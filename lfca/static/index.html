@@ -43,11 +43,35 @@
         <div id="treeContainer">No tree loaded.</div>
       </section>
       <section class="graph">
-        <h2>Impact graph</h2>
+        <div class="graph-header">
+          <div>
+            <h2>Impact graph</h2>
+            <p class="graph-subtitle">Drag nodes or scroll to zoom/pan.</p>
+          </div>
+          <div id="graphLegend"></div>
+        </div>
         <div id="graphContainer">
           <svg id="graph" width="900" height="600" role="img" aria-label="Impact graph"></svg>
         </div>
-        <div id="graphLegend"></div>
+        <div class="summary-grid">
+          <div class="card">
+            <h3>Focus file</h3>
+            <div id="focusPath" class="mono">Select a file to load impact.</div>
+            <div class="meta" id="focusStats"></div>
+          </div>
+          <div class="card">
+            <h3>Top impacted files</h3>
+            <ol id="impactList"></ol>
+          </div>
+          <div class="card">
+            <h3>Top impacted folders</h3>
+            <ol id="folderImpactList"></ol>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Lineage</h3>
+          <ul id="lineageList" class="lineage-list"></ul>
+        </div>
       </section>
     </main>
 
