@@ -1,0 +1,25 @@
+[project]
+name = "lfca"
+version = "0.1.0"
+description = "Logical File Coupling Analyzer (LFCA)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "LFCA"}]
+
+dependencies = [
+  "pyarrow>=14.0.0",
+]
+
+[project.optional-dependencies]
+api = [
+  "fastapi>=0.110.0",
+  "uvicorn>=0.27.0",
+  "pydantic>=2.6.0",
+]
+
+[project.scripts]
+lfca = "lfca.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
