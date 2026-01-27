@@ -11,6 +11,14 @@ Provides-Extra: api
 Requires-Dist: fastapi>=0.110.0; extra == "api"
 Requires-Dist: uvicorn>=0.27.0; extra == "api"
 Requires-Dist: pydantic>=2.6.0; extra == "api"
+Provides-Extra: clustering
+Requires-Dist: networkx>=3.0; extra == "clustering"
+Requires-Dist: python-louvain>=0.16; extra == "clustering"
+Requires-Dist: scipy>=1.10.0; extra == "clustering"
+Requires-Dist: scikit-learn>=1.3.0; extra == "clustering"
+Requires-Dist: numpy>=1.24.0; extra == "clustering"
+Provides-Extra: all
+Requires-Dist: lfca[api,clustering]; extra == "all"
 
 # Logical File Coupling Analyzer (LFCA)
 
@@ -35,7 +43,7 @@ sparse graphs to avoid pair explosion.
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e ".[api]"
+python -m pip install -e ".[api]"
 ```
 
 ### 2. Setup Frontend
@@ -49,10 +57,10 @@ npm run dev
 In a new terminal (with venv activated):
 ```bash
 # Analyze a repository
-lfca analyze /path/to/repo --data-dir data --repo-id myrepo
+python -m lfca analyze /path/to/repo --data-dir data --repo-id myrepo
 
 # Start the API server
-uvicorn lfca.api:app --reload
+python -m uvicorn lfca.api:app --reload
 ```
 
 Open <http://localhost:5173/> (the Vite dev server) or <http://localhost:8000/> (for the API docs/legacy static UI).
@@ -61,10 +69,10 @@ Open <http://localhost:5173/> (the Vite dev server) or <http://localhost:8000/> 
 ```bash
 # Clone and analyze
 git clone https://github.com/octocat/Hello-World.git /tmp/hello-world
-lfca analyze /tmp/hello-world --data-dir data --repo-id hello-world
+python -m lfca analyze /tmp/hello-world --data-dir data --repo-id hello-world
 
 # Run servers
-uvicorn lfca.api:app --reload &
+python -m uvicorn lfca.api:app --reload &
 cd frontend && npm run dev
 ```
 
@@ -84,5 +92,5 @@ Artifacts are stored under `data/repos/<repo_id>/artifacts/v1/`:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .
+python -m pip install -e .
 ```

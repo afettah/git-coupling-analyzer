@@ -4,6 +4,40 @@ const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
 });
 
+// === Global Error Handling ===
+
+export interface ApiErrorInfo {
+    code: string;
+    message: string;
+    details?: any;
+    status: number;
+}
+
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const errorInfo: ApiErrorInfo = {
+            code: 'UNKNOWN_ERROR',
+            message: 'An unexpected error occurred',
+            status: error.response?.status || 500,
+        };
+
+        if (error.response && error.response.data && error.response.data.error) {
+            const apiError = error.response.data.error;
+            errorInfo.code = apiError.code;
+            errorInfo.message = apiError.message;
+            errorInfo.details = apiError.details;
+        } else if (error.message) {
+            errorInfo.message = error.message;
+        }
+
+        // Dispatch a global event for the UI to handle
+        window.dispatchEvent(new CustomEvent('api-error', { detail: errorInfo }));
+
+        return Promise.reject(errorInfo);
+    }
+);
+
 // === Types ===
 
 export interface RepoInfo {
@@ -75,7 +109,7 @@ export interface ClusterConfig {
 
 // === API Functions ===
 
-export const getRepos = () => 
+export const getRepos = () =>
     api.get<RepoInfo[]>('/repos').then(res => res.data);
 
 export const createRepo = (payload: { path: string; name?: string }) =>
@@ -109,22 +143,22 @@ export const getCoupling = (repoId: string, path: string, params?: {
     metric?: string;
     min_weight?: number;
     limit?: number;
-}) => api.get<CoupledFile[]>(`/repos/${repoId}/coupling`, { 
-    params: { path, ...params } 
+}) => api.get<CoupledFile[]>(`/repos/${repoId}/coupling`, {
+    params: { path, ...params }
 }).then(res => res.data);
 
 export const getCouplingGraph = (repoId: string, path: string, params?: {
     metric?: string;
     min_weight?: number;
     limit?: number;
-}) => api.get(`/repos/${repoId}/coupling/graph`, { 
-    params: { path, ...params } 
+}) => api.get(`/repos/${repoId}/coupling/graph`, {
+    params: { path, ...params }
 }).then(res => res.data);
 
 // Component coupling
 export const getComponentCoupling = (repoId: string, component: string, depth?: number) =>
-    api.get(`/repos/${repoId}/coupling/components`, { 
-        params: { component, depth } 
+    api.get(`/repos/${repoId}/coupling/components`, {
+        params: { component, depth }
     }).then(res => res.data);
 
 // Clustering

@@ -7,9 +7,10 @@ import json
 from pathlib import Path
 from typing import List
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 import pyarrow.dataset as ds
@@ -46,6 +47,16 @@ def _paths(repo_id: str, data_dir: str) -> RepoPaths:
 
 
 # === Models ===
+
+class ApiErrorDetail(BaseModel):
+    code: str
+    message: str
+    details: dict | list | str | None = None
+
+
+class ApiError(BaseModel):
+    error: ApiErrorDetail
+
 
 class RepoInfo(BaseModel):
     id: str
@@ -106,6 +117,51 @@ class CreateRepoRequest(BaseModel):
     path: str
     name: str | None = None
     data_dir: str = "data"
+
+
+# === Exception Handlers ===
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": {
+                "code": f"HTTP_{exc.status_code}",
+                "message": exc.detail,
+                "details": None
+            }
+        },
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "Validation error",
+                "details": exc.errors()
+            }
+        },
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled error occurred")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "code": "INTERNAL_SERVER_ERROR",
+                "message": "An unexpected error occurred",
+                "details": str(exc) if app.debug else None
+            }
+        },
+    )
 
 
 # === Endpoints ===

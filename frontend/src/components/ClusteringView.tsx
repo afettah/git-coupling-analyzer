@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Info } from 'lucide-react';
 import { getClusteringAlgorithms, runClustering, getFolders, type ClusterResult } from '../api';
+import AlgorithmInfoModal from './AlgorithmInfoModal';
 
 interface ClusteringViewProps {
     repoId: string;
@@ -22,6 +24,7 @@ export default function ClusteringView({ repoId }: ClusteringViewProps) {
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<ClusterResult | null>(null);
     const [availableFolders, setAvailableFolders] = useState<string[]>([]);
+    const [infoModalOpen, setInfoModalOpen] = useState(false);
 
     useEffect(() => {
         loadAlgorithms();
@@ -74,7 +77,16 @@ export default function ClusteringView({ repoId }: ClusteringViewProps) {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
                     <div>
-                        <label className="block text-sm font-medium text-slate-400 mb-1">Algorithm</label>
+                        <div className="flex justify-between items-center mb-1">
+                            <label className="block text-sm font-medium text-slate-400">Algorithm</label>
+                            <button
+                                onClick={() => setInfoModalOpen(true)}
+                                className="text-slate-500 hover:text-sky-400 transition-colors"
+                                title="Learn more about these algorithms"
+                            >
+                                <Info className="w-4 h-4" />
+                            </button>
+                        </div>
                         <select
                             value={selectedAlgo}
                             onChange={(e) => {
@@ -205,6 +217,11 @@ export default function ClusteringView({ repoId }: ClusteringViewProps) {
                     </div>
                 </div>
             )}
+
+            <AlgorithmInfoModal
+                isOpen={infoModalOpen}
+                onClose={() => setInfoModalOpen(false)}
+            />
         </div>
     );
 }

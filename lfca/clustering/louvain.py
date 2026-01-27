@@ -63,8 +63,11 @@ class Louvain(ClusterAlgorithm):
             random_state=random_state
         )
         
-        # Calculate modularity
-        modularity = community_louvain.modularity(partition, G, weight="weight")
+        # Calculate modularity (undefined for graphs with no edges)
+        if G.number_of_edges() > 0:
+            modularity = community_louvain.modularity(partition, G, weight="weight")
+        else:
+            modularity = 0.0
         
         # Group by community
         communities: dict[int, list[int]] = {}

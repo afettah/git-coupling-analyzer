@@ -3,6 +3,7 @@ import { type RepoInfo, getRepos } from './api';
 import RepoList from './components/RepoList';
 import AnalysisDashboard from './components/AnalysisDashboard';
 import CreateRepoModal from './components/CreateRepoModal';
+import ErrorNotification from './components/ErrorNotification';
 import { Plus } from 'lucide-react';
 
 function App() {
@@ -30,10 +31,13 @@ function App() {
 
   if (selectedRepoId && selectedRepo) {
     return (
-      <AnalysisDashboard
-        repo={selectedRepo}
-        onBack={() => setSelectedRepoId(null)}
-      />
+      <>
+        <ErrorNotification />
+        <AnalysisDashboard
+          repo={selectedRepo}
+          onBack={() => setSelectedRepoId(null)}
+        />
+      </>
     );
   }
 
@@ -78,6 +82,7 @@ function App() {
           }}
         />
       )}
+      <ErrorNotification />
     </div>
   );
 }
