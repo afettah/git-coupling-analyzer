@@ -36,7 +36,13 @@ def _token_stream(proc: subprocess.Popen[bytes], chunk_size: int = 1 << 20) -> I
         yield buffer.decode("utf-8", errors="replace")
 
 
-def iter_log(repo_path: Path, since: str | None = None, until: str | None = None) -> Iterable[tuple[CommitHeader, list[tuple[str, str, str | None]]]]:
+def iter_log(
+    repo_path: Path,
+    since: str | None = None,
+    until: str | None = None,
+    ref: str = "HEAD",
+    all_refs: bool = False
+) -> Iterable[tuple[CommitHeader, list[tuple[str, str, str | None]]]]:
     args = [
         "git",
         "-C",
@@ -51,6 +57,11 @@ def iter_log(repo_path: Path, since: str | None = None, until: str | None = None
         args.append(f"--since={since}")
     if until:
         args.append(f"--until={until}")
+
+    if all_refs:
+        args.append("--all")
+    else:
+        args.append(ref)
 
     pretty = "%x00".join(
         [
@@ -132,3 +143,12 @@ def count_commits(repo_path: Path, since: str | None = None, until: str | None =
         args.append(f"--until={until}")
     output = subprocess.check_output(args, stderr=subprocess.STDOUT)
     return int(output.decode("utf-8").strip() or 0)
+
+
+def get_head_oid(repo_path: Path) -> str:
+    """Get current HEAD commit OID."""
+    result = subprocess.run(
+        ["git", "-C", str(repo_path), "rev-parse", "HEAD"],
+        capture_output=True, text=True, check=True
+    )
+    return result.stdout.strip()

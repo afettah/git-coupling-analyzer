@@ -1,30 +1,27 @@
+"""FastAPI application."""
+
 from __future__ import annotations
 
 import datetime
 import json
-import uuid
 from pathlib import Path
-from typing import Iterable, List
+from typing import List
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
-
-from lfca.cluster import ClusterConfig, build_clusters, save_clusters
-from lfca.config import RepoPaths
-from lfca.edges import EdgeBuilder, EdgeConfig
-from lfca.extract import ExtractConfig, HistoryExtractor
-from lfca.git import count_commits
-from lfca.mirror import mirror_repo
-from lfca.logging_utils import get_logger, setup_logging
-import pyarrow.parquet as pq
 import pyarrow.dataset as ds
+
+from lfca.config import RepoPaths, CouplingConfig
+from lfca.storage import Storage
+from lfca.sync import build_file_tree, get_folder_list
+from lfca.logging_utils import get_logger
 
 logger = get_logger(__name__)
 
-app = FastAPI(title="LFCA API")
+app = FastAPI(title="LFCA API", version="2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,104 +36,70 @@ if _STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
 
 
+def get_storage(repo_id: str, data_dir: str = "data") -> Storage:
+    paths = RepoPaths(Path(data_dir), repo_id)
+    return Storage(paths.db_path, paths.parquet_dir)
+
+
 def _paths(repo_id: str, data_dir: str) -> RepoPaths:
     return RepoPaths(Path(data_dir), repo_id)
 
 
-def _edges_for_file(edges_path: Path, file_id: int) -> Iterable[dict]:
-    dataset = ds.dataset(edges_path)
-    filter_expr = (ds.field("src_file_id") == file_id) | (ds.field("dst_file_id") == file_id)
-    columns = [
-        "src_file_id",
-        "dst_file_id",
-        "pair_count",
-        "src_count",
-        "dst_count",
-        "weight_jaccard",
-    ]
-    for batch in dataset.to_batches(columns=columns, filter=filter_expr):
-        src_ids = batch.column(batch.schema.get_field_index("src_file_id")).to_pylist()
-        dst_ids = batch.column(batch.schema.get_field_index("dst_file_id")).to_pylist()
-        pair_counts = batch.column(batch.schema.get_field_index("pair_count")).to_pylist()
-        src_counts = batch.column(batch.schema.get_field_index("src_count")).to_pylist()
-        dst_counts = batch.column(batch.schema.get_field_index("dst_count")).to_pylist()
-        weights = batch.column(batch.schema.get_field_index("weight_jaccard")).to_pylist()
-        for src, dst, pair_count, src_count, dst_count, weight in zip(
-            src_ids, dst_ids, pair_counts, src_counts, dst_counts, weights
-        ):
-            yield {
-                "src_file_id": int(src),
-                "dst_file_id": int(dst),
-                "pair_count": float(pair_count),
-                "src_count": int(src_count),
-                "dst_count": int(dst_count),
-                "weight_jaccard": float(weight),
-            }
-
-
-def _file_id_for_path(index_path: Path, path: str) -> int:
-    import sqlite3
-
-    with sqlite3.connect(index_path) as conn:
-        row = conn.execute("SELECT file_id FROM file_index WHERE path_current = ?", (path,)).fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="Path not found")
-        return int(row[0])
-
-
-def _paths_for_ids(index_path: Path, file_ids: Iterable[int]) -> dict[int, str]:
-    import sqlite3
-
-    file_ids_list = list(set(file_ids))
-    if not file_ids_list:
-        return {}
-    placeholders = ",".join(["?"] * len(file_ids_list))
-    query = f"SELECT file_id, path_current FROM file_index WHERE file_id IN ({placeholders})"
-    with sqlite3.connect(index_path) as conn:
-        rows = conn.execute(query, file_ids_list).fetchall()
-    return {int(file_id): path for file_id, path in rows}
-
-
-def _folder_at_depth(path: str, depth: int) -> str:
-    if not path:
-        return ""
-    parts = path.split("/")
-    if depth <= 0:
-        return ""
-    return "/".join(parts[:depth])
-
-
-def _analysis_status_path(paths: RepoPaths) -> Path:
-    return paths.runs_dir / "analysis_status.json"
-
-
-def _cluster_status_path(paths: RepoPaths, run_id: str) -> Path:
-    return paths.runs_dir / f"cluster_{run_id}_status.json"
-
-
-def _cluster_results_path(paths: RepoPaths, run_id: str) -> Path:
-    return paths.runs_dir / f"cluster_{run_id}.json"
-
-
-def _write_status(path: Path, payload: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = path.with_suffix(".tmp")
-    tmp_path.write_text(json.dumps(payload, indent=2))
-    tmp_path.replace(path)
-
-
-def _read_status(path: Path) -> dict | None:
-    if not path.exists():
-        return None
-    return json.loads(path.read_text())
-
+# === Models ===
 
 class RepoInfo(BaseModel):
     id: str
     name: str
+    state: str
+    file_count: int = 0
+    commit_count: int = 0
+
+
+class FileInfo(BaseModel):
+    file_id: int
     path: str
-    last_analyzed: str | None = None
-    state: str = "not_started"
+    exists_at_head: bool
+    total_commits: int
+
+
+class CoupledFile(BaseModel):
+    file_id: int
+    path: str
+    pair_count: float
+    jaccard: float
+    jaccard_weighted: float
+    p_dst_given_src: float
+    p_src_given_dst: float
+
+
+class FileHistory(BaseModel):
+    file_id: int
+    path: str
+    commits: List[dict]
+    renames: List[dict]
+
+
+class AnalysisRequest(BaseModel):
+    repo_path: str | None = None
+    min_revisions: int = 5
+    max_changeset_size: int = 50
+    changeset_mode: str = "by_commit"
+    author_time_window_hours: int = 24
+    ticket_id_pattern: str | None = None
+    min_cooccurrence: int = 5
+    window_days: int | None = None
+    since: str | None = None
+    until: str | None = None
+    data_dir: str = "data"
+
+
+class ClusterRequest(BaseModel):
+    algorithm: str = "louvain"
+    weight_column: str = "jaccard"
+    min_weight: float = 0.1
+    folders: List[str] = Field(default_factory=list)
+    params: dict = Field(default_factory=dict)
+    data_dir: str = "data"
 
 
 class CreateRepoRequest(BaseModel):
@@ -145,25 +108,7 @@ class CreateRepoRequest(BaseModel):
     data_dir: str = "data"
 
 
-class AnalyzeRequest(BaseModel):
-    repo_path: str | None = None
-    since: str | None = None
-    until: str | None = None
-    max_files_per_commit: int = 300
-    bulk_policy: str = "downweight"
-    topk_edges_per_file: int = 50
-    merge_policy: str = "include"
-    merge_downweight: float = 0.5
-    parallel_postprocessing: bool = False
-    data_dir: str = "data"
-
-
-class ClusterRequest(BaseModel):
-    algorithm: str = "components"
-    min_weight: float = Field(0.2, ge=0.0, le=1.0)
-    folders: list[str] = Field(default_factory=list)
-    data_dir: str = "data"
-
+# === Endpoints ===
 
 @app.get("/")
 def index() -> FileResponse:
@@ -184,30 +129,57 @@ def list_repositories(data_dir: str = "data") -> List[RepoInfo]:
             continue
         
         repo_id = repo_dir.name
-        paths = _paths(repo_id, data_dir)
-        status = _read_status(_analysis_status_path(paths))
+        storage = get_storage(repo_id, data_dir)
         
-        # Try to find original path and name from status or config if we saved it
-        # For now, we'll infer it or return defaults
-        repo_path = ""
-        repo_name = repo_id
-        
-        last_analyzed = None
-        state = "not_started"
-        if status:
-            state = status.get("state", "not_started")
-            last_analyzed = status.get("updated_at")
-            # If we had saved the path in status
-            # repo_path = status.get("repo_path", "")
-
-        results.append(RepoInfo(
-            id=repo_id,
-            name=repo_name,
-            path=repo_path,
-            last_analyzed=last_analyzed,
-            state=state
-        ))
+        try:
+            # Get latest run info
+            row = storage.conn.execute("""
+                SELECT state, commit_count, file_count FROM analysis_runs
+                ORDER BY created_at DESC LIMIT 1
+            """).fetchone()
+            
+            state = row[0] if row else "not_started"
+            commit_count = row[1] or 0 if row else 0
+            file_count = row[2] or 0 if row else 0
+            
+            results.append(RepoInfo(
+                id=repo_id,
+                name=repo_id,
+                state=state,
+                commit_count=commit_count,
+                file_count=file_count
+            ))
+        finally:
+            storage.close()
+    
     return results
+
+
+@app.delete("/repos/{repo_id}")
+def delete_repository(repo_id: str, data_dir: str = "data") -> dict:
+    """Delete a repository by moving it to a deleted folder."""
+    import shutil
+    
+    repos_base = Path(data_dir) / "repos"
+    repo_dir = repos_base / repo_id
+    
+    if not repo_dir.exists():
+        raise HTTPException(status_code=404, detail=f"Repository not found: {repo_id}")
+    
+    # Create deleted folder
+    deleted_base = Path(data_dir) / "deleted"
+    deleted_base.mkdir(parents=True, exist_ok=True)
+    
+    # Generate unique name with timestamp
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    deleted_name = f"{repo_id}_{timestamp}"
+    deleted_path = deleted_base / deleted_name
+    
+    # Move to deleted folder
+    shutil.move(str(repo_dir), str(deleted_path))
+    
+    logger.info(f"Repository {repo_id} moved to {deleted_path}")
+    return {"status": "deleted", "repo_id": repo_id}
 
 
 @app.post("/repos", response_model=RepoInfo)
@@ -216,432 +188,408 @@ def create_repository(request: CreateRepoRequest) -> RepoInfo:
     if not repo_path.exists():
         raise HTTPException(status_code=400, detail=f"Path does not exist: {request.path}")
     
-    if request.name:
-        repo_name = request.name
-    else:
-        repo_name = repo_path.name or "unknown"
+    # Check if it's a git repository
+    git_dir = repo_path / ".git"
+    if not git_dir.exists() and not (repo_path / "HEAD").exists():
+        raise HTTPException(status_code=400, detail=f"Not a git repository: {request.path}")
     
-    # Simple slugify for repo_id
+    repo_name = request.name or repo_path.name or "unknown"
     repo_id = "".join(c if c.isalnum() else "_" for c in repo_name.lower())
     
     paths = _paths(repo_id, request.data_dir)
     paths.ensure_dirs()
     
-    # Save a marker/initial status so we know about this repo
-    status_path = _analysis_status_path(paths)
-    if not status_path.exists():
-        _write_status(status_path, {
-            "state": "not_started",
-            "repo_path": str(repo_path),
-            "repo_name": repo_name,
-            "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        })
-    
-    return RepoInfo(
-        id=repo_id,
-        name=repo_name,
-        path=str(repo_path),
-        state="not_started"
+    # Initialize storage and save original repo path
+    storage = get_storage(repo_id, request.data_dir)
+    storage.conn.execute(
+        "INSERT OR REPLACE INTO repo_meta (key, value) VALUES ('source_path', ?)",
+        (str(repo_path.resolve()),)
     )
-
-
-@app.get("/repos/{repo_id}/folders/tree")
-def folder_tree(repo_id: str, data_dir: str = "data") -> dict:
-    paths = _paths(repo_id, data_dir)
-    stats_path = paths.artifacts_root / "file_stats.parquet"
-    if not stats_path.exists():
-        raise HTTPException(status_code=404, detail="file_stats.parquet not found")
-    table = pq.read_table(stats_path)
-    paths_col = table.column("path_current").to_pylist()
-
-    tree = {}
-    for path in paths_col:
-        if not path:
-            continue
-        parts = path.split("/")
-        node = tree
-        for part in parts:
-            node = node.setdefault(part, {})
-    return tree
-
-
-@app.get("/repos/{repo_id}/files")
-def list_files(repo_id: str, q: str | None = None, limit: int = 200, data_dir: str = "data") -> List[str]:
-    paths = _paths(repo_id, data_dir)
-    index_path = paths.indexes_dir / "file_index.sqlite"
-    if not index_path.exists():
-        raise HTTPException(status_code=404, detail="file_index.sqlite not found")
-    import sqlite3
-
-    with sqlite3.connect(index_path) as conn:
-        if q:
-            rows = conn.execute(
-                "SELECT path_current FROM file_index WHERE path_current LIKE ? ORDER BY path_current LIMIT ?",
-                (f"{q}%", limit),
-            ).fetchall()
-        else:
-            rows = conn.execute(
-                "SELECT path_current FROM file_index ORDER BY path_current LIMIT ?",
-                (limit,),
-            ).fetchall()
-    return [row[0] for row in rows]
-
-
-def _run_analysis_job(repo_id: str, request: AnalyzeRequest) -> None:
-    paths = _paths(repo_id, request.data_dir)
-    status_path = _analysis_status_path(paths)
-    started_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    
-    repo_path = request.repo_path
-    if not repo_path:
-        status = _read_status(status_path)
-        if status:
-            repo_path = status.get("repo_path")
-    
-    if not repo_path:
-        _write_status(
-            status_path,
-            {
-                "state": "failed",
-                "stage": "error",
-                "error": "Missing repo_path in request and not found in existing repo config.",
-                "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            },
-        )
-        return
-    
-    # Setup per-repo logging
-    setup_logging(log_file=paths.artifacts_root / "analysis.log")
-    logger.info(f"Background analysis started for repo: {repo_id} at {repo_path}")
-
-    total_commits = count_commits(Path(repo_path), since=request.since, until=request.until)
-    _write_status(
-        status_path,
-        {
-            "state": "running",
-            "stage": "extracting",
-            "processed_commits": 0,
-            "total_commits": total_commits,
-            "progress": 0.0,
-            "started_at": started_at,
-            "updated_at": started_at,
-            "repo_path": str(repo_path), # Keep path
-        },
+    storage.conn.execute(
+        "INSERT OR REPLACE INTO repo_meta (key, value) VALUES ('name', ?)",
+        (repo_name,)
     )
+    storage.conn.commit()
+    storage.close()
+    
+    return RepoInfo(id=repo_id, name=repo_name, state="not_started")
+
+
+# --- Repository Structure ---
+
+@app.get("/repos/{repo_id}/files/tree")
+def get_file_tree(repo_id: str, data_dir: str = "data") -> dict:
+    """Get current file tree (only files at HEAD)."""
+    storage = get_storage(repo_id, data_dir)
     try:
-        mirror_repo(Path(repo_path), paths)
-        extractor = HistoryExtractor(
-            Path(repo_path),
-            paths,
-            ExtractConfig(
-                max_files_per_commit=request.max_files_per_commit,
-                bulk_policy=request.bulk_policy,
-                merge_policy=request.merge_policy,
-                parallel_postprocessing=request.parallel_postprocessing,
-            ),
+        return build_file_tree(storage)
+    finally:
+        storage.close()
+
+
+@app.get("/repos/{repo_id}/files", response_model=List[FileInfo])
+def list_files(
+    repo_id: str,
+    q: str | None = None,
+    current_only: bool = True,
+    limit: int = 500,
+    data_dir: str = "data"
+) -> List[FileInfo]:
+    """List files, optionally filtered by path prefix."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        if current_only:
+            query = """
+                SELECT file_id, path_current, exists_at_head, total_commits
+                FROM files
+                WHERE exists_at_head = TRUE
+            """
+        else:
+            query = """
+                SELECT file_id, COALESCE(path_current, path_latest), exists_at_head, total_commits
+                FROM files
+            """
+        
+        params = []
+        if q:
+            query += " AND path_current LIKE ?"
+            params.append(f"{q}%")
+        
+        query += f" ORDER BY path_current LIMIT {limit}"
+        
+        rows = storage.conn.execute(query, params).fetchall()
+        return [
+            FileInfo(file_id=r[0], path=r[1] or "", exists_at_head=bool(r[2]), total_commits=r[3] or 0)
+            for r in rows
+        ]
+    finally:
+        storage.close()
+
+
+@app.get("/repos/{repo_id}/folders")
+def list_folders(
+    repo_id: str,
+    depth: int = 2,
+    data_dir: str = "data"
+) -> List[str]:
+    """Get folder list at given depth."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        return get_folder_list(storage, depth)
+    finally:
+        storage.close()
+
+
+# --- File History ---
+
+@app.get("/repos/{repo_id}/files/{path:path}/history")
+def get_file_history(
+    repo_id: str,
+    path: str,
+    limit: int = 100,
+    data_dir: str = "data"
+) -> FileHistory:
+    """Get commit history for a file."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        file_info = storage.get_file_by_path(path)
+        if not file_info:
+            raise HTTPException(404, f"File not found: {path}")
+        
+        file_id = file_info["file_id"]
+        
+        # Get commits from changes parquet
+        changes_path = storage.parquet_dir / "changes.parquet"
+        
+        if changes_path.exists():
+            dataset = ds.dataset(changes_path)
+            table = dataset.to_table(filter=ds.field("file_id") == file_id)
+            commits = table.to_pylist()[:limit]
+        else:
+            commits = []
+        
+        # Get renames
+        renames = storage.conn.execute("""
+            SELECT path, start_commit_oid, end_commit_oid
+            FROM file_lineage
+            WHERE file_id = ?
+            ORDER BY start_commit_oid
+        """, (file_id,)).fetchall()
+        
+        return FileHistory(
+            file_id=file_id,
+            path=path,
+            commits=commits,
+            renames=[{"path": r[0], "start": r[1], "end": r[2]} for r in renames]
         )
+    finally:
+        storage.close()
 
-        def _update_progress(commit_count: int) -> None:
-            progress = 1.0 if total_commits == 0 else min(commit_count / total_commits, 1.0)
-            _write_status(
-                status_path,
-                {
-                    "state": "running",
-                    "stage": "extracting",
-                    "processed_commits": commit_count,
-                    "total_commits": total_commits,
-                    "progress": progress,
-                    "started_at": started_at,
-                    "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                    "repo_path": str(repo_path),
-                },
-            )
 
-        stats = extractor.run(since=request.since, until=request.until, progress_callback=_update_progress)
+# --- Global Coupling ---
 
-        _write_status(
-            status_path,
+@app.get("/repos/{repo_id}/coupling", response_model=List[CoupledFile])
+def get_coupling(
+    repo_id: str,
+    path: str,
+    metric: str = "jaccard",
+    min_weight: float = 0.0,
+    limit: int = 50,
+    current_only: bool = True,
+    data_dir: str = "data"
+) -> List[CoupledFile]:
+    """Get globally coupled files based on pre-computed edges."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        file_info = storage.get_file_by_path(path)
+        if not file_info:
+            raise HTTPException(404, f"File not found: {path}")
+        
+        edges = storage.get_edges_for_file(
+            file_info["file_id"],
+            metric=metric,
+            min_weight=min_weight,
+            limit=limit,
+            current_only=current_only
+        )
+        
+        return [CoupledFile(**e) for e in edges]
+    finally:
+        storage.close()
+
+
+@app.get("/repos/{repo_id}/coupling/graph")
+def get_coupling_graph(
+    repo_id: str,
+    path: str,
+    metric: str = "jaccard",
+    min_weight: float = 0.1,
+    limit: int = 30,
+    data_dir: str = "data"
+) -> dict:
+    """Get coupling as graph (nodes + edges) for visualization."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        file_info = storage.get_file_by_path(path)
+        if not file_info:
+            raise HTTPException(404, f"File not found: {path}")
+        
+        focus_id = file_info["file_id"]
+        edges_data = storage.get_edges_for_file(focus_id, metric=metric, min_weight=min_weight, limit=limit)
+        
+        # Build nodes
+        node_ids = {focus_id}
+        for e in edges_data:
+            node_ids.add(e["file_id"])
+        
+        # Get paths
+        placeholders = ",".join("?" * len(node_ids))
+        rows = storage.conn.execute(f"""
+            SELECT file_id, path_current FROM files WHERE file_id IN ({placeholders})
+        """, list(node_ids)).fetchall()
+        path_map = {r[0]: r[1] for r in rows}
+        
+        nodes = [
+            {"id": nid, "path": path_map.get(nid, f"file:{nid}"), "is_focus": nid == focus_id}
+            for nid in node_ids
+        ]
+        
+        edges = [
             {
-                "state": "running",
-                "stage": "building_edges",
-                "processed_commits": stats.commit_count,
-                "total_commits": total_commits,
-                "progress": 1.0 if total_commits == 0 else min(stats.commit_count / total_commits, 1.0),
-                "started_at": started_at,
-                "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                "repo_path": str(repo_path),
-            },
-        )
+                "source": focus_id,
+                "target": e["file_id"],
+                "weight": e[metric],
+                "pair_count": e["pair_count"]
+            }
+            for e in edges_data
+        ]
+        
+        return {"nodes": nodes, "edges": edges, "focus_id": focus_id}
+    finally:
+        storage.close()
 
-        from lfca.cli import _iter_transactions_from_parquet
 
-        transactions = _iter_transactions_from_parquet(
-            paths, merge_policy=request.merge_policy, merge_downweight=request.merge_downweight
-        )
-        EdgeBuilder(
-            paths,
-            EdgeConfig(
-                max_files_per_commit=request.max_files_per_commit,
-                bulk_policy=request.bulk_policy,
-                topk_edges_per_file=request.topk_edges_per_file,
-                merge_policy=request.merge_policy,
-                merge_downweight=request.merge_downweight,
-            ),
-        ).build(transactions)
-        _write_status(
-            status_path,
-            {
-                "state": "complete",
-                "stage": "complete",
-                "processed_commits": stats.commit_count,
-                "total_commits": total_commits,
-                "progress": 1.0,
-                "commit_count": stats.commit_count,
-                "change_count": stats.change_count,
-                "transaction_count": stats.transaction_count,
-                "started_at": started_at,
-                "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                "repo_path": str(repo_path),
-            },
-        )
-        logger.info(f"Background analysis completed for repo: {repo_id}")
-    except Exception as exc:
-        _write_status(
-            status_path,
-            {
-                "state": "failed",
-                "stage": "error",
-                "processed_commits": 0,
-                "total_commits": total_commits,
-                "progress": 0.0,
-                "error": str(exc),
-                "started_at": started_at,
-                "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                "repo_path": str(repo_path),
-            },
-        )
-        logger.exception(f"Background analysis failed for repo: {repo_id}")
-        raise
+# --- Component Level Coupling ---
+
+@app.get("/repos/{repo_id}/coupling/components")
+def get_component_coupling(
+    repo_id: str,
+    component: str,
+    depth: int = 2,
+    limit: int = 20,
+    data_dir: str = "data"
+) -> dict:
+    """Get coupling at component/folder level."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        rows = storage.conn.execute("""
+            SELECT dst_component, pair_count, jaccard, file_pair_count
+            FROM component_edges
+            WHERE src_component = ? AND depth = ?
+            ORDER BY jaccard DESC
+            LIMIT ?
+        """, (component, depth, limit)).fetchall()
+        
+        return {
+            "component": component,
+            "depth": depth,
+            "coupled_components": [
+                {"component": r[0], "pair_count": r[1], "jaccard": r[2], "file_pair_count": r[3]}
+                for r in rows
+            ]
+        }
+    finally:
+        storage.close()
+
+
+# --- Analysis ---
+
+def _run_analysis_job(repo_id: str, request: AnalysisRequest) -> None:
+    from lfca.runner import create_run, run_analysis
+    from lfca.mirror import mirror_repo
+    
+    paths = _paths(repo_id, request.data_dir)
+    
+    config = CouplingConfig(
+        min_revisions=request.min_revisions,
+        max_changeset_size=request.max_changeset_size,
+        changeset_mode=request.changeset_mode,
+        author_time_window_hours=request.author_time_window_hours,
+        ticket_id_pattern=request.ticket_id_pattern,
+        min_cooccurrence=request.min_cooccurrence,
+        window_days=request.window_days,
+    )
+    
+    run_id = create_run(paths, config)
+    
+    # Get source path from request or database
+    if request.repo_path:
+        repo_path = Path(request.repo_path)
+    else:
+        storage = get_storage(repo_id, request.data_dir)
+        try:
+            row = storage.conn.execute(
+                "SELECT value FROM repo_meta WHERE key = 'source_path'"
+            ).fetchone()
+            if row:
+                repo_path = Path(row[0])
+            else:
+                raise ValueError(f"No source path found for repository {repo_id}")
+        finally:
+            storage.close()
+    
+    run_analysis(
+        paths=paths,
+        run_id=run_id,
+        repo_path=repo_path,
+        config=config,
+        since=request.since,
+        until=request.until
+    )
 
 
 @app.post("/repos/{repo_id}/analysis/start")
-def start_analysis(repo_id: str, request: AnalyzeRequest, background_tasks: BackgroundTasks) -> dict:
+def start_analysis(repo_id: str, request: AnalysisRequest, background_tasks: BackgroundTasks) -> dict:
     paths = _paths(repo_id, request.data_dir)
-    status_path = _analysis_status_path(paths)
-    status = _read_status(status_path)
-    if status and status.get("state") == "running":
-        raise HTTPException(status_code=409, detail="Analysis is already running.")
+    paths.ensure_dirs()
     background_tasks.add_task(_run_analysis_job, repo_id, request)
     return {"state": "queued"}
 
 
 @app.get("/repos/{repo_id}/analysis/status")
 def analysis_status(repo_id: str, data_dir: str = "data") -> dict:
+    from lfca.runner import get_latest_run
     paths = _paths(repo_id, data_dir)
-    status = _read_status(_analysis_status_path(paths))
-    if not status:
+    run = get_latest_run(paths)
+    if not run:
         return {"state": "not_started"}
-    return status
+    return run
 
 
-def _run_cluster_job(repo_id: str, run_id: str, request: ClusterRequest) -> None:
-    paths = _paths(repo_id, request.data_dir)
-    status_path = _cluster_status_path(paths, run_id)
-    started_at = datetime.datetime.utcnow().isoformat()
-    _write_status(
-        status_path,
-        {
-            "state": "running",
-            "stage": "clustering",
-            "run_id": run_id,
-            "started_at": started_at,
-            "updated_at": started_at,
-        },
-    )
+# --- Clustering ---
+
+@app.get("/repos/{repo_id}/clustering/algorithms")
+def list_clustering_algorithms(repo_id: str) -> list[dict]:
+    """List available clustering algorithms with their parameters."""
+    from lfca.clustering import list_algorithms
+    return list_algorithms()
+
+
+@app.post("/repos/{repo_id}/clustering/run")
+def run_clustering(repo_id: str, request: ClusterRequest) -> dict:
+    """Run clustering algorithm."""
+    from lfca.clustering import get_algorithm
+    
+    storage = get_storage(repo_id, request.data_dir)
     try:
-        config = ClusterConfig(
-            algorithm=request.algorithm,
-            min_weight=request.min_weight,
-            folders=tuple(request.folders),
-        )
-        results = build_clusters(paths, config)
-        results.update(
+        # Get edges
+        if request.folders:
+            folder_patterns = [f"{f}/%" for f in request.folders]
+            placeholders = " OR ".join(["path_current LIKE ?" for _ in folder_patterns])
+            rows = storage.conn.execute(f"""
+                SELECT file_id, path_current FROM files
+                WHERE exists_at_head = TRUE AND ({placeholders})
+            """, folder_patterns).fetchall()
+        else:
+            rows = storage.conn.execute("""
+                SELECT file_id, path_current FROM files WHERE exists_at_head = TRUE
+            """).fetchall()
+        
+        file_ids = {r[0] for r in rows}
+        file_paths = {r[0]: r[1] for r in rows}
+        
+        if not file_ids:
+            return {"algorithm": request.algorithm, "cluster_count": 0, "clusters": [], "metrics": {}}
+        
+        # Get all edges between these files
+        placeholders = ",".join("?" * len(file_ids))
+        edges = storage.conn.execute(f"""
+            SELECT src_file_id, dst_file_id, pair_count, jaccard, jaccard_weighted,
+                   p_dst_given_src, p_src_given_dst
+            FROM edges
+            WHERE src_file_id IN ({placeholders}) AND dst_file_id IN ({placeholders})
+        """, list(file_ids) + list(file_ids)).fetchall()
+        
+        edges_list = [
             {
-                "run_id": run_id,
-                "generated_at": datetime.datetime.utcnow().isoformat(),
+                "src_file_id": e[0], "dst_file_id": e[1], "pair_count": e[2],
+                "jaccard": e[3], "jaccard_weighted": e[4],
+                "p_dst_given_src": e[5], "p_src_given_dst": e[6]
             }
+            for e in edges
+        ]
+        
+        # Run algorithm
+        algo = get_algorithm(request.algorithm)
+        result = algo.run(
+            edges_list,
+            file_ids,
+            file_paths,
+            {**request.params, "weight_column": request.weight_column, "min_weight": request.min_weight}
         )
-        save_clusters(_cluster_results_path(paths, run_id), results)
-        _write_status(
-            status_path,
-            {
-                "state": "complete",
-                "stage": "complete",
-                "run_id": run_id,
-                "cluster_count": results["cluster_count"],
-                "started_at": started_at,
-                "updated_at": datetime.datetime.utcnow().isoformat(),
-            },
-        )
-    except Exception as exc:
-        _write_status(
-            status_path,
-            {
-                "state": "failed",
-                "stage": "error",
-                "run_id": run_id,
-                "error": str(exc),
-                "started_at": started_at,
-                "updated_at": datetime.datetime.utcnow().isoformat(),
-            },
-        )
-        raise
+        
+        return result.to_dict()
+    finally:
+        storage.close()
 
 
-@app.post("/repos/{repo_id}/clusters/start")
-def start_cluster(repo_id: str, request: ClusterRequest, background_tasks: BackgroundTasks) -> dict:
-    paths = _paths(repo_id, request.data_dir)
-    run_id = uuid.uuid4().hex[:10]
-    background_tasks.add_task(_run_cluster_job, repo_id, run_id, request)
-    _write_status(
-        paths.runs_dir / "cluster_latest.json",
-        {
-            "run_id": run_id,
-            "requested_at": datetime.datetime.utcnow().isoformat(),
-        },
-    )
-    return {"state": "queued", "run_id": run_id}
-
-
-@app.get("/repos/{repo_id}/clusters/{run_id}/status")
-def cluster_status(repo_id: str, run_id: str, data_dir: str = "data") -> dict:
-    paths = _paths(repo_id, data_dir)
-    status = _read_status(_cluster_status_path(paths, run_id))
-    if not status:
-        return {"state": "not_started", "run_id": run_id}
-    return status
-
-
-@app.get("/repos/{repo_id}/clusters/{run_id}")
-def cluster_results(repo_id: str, run_id: str, data_dir: str = "data") -> dict:
-    paths = _paths(repo_id, data_dir)
-    results_path = _cluster_results_path(paths, run_id)
-    if not results_path.exists():
-        raise HTTPException(status_code=404, detail="Cluster results not found.")
-    return json.loads(results_path.read_text())
-
-
-@app.get("/repos/{repo_id}/clusters/latest")
-def cluster_latest(repo_id: str, data_dir: str = "data") -> dict:
-    paths = _paths(repo_id, data_dir)
-    latest_path = paths.runs_dir / "cluster_latest.json"
-    if not latest_path.exists():
-        raise HTTPException(status_code=404, detail="No cluster run found.")
-    return json.loads(latest_path.read_text())
-
-
+# Legacy endpoint compatibility
 @app.get("/repos/{repo_id}/impact")
 def impact(repo_id: str, path: str, top: int = 20, data_dir: str = "data") -> List[dict]:
-    paths = _paths(repo_id, data_dir)
-    index_path = paths.indexes_dir / "file_index.sqlite"
-    edges_path = paths.edges_dir / "edges_file_topk.parquet"
-    if not index_path.exists() or not edges_path.exists():
-        raise HTTPException(status_code=404, detail="Required artifacts not found")
-
-    file_id = _file_id_for_path(index_path, path)
-    rows = list(_edges_for_file(edges_path, file_id))
-    rows.sort(key=lambda row: row["weight_jaccard"], reverse=True)
-    return rows[:top]
-
-
-@app.get("/repos/{repo_id}/impact/folders")
-def impact_folders(
-    repo_id: str,
-    path: str,
-    top: int = 10,
-    depth: int = 2,
-    data_dir: str = "data",
-) -> List[dict]:
-    paths = _paths(repo_id, data_dir)
-    index_path = paths.indexes_dir / "file_index.sqlite"
-    edges_path = paths.edges_dir / "edges_file_topk.parquet"
-    if not index_path.exists() or not edges_path.exists():
-        raise HTTPException(status_code=404, detail="Required artifacts not found")
-
-    file_id = _file_id_for_path(index_path, path)
-    rows = list(_edges_for_file(edges_path, file_id))
-    node_ids = {file_id}
-    for row in rows:
-        node_ids.add(row["src_file_id"])
-        node_ids.add(row["dst_file_id"])
-    paths_map = _paths_for_ids(index_path, node_ids)
-
-    folder_totals: dict[str, dict[str, float]] = {}
-    for row in rows:
-        src_path = paths_map.get(row["src_file_id"], "")
-        dst_path = paths_map.get(row["dst_file_id"], "")
-        other_path = dst_path if row["src_file_id"] == file_id else src_path
-        folder = _folder_at_depth(other_path, depth) or "(root)"
-        entry = folder_totals.setdefault(folder, {"weight_total": 0.0, "edge_count": 0})
-        entry["weight_total"] += float(row["weight_jaccard"])
-        entry["edge_count"] += 1
-
-    ranked = [
-        {"folder": folder, "weight_total": data["weight_total"], "edge_count": data["edge_count"]}
-        for folder, data in folder_totals.items()
-    ]
-    ranked.sort(key=lambda item: item["weight_total"], reverse=True)
-    return ranked[:top]
-
-
-@app.get("/repos/{repo_id}/files/{path:path}/lineage")
-def file_lineage(repo_id: str, path: str, data_dir: str = "data") -> List[dict]:
-    paths = _paths(repo_id, data_dir)
-    index_path = paths.indexes_dir / "file_index.sqlite"
-    lineage_path = paths.artifacts_root / "file_lineage.parquet"
-    if not index_path.exists() or not lineage_path.exists():
-        raise HTTPException(status_code=404, detail="Required artifacts not found")
-
-    file_id = _file_id_for_path(index_path, path)
-    dataset = ds.dataset(lineage_path)
-    table = dataset.to_table(
-        columns=["file_id", "path", "start_commit_oid", "end_commit_oid"],
-        filter=ds.field("file_id") == file_id,
-    )
-    rows = table.to_pylist()
-    rows.sort(key=lambda row: row.get("start_commit_oid") or "")
-    return rows
+    """Legacy impact endpoint - returns coupled files."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        file_info = storage.get_file_by_path(path)
+        if not file_info:
+            raise HTTPException(404, f"File not found: {path}")
+        
+        edges = storage.get_edges_for_file(file_info["file_id"], limit=top)
+        return edges
+    finally:
+        storage.close()
 
 
 @app.get("/repos/{repo_id}/impact/graph")
 def impact_graph(repo_id: str, path: str, top: int = 20, data_dir: str = "data") -> dict:
-    paths = _paths(repo_id, data_dir)
-    index_path = paths.indexes_dir / "file_index.sqlite"
-    edges_path = paths.edges_dir / "edges_file_topk.parquet"
-    if not index_path.exists() or not edges_path.exists():
-        raise HTTPException(status_code=404, detail="Required artifacts not found")
-
-    file_id = _file_id_for_path(index_path, path)
-    rows = list(_edges_for_file(edges_path, file_id))
-    rows.sort(key=lambda row: row["weight_jaccard"], reverse=True)
-    rows = rows[:top]
-    node_ids = {file_id}
-    for row in rows:
-        node_ids.add(row["src_file_id"])
-        node_ids.add(row["dst_file_id"])
-    paths_map = _paths_for_ids(index_path, node_ids)
-    nodes = [
-        {"id": node_id, "path": paths_map.get(node_id, f"file:{node_id}")}
-        for node_id in sorted(node_ids)
-    ]
-    edges = [
-        {
-            "source": row["src_file_id"],
-            "target": row["dst_file_id"],
-            "weight": row["weight_jaccard"],
-            "pair_count": row["pair_count"],
-        }
-        for row in rows
-    ]
-    return {"nodes": nodes, "edges": edges, "focus_id": file_id}
+    """Legacy graph endpoint."""
+    return get_coupling_graph(repo_id, path, limit=top, data_dir=data_dir)

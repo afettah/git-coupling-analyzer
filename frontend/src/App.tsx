@@ -64,6 +64,7 @@ function App() {
           <RepoList
             repos={repos}
             onSelect={(id) => setSelectedRepoId(id)}
+            onDeleted={(id) => setRepos(repos.filter(r => r.id !== id))}
           />
         )}
       </main>

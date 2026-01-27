@@ -1,66 +1,126 @@
 import { useState, useEffect } from 'react';
-import { getFolderTree } from '../api';
-import { ChevronRight, ChevronDown, Folder, FileCode } from 'lucide-react';
+import { getFileTree } from '../api';
 
 interface FolderTreeProps {
     repoId: string;
+    onFileSelect?: (path: string) => void;
 }
 
-export default function FolderTree({ repoId }: FolderTreeProps) {
-    const [tree, setTree] = useState<any>(null);
+interface TreeNode {
+    __type?: 'file' | 'dir';
+    __children?: Record<string, TreeNode>;
+    file_id?: number;
+    commits?: number;
+    [key: string]: any;
+}
+
+export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
+    const [tree, setTree] = useState<Record<string, TreeNode>>({});
     const [loading, setLoading] = useState(true);
+    const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
     useEffect(() => {
-        getFolderTree(repoId).then(setTree).finally(() => setLoading(false));
+        loadTree();
     }, [repoId]);
 
-    if (loading) return <div className="p-8 text-center text-slate-500">Loading tree...</div>;
-    if (!tree) return <div className="p-8 text-center text-slate-500">No tree data found</div>;
+    const loadTree = async () => {
+        setLoading(true);
+        try {
+            const data = await getFileTree(repoId);
+            setTree(data);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    return (
-        <div className="p-8 max-w-4xl mx-auto w-full">
-            <h2 className="text-2xl font-bold mb-6">Repository Structure</h2>
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-                <TreeNode name="/" subtree={tree} depth={0} />
-            </div>
-        </div>
-    );
-}
+    const toggleExpand = (path: string) => {
+        const next = new Set(expanded);
+        if (next.has(path)) {
+            next.delete(path);
+        } else {
+            next.add(path);
+        }
+        setExpanded(next);
+    };
 
-function TreeNode({ name, subtree, depth }: { name: string, subtree: any, depth: number }) {
-    const [isOpen, setIsOpen] = useState(depth < 1);
-    const isFolder = Object.keys(subtree).length > 0;
+    const renderNode = (name: string, node: TreeNode, path: string, depth: number) => {
+        const fullPath = path ? `${path}/${name}` : name;
+        const isDir = node.__type === 'dir' || node.__children;
+        const isExpanded = expanded.has(fullPath);
 
-    return (
-        <div className="select-none">
-            <div
-                className={`flex items-center gap-2 py-1 px-2 rounded cursor-pointer hover:bg-slate-800/50 transition-colors ${depth === 0 ? 'text-sky-400 font-bold' : 'text-slate-300'}`}
-                onClick={() => isFolder && setIsOpen(!isOpen)}
-                style={{ paddingLeft: `${depth * 16 + 8}px` }}
-            >
-                {isFolder ? (
-                    <>
-                        {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                        <Folder size={16} className="text-amber-500/80" fill="currentColor" />
-                    </>
-                ) : (
-                    <FileCode size={16} className="text-slate-500 ml-3.5" />
-                )}
-                <span className="text-sm">{name}</span>
-            </div>
-
-            {isOpen && isFolder && (
-                <div>
-                    {Object.entries(subtree).map(([childName, childSubtree]) => (
-                        <TreeNode
-                            key={childName}
-                            name={childName}
-                            subtree={childSubtree}
-                            depth={depth + 1}
-                        />
-                    ))}
+        if (isDir) {
+            const children = node.__children || {};
+            return (
+                <div key={fullPath}>
+                    <div
+                        className="flex items-center gap-1 py-1 px-2 hover:bg-slate-800 rounded cursor-pointer text-sm"
+                        style={{ paddingLeft: `${depth * 16 + 8}px` }}
+                        onClick={() => toggleExpand(fullPath)}
+                    >
+                        <span className="text-slate-500">{isExpanded ? '▼' : '▶'}</span>
+                        <span className="text-amber-400">📁</span>
+                        <span className="text-slate-300">{name}</span>
+                    </div>
+                    {isExpanded && (
+                        <div>
+                            {Object.entries(children)
+                                .sort(([a, nodeA], [b, nodeB]) => {
+                                    const aIsDir = nodeA.__type === 'dir' || nodeA.__children;
+                                    const bIsDir = nodeB.__type === 'dir' || nodeB.__children;
+                                    if (aIsDir && !bIsDir) return -1;
+                                    if (!aIsDir && bIsDir) return 1;
+                                    return a.localeCompare(b);
+                                })
+                                .map(([childName, childNode]) =>
+                                    renderNode(childName, childNode, fullPath, depth + 1)
+                                )}
+                        </div>
+                    )}
                 </div>
-            )}
+            );
+        }
+
+        // File node
+        return (
+            <div
+                key={fullPath}
+                className="flex items-center gap-1 py-1 px-2 hover:bg-slate-800 rounded cursor-pointer text-sm"
+                style={{ paddingLeft: `${depth * 16 + 24}px` }}
+                onClick={() => onFileSelect?.(fullPath)}
+            >
+                <span className="text-sky-400">📄</span>
+                <span className="text-slate-400">{name}</span>
+                {node.commits && (
+                    <span className="text-xs text-slate-600 ml-auto">{node.commits}</span>
+                )}
+            </div>
+        );
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center py-12">
+                <span className="text-slate-500">Loading...</span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="p-4 overflow-auto">
+            <h3 className="text-sm font-bold text-slate-400 mb-4">Current Files</h3>
+            <div className="font-mono text-xs">
+                {Object.entries(tree)
+                    .sort(([a, nodeA], [b, nodeB]) => {
+                        const aIsDir = nodeA.__type === 'dir' || nodeA.__children;
+                        const bIsDir = nodeB.__type === 'dir' || nodeB.__children;
+                        if (aIsDir && !bIsDir) return -1;
+                        if (!aIsDir && bIsDir) return 1;
+                        return a.localeCompare(b);
+                    })
+                    .map(([name, node]) => renderNode(name, node, '', 0))}
+            </div>
         </div>
     );
 }

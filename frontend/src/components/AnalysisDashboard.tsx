@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { type RepoInfo, type AnalysisStatus, getAnalysisStatus, startAnalysis } from '../api';
-import { ArrowLeft, Play, BarChart3, Network, Box, Settings2, Loader2, GitCommit } from 'lucide-react';
+import { ArrowLeft, Play, BarChart3, Network, Box, Settings2, Loader2, GitCommit, AlertTriangle } from 'lucide-react';
 import ImpactGraph from './ImpactGraph';
 import ClusteringView from './ClusteringView';
 import FolderTree from './FolderTree';
@@ -44,6 +44,7 @@ export default function AnalysisDashboard({ repo, onBack }: AnalysisDashboardPro
 
     const isComplete = status?.state === 'complete';
     const isRunning = status?.state === 'running';
+    const isFailed = status?.state === 'failed';
 
     return (
         <div className="flex h-screen bg-slate-950 text-slate-50">
@@ -123,7 +124,26 @@ export default function AnalysisDashboard({ repo, onBack }: AnalysisDashboardPro
 
             {/* Main Content */}
             <main className="flex-1 overflow-auto flex flex-col">
-                {!isComplete && !isRunning ? (
+                {isFailed ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+                        <div className="bg-red-500/10 p-6 rounded-2xl text-red-400 mb-6">
+                            <AlertTriangle size={64} />
+                        </div>
+                        <h2 className="text-3xl font-bold mb-4 text-red-400">Analysis Failed</h2>
+                        <div className="bg-slate-900 border border-red-500/30 rounded-xl p-4 max-w-2xl mx-auto mb-8">
+                            <p className="text-sm text-slate-300 font-mono break-all">
+                                {status?.error || 'Unknown error occurred'}
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleStartAnalysis}
+                            disabled={loading}
+                            className="px-8 py-3 bg-sky-500 hover:bg-sky-400 text-slate-900 font-bold rounded-xl transition-all shadow-xl shadow-sky-500/20 text-lg"
+                        >
+                            {loading ? 'Starting...' : 'Retry Analysis'}
+                        </button>
+                    </div>
+                ) : !isComplete && !isRunning ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
                         <div className="bg-sky-500/10 p-6 rounded-2xl text-sky-400 mb-6">
                             <GitCommit size={64} />
