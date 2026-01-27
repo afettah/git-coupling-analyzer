@@ -1,15 +1,21 @@
 from __future__ import annotations
 
+import datetime
+import json
+import uuid
 from pathlib import Path
 from typing import Iterable, List
 
-from fastapi import FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
 
+from lfca.cluster import ClusterConfig, build_clusters, save_clusters
 from lfca.config import RepoPaths
 from lfca.edges import EdgeBuilder, EdgeConfig
 from lfca.extract import ExtractConfig, HistoryExtractor
+from lfca.git import count_commits
 from lfca.mirror import mirror_repo
 import pyarrow.parquet as pq
 import pyarrow.dataset as ds
@@ -87,6 +93,51 @@ def _folder_at_depth(path: str, depth: int) -> str:
     return "/".join(parts[:depth])
 
 
+def _analysis_status_path(paths: RepoPaths) -> Path:
+    return paths.runs_dir / "analysis_status.json"
+
+
+def _cluster_status_path(paths: RepoPaths, run_id: str) -> Path:
+    return paths.runs_dir / f"cluster_{run_id}_status.json"
+
+
+def _cluster_results_path(paths: RepoPaths, run_id: str) -> Path:
+    return paths.runs_dir / f"cluster_{run_id}.json"
+
+
+def _write_status(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.with_suffix(".tmp")
+    tmp_path.write_text(json.dumps(payload, indent=2))
+    tmp_path.replace(path)
+
+
+def _read_status(path: Path) -> dict | None:
+    if not path.exists():
+        return None
+    return json.loads(path.read_text())
+
+
+class AnalyzeRequest(BaseModel):
+    repo_path: str
+    since: str | None = None
+    until: str | None = None
+    max_files_per_commit: int = 300
+    bulk_policy: str = "downweight"
+    topk_edges_per_file: int = 50
+    merge_policy: str = "include"
+    merge_downweight: float = 0.5
+    parallel_postprocessing: bool = False
+    data_dir: str = "data"
+
+
+class ClusterRequest(BaseModel):
+    algorithm: str = "components"
+    min_weight: float = Field(0.2, ge=0.0, le=1.0)
+    folders: list[str] = Field(default_factory=list)
+    data_dir: str = "data"
+
+
 @app.get("/")
 def index() -> FileResponse:
     if not _STATIC_DIR.exists():
@@ -136,54 +187,227 @@ def list_files(repo_id: str, q: str | None = None, limit: int = 200, data_dir: s
     return [row[0] for row in rows]
 
 
-@app.post("/repos/{repo_id}/analyze")
-def analyze_repo(
-    repo_id: str,
-    repo_path: str,
-    since: str | None = None,
-    until: str | None = None,
-    max_files_per_commit: int = 300,
-    bulk_policy: str = "downweight",
-    topk_edges_per_file: int = 50,
-    merge_policy: str = "include",
-    merge_downweight: float = 0.5,
-    parallel_postprocessing: bool = False,
-    data_dir: str = "data",
-) -> dict:
+def _run_analysis_job(repo_id: str, request: AnalyzeRequest) -> None:
+    paths = _paths(repo_id, request.data_dir)
+    status_path = _analysis_status_path(paths)
+    started_at = datetime.datetime.utcnow().isoformat()
+    total_commits = count_commits(Path(request.repo_path), since=request.since, until=request.until)
+    _write_status(
+        status_path,
+        {
+            "state": "running",
+            "stage": "extracting",
+            "processed_commits": 0,
+            "total_commits": total_commits,
+            "progress": 0.0,
+            "started_at": started_at,
+            "updated_at": started_at,
+        },
+    )
+    try:
+        mirror_repo(Path(request.repo_path), paths)
+        extractor = HistoryExtractor(
+            Path(request.repo_path),
+            paths,
+            ExtractConfig(
+                max_files_per_commit=request.max_files_per_commit,
+                bulk_policy=request.bulk_policy,
+                merge_policy=request.merge_policy,
+                parallel_postprocessing=request.parallel_postprocessing,
+            ),
+        )
+
+        def _update_progress(commit_count: int) -> None:
+            progress = 1.0 if total_commits == 0 else min(commit_count / total_commits, 1.0)
+            _write_status(
+                status_path,
+                {
+                    "state": "running",
+                    "stage": "extracting",
+                    "processed_commits": commit_count,
+                    "total_commits": total_commits,
+                    "progress": progress,
+                    "started_at": started_at,
+                    "updated_at": datetime.datetime.utcnow().isoformat(),
+                },
+            )
+
+        stats = extractor.run(since=request.since, until=request.until, progress_callback=_update_progress)
+
+        _write_status(
+            status_path,
+            {
+                "state": "running",
+                "stage": "building_edges",
+                "processed_commits": stats.commit_count,
+                "total_commits": total_commits,
+                "progress": 1.0 if total_commits == 0 else min(stats.commit_count / total_commits, 1.0),
+                "started_at": started_at,
+                "updated_at": datetime.datetime.utcnow().isoformat(),
+            },
+        )
+
+        from lfca.cli import _iter_transactions_from_parquet
+
+        transactions = _iter_transactions_from_parquet(
+            paths, merge_policy=request.merge_policy, merge_downweight=request.merge_downweight
+        )
+        EdgeBuilder(
+            paths,
+            EdgeConfig(
+                max_files_per_commit=request.max_files_per_commit,
+                bulk_policy=request.bulk_policy,
+                topk_edges_per_file=request.topk_edges_per_file,
+                merge_policy=request.merge_policy,
+                merge_downweight=request.merge_downweight,
+            ),
+        ).build(transactions)
+        _write_status(
+            status_path,
+            {
+                "state": "complete",
+                "stage": "complete",
+                "processed_commits": stats.commit_count,
+                "total_commits": total_commits,
+                "progress": 1.0,
+                "commit_count": stats.commit_count,
+                "change_count": stats.change_count,
+                "transaction_count": stats.transaction_count,
+                "started_at": started_at,
+                "updated_at": datetime.datetime.utcnow().isoformat(),
+            },
+        )
+    except Exception as exc:
+        _write_status(
+            status_path,
+            {
+                "state": "failed",
+                "stage": "error",
+                "processed_commits": 0,
+                "total_commits": total_commits,
+                "progress": 0.0,
+                "error": str(exc),
+                "started_at": started_at,
+                "updated_at": datetime.datetime.utcnow().isoformat(),
+            },
+        )
+        raise
+
+
+@app.post("/repos/{repo_id}/analysis/start")
+def start_analysis(repo_id: str, request: AnalyzeRequest, background_tasks: BackgroundTasks) -> dict:
+    paths = _paths(repo_id, request.data_dir)
+    status_path = _analysis_status_path(paths)
+    status = _read_status(status_path)
+    if status and status.get("state") == "running":
+        raise HTTPException(status_code=409, detail="Analysis is already running.")
+    background_tasks.add_task(_run_analysis_job, repo_id, request)
+    return {"state": "queued"}
+
+
+@app.get("/repos/{repo_id}/analysis/status")
+def analysis_status(repo_id: str, data_dir: str = "data") -> dict:
     paths = _paths(repo_id, data_dir)
-    mirror_repo(Path(repo_path), paths)
-    extractor = HistoryExtractor(
-        Path(repo_path),
-        paths,
-        ExtractConfig(
-            max_files_per_commit=max_files_per_commit,
-            bulk_policy=bulk_policy,
-            merge_policy=merge_policy,
-            parallel_postprocessing=parallel_postprocessing,
-        ),
-    )
-    stats = extractor.run(since=since, until=until)
+    status = _read_status(_analysis_status_path(paths))
+    if not status:
+        return {"state": "not_started"}
+    return status
 
-    from lfca.cli import _iter_transactions_from_parquet
 
-    transactions = _iter_transactions_from_parquet(
-        paths, merge_policy=merge_policy, merge_downweight=merge_downweight
+def _run_cluster_job(repo_id: str, run_id: str, request: ClusterRequest) -> None:
+    paths = _paths(repo_id, request.data_dir)
+    status_path = _cluster_status_path(paths, run_id)
+    started_at = datetime.datetime.utcnow().isoformat()
+    _write_status(
+        status_path,
+        {
+            "state": "running",
+            "stage": "clustering",
+            "run_id": run_id,
+            "started_at": started_at,
+            "updated_at": started_at,
+        },
     )
-    EdgeBuilder(
-        paths,
-        EdgeConfig(
-            max_files_per_commit=max_files_per_commit,
-            bulk_policy=bulk_policy,
-            topk_edges_per_file=topk_edges_per_file,
-            merge_policy=merge_policy,
-            merge_downweight=merge_downweight,
-        ),
-    ).build(transactions)
-    return {
-        "commit_count": stats.commit_count,
-        "change_count": stats.change_count,
-        "transaction_count": stats.transaction_count,
-    }
+    try:
+        config = ClusterConfig(
+            algorithm=request.algorithm,
+            min_weight=request.min_weight,
+            folders=tuple(request.folders),
+        )
+        results = build_clusters(paths, config)
+        results.update(
+            {
+                "run_id": run_id,
+                "generated_at": datetime.datetime.utcnow().isoformat(),
+            }
+        )
+        save_clusters(_cluster_results_path(paths, run_id), results)
+        _write_status(
+            status_path,
+            {
+                "state": "complete",
+                "stage": "complete",
+                "run_id": run_id,
+                "cluster_count": results["cluster_count"],
+                "started_at": started_at,
+                "updated_at": datetime.datetime.utcnow().isoformat(),
+            },
+        )
+    except Exception as exc:
+        _write_status(
+            status_path,
+            {
+                "state": "failed",
+                "stage": "error",
+                "run_id": run_id,
+                "error": str(exc),
+                "started_at": started_at,
+                "updated_at": datetime.datetime.utcnow().isoformat(),
+            },
+        )
+        raise
+
+
+@app.post("/repos/{repo_id}/clusters/start")
+def start_cluster(repo_id: str, request: ClusterRequest, background_tasks: BackgroundTasks) -> dict:
+    paths = _paths(repo_id, request.data_dir)
+    run_id = uuid.uuid4().hex[:10]
+    background_tasks.add_task(_run_cluster_job, repo_id, run_id, request)
+    _write_status(
+        paths.runs_dir / "cluster_latest.json",
+        {
+            "run_id": run_id,
+            "requested_at": datetime.datetime.utcnow().isoformat(),
+        },
+    )
+    return {"state": "queued", "run_id": run_id}
+
+
+@app.get("/repos/{repo_id}/clusters/{run_id}/status")
+def cluster_status(repo_id: str, run_id: str, data_dir: str = "data") -> dict:
+    paths = _paths(repo_id, data_dir)
+    status = _read_status(_cluster_status_path(paths, run_id))
+    if not status:
+        return {"state": "not_started", "run_id": run_id}
+    return status
+
+
+@app.get("/repos/{repo_id}/clusters/{run_id}")
+def cluster_results(repo_id: str, run_id: str, data_dir: str = "data") -> dict:
+    paths = _paths(repo_id, data_dir)
+    results_path = _cluster_results_path(paths, run_id)
+    if not results_path.exists():
+        raise HTTPException(status_code=404, detail="Cluster results not found.")
+    return json.loads(results_path.read_text())
+
+
+@app.get("/repos/{repo_id}/clusters/latest")
+def cluster_latest(repo_id: str, data_dir: str = "data") -> dict:
+    paths = _paths(repo_id, data_dir)
+    latest_path = paths.runs_dir / "cluster_latest.json"
+    if not latest_path.exists():
+        raise HTTPException(status_code=404, detail="No cluster run found.")
+    return json.loads(latest_path.read_text())
 
 
 @app.get("/repos/{repo_id}/impact")
