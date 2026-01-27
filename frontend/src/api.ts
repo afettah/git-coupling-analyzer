@@ -84,8 +84,39 @@ export interface ClusterResult {
         id: number;
         size: number;
         files: string[];
+        total_churn?: number;
+        avg_coupling?: number;
+        hot_files?: Array<{ path: string; churn: number }>;
+        top_commits?: Array<{ oid: string; message: string; author: string; file_count: number }>;
+        common_authors?: Array<{ name: string; email: string; commit_count: number }>;
     }>;
     metrics: Record<string, any>;
+}
+
+export interface ComparisonResult {
+    comparisons: Array<{
+        old_id: number | null;
+        new_id: number | null;
+        overlap_count?: number;
+        overlap_ratio?: number;
+        status: 'stable' | 'drifted' | 'dissolved' | 'new';
+        size_diff?: number;
+    }>;
+    flows: Array<{
+        source: number;
+        target: number;
+        value: number;
+    }>;
+    nodes: {
+        old: Array<{ id: number; size: number }>;
+        new: Array<{ id: number; size: number }>;
+    };
+    summary: {
+        stable: number;
+        drifted: number;
+        dissolved: number;
+        new: number;
+    };
 }
 
 export interface AnalysisConfig {
@@ -128,8 +159,13 @@ export const getAnalysisStatus = (repoId: string) =>
 export const getFileTree = (repoId: string) =>
     api.get(`/repos/${repoId}/files/tree`).then(res => res.data);
 
-export const listFiles = (repoId: string, params?: { q?: string; current_only?: boolean }) =>
-    api.get<FileInfo[]>(`/repos/${repoId}/files`, { params }).then(res => res.data);
+export const listFiles = (repoId: string, params?: {
+    q?: string;
+    current_only?: boolean;
+    limit?: number;
+    sort_by?: 'path' | 'commits';
+    sort_dir?: 'asc' | 'desc';
+}) => api.get<FileInfo[]>(`/repos/${repoId}/files`, { params }).then(res => res.data);
 
 export const getFolders = (repoId: string, depth?: number) =>
     api.get<string[]>(`/repos/${repoId}/folders`, { params: { depth } }).then(res => res.data);
@@ -168,6 +204,18 @@ export const getClusteringAlgorithms = (repoId: string) =>
 
 export const runClustering = (repoId: string, config: ClusterConfig) =>
     api.post<ClusterResult>(`/repos/${repoId}/clustering/run`, config).then(res => res.data);
+
+export const saveClusteringSnapshot = (repoId: string, name: string, result: ClusterResult) =>
+    api.post(`/repos/${repoId}/clustering/snapshots`, { name, result }).then(res => res.data);
+
+export const getClusteringSnapshots = (repoId: string) =>
+    api.get<Array<{ id: string; name: string; algorithm: string; created_at: string }>>(`/repos/${repoId}/clustering/snapshots`).then(res => res.data);
+
+export const getClusteringSnapshot = (repoId: string, snapshotId: string) =>
+    api.get<{ name: string; result: ClusterResult }>(`/repos/${repoId}/clustering/snapshots/${snapshotId}`).then(res => res.data);
+
+export const compareClusteringSnapshots = (repoId: string, base: string, head: string) =>
+    api.get<ComparisonResult>(`/repos/${repoId}/clustering/compare`, { params: { base, head } }).then(res => res.data);
 
 // Legacy compatibility
 export const getImpact = (repoId: string, params: { path: string; top?: number }) =>

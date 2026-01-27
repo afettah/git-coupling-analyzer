@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import { getImpactGraph, getImpact, getLineage } from '../api';
+import { getImpactGraph, getImpact, getLineage, listFiles, type ApiErrorInfo } from '../api';
 import { Search, Info, History } from 'lucide-react';
 
 interface ImpactGraphProps {
@@ -15,28 +15,13 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
     const [data, setData] = useState<any>(null);
     const [impacts, setImpacts] = useState<any[]>([]);
     const [lineage, setLineage] = useState<any[]>([]);
+    const [suggestedPaths, setSuggestedPaths] = useState<string[]>([]);
+    const [errorMessage, setErrorMessage] = useState<string>('');
+    const [autoLoaded, setAutoLoaded] = useState(false);
 
-    const loadData = async (path: string) => {
-        if (!path) return;
-        setLoading(true);
-        try {
-            const g = await getImpactGraph(repoId, { path, top: topEdges });
-            const imp = await getImpact(repoId, { path, top: 10 });
-            const lin = await getLineage(repoId, path);
-
-            setData(g);
-            setImpacts(imp);
-            setLineage(lin);
-            renderChart(g);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const renderChart = (graph: any) => {
+    const renderChart = useCallback((graph: any) => {
         if (!svgRef.current) return;
+        if (!graph || !graph.nodes || !graph.edges) return;
         const width = svgRef.current.clientWidth;
         const height = svgRef.current.clientHeight;
         const svg = d3.select(svgRef.current);
@@ -99,7 +84,66 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
             .on('zoom', (event) => {
                 g.attr('transform', event.transform);
             }) as any);
-    };
+    }, []);
+
+    const loadData = useCallback(async (path: string) => {
+        const trimmedPath = path.trim();
+        if (!trimmedPath) {
+            setErrorMessage('Enter a file path or pick a preset.');
+            return;
+        }
+        setLoading(true);
+        setErrorMessage('');
+        try {
+            const g = await getImpactGraph(repoId, { path: trimmedPath, top: topEdges });
+            const imp = await getImpact(repoId, { path: trimmedPath, top: 10 });
+            const lin = await getLineage(repoId, trimmedPath);
+
+            setData(g);
+            setImpacts(imp);
+            setLineage(lin);
+            renderChart(g);
+        } catch (e) {
+            const apiError = e as ApiErrorInfo;
+            if (apiError?.status === 404) {
+                setErrorMessage('File not found. Pick a file from the tree or a preset.');
+            } else if (apiError?.code) {
+                setErrorMessage(apiError.message || 'Failed to load impact data.');
+            } else {
+                setErrorMessage('Failed to load impact data.');
+            }
+            setData(null);
+            setImpacts([]);
+            setLineage([]);
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    }, [renderChart, repoId, topEdges]);
+
+    useEffect(() => {
+        const loadPresets = async () => {
+            try {
+                const files = await listFiles(repoId, {
+                    current_only: true,
+                    limit: 6,
+                    sort_by: 'commits',
+                    sort_dir: 'desc',
+                });
+                const paths = files.map((f) => f.path).filter(Boolean);
+                setSuggestedPaths(paths);
+                if (!filePath && paths.length && !autoLoaded) {
+                    setFilePath(paths[0]);
+                    await loadData(paths[0]);
+                    setAutoLoaded(true);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        loadPresets();
+    }, [autoLoaded, filePath, loadData, repoId]);
 
     const drag = (simulation: any) => {
         function dragstarted(event: any) {
@@ -136,6 +180,27 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                             onKeyDown={(e) => e.key === 'Enter' && loadData(filePath)}
                             className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-sky-500 outline-none"
                         />
+                        {errorMessage && (
+                            <div className="mt-2 text-xs text-rose-400">{errorMessage}</div>
+                        )}
+                        {!errorMessage && suggestedPaths.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                                <span className="text-slate-500">Presets:</span>
+                                {suggestedPaths.map((path) => (
+                                    <button
+                                        key={path}
+                                        onClick={() => {
+                                            setFilePath(path);
+                                            loadData(path);
+                                        }}
+                                        className="px-2 py-0.5 rounded border border-slate-800 text-slate-300 hover:text-sky-300 hover:border-sky-400"
+                                        title={path}
+                                    >
+                                        {path.split('/').pop()}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     <button
                         onClick={() => loadData(filePath)}
@@ -152,6 +217,11 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                             Enter a file path to visualize its coupling graph
                         </div>
                     )}
+                    {data && !loading && data.edges?.length === 0 && (
+                        <div className="absolute inset-x-0 bottom-4 text-center text-xs text-slate-500">
+                            No coupled files found. Try another file, or lower coupling thresholds by rerunning analysis.
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -164,8 +234,8 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                             <h3 className="text-sm">What is an Impact Graph?</h3>
                         </div>
                         <div className="bg-slate-950 p-3 rounded border border-slate-800 text-xs text-slate-400 leading-relaxed">
-                            This graph visualizes <strong>Logical Coupling</strong>. It shows files that frequently change together in the same commits.
-                            A high percentage indicates that when one file is modified, these other files are often modified as well, suggesting a hidden dependency or shared responsibility.
+                            This graph visualizes <strong>Logical Coupling</strong>. It shows the most impacted files — the top co-changed neighbors of your selected file,
+                            ranked by Jaccard similarity across commits. A high percentage means the files often change together, suggesting a hidden dependency or shared responsibility.
                         </div>
                     </section>
 
@@ -178,7 +248,7 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                             {impacts.length ? impacts.map((imp, i) => (
                                 <div key={i} className="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between items-center text-xs">
                                     <div className="truncate pr-2 font-mono" title={imp.path}>{imp.path?.split('/').pop()}</div>
-                                    <div className="text-sky-400 font-bold">{(imp.weight_jaccard * 100).toFixed(1)}%</div>
+                                    <div className="text-sky-400 font-bold">{(imp.jaccard * 100).toFixed(1)}%</div>
                                 </div>
                             )) : <div className="text-slate-500 text-xs">No data loaded</div>}
                         </div>

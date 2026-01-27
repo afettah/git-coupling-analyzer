@@ -17,6 +17,7 @@ Requires-Dist: python-louvain>=0.16; extra == "clustering"
 Requires-Dist: scipy>=1.10.0; extra == "clustering"
 Requires-Dist: scikit-learn>=1.3.0; extra == "clustering"
 Requires-Dist: numpy>=1.24.0; extra == "clustering"
+Requires-Dist: pandas>=2.0.0; extra == "clustering"
 Provides-Extra: all
 Requires-Dist: lfca[api,clustering]; extra == "all"
 

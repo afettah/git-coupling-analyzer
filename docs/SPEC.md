@@ -411,10 +411,9 @@ Simple baseline for identifying isolated subgraphs.
 
 #### A. Impact Graph
 - **Network View**: Force-directed graph centered on a selected file.
-- **Controls**: 
-  - Metric selector (Jaccard vs Probability).
-  - Weight threshold slider.
-  - Neighborhood expansion.
+- **Impacted Files (Definition)**: The top co-changed neighbors of the focus file, ranked by Jaccard similarity from the precomputed edge table. Only files that exist at `HEAD` are included.
+- **Defaults**: Top 25 edges in the graph, Top 10 impacts in the sidebar, Jaccard similarity as the displayed percentage.
+- **Guidance**: When empty, prompt users to choose a valid path and suggest high-activity presets.
 
 #### B. Folder Aggregation
 - **Folder Heatmap**: Aggregate file-level edges to show folder-to-folder coupling.
@@ -428,10 +427,10 @@ Simple baseline for identifying isolated subgraphs.
 
 | Endpoint | Purpose |
 |----------|---------|
-| `GET /repos/{repo_id}/runs/{run_id}/impact/graph` | Impact graph for a file |
-| `GET /repos/{repo_id}/runs/{run_id}/impact/folders` | Folder-aggregated coupling |
-| `GET /repos/{repo_id}/runs/{run_id}/clusters/{cluster_run_id}/graph` | Cluster relationship graph |
-| `GET /repos/{repo_id}/runs/{run_id}/folder-heatmap` | Folder-to-folder coupling matrix |
+| `GET /repos/{repo_id}/impact/graph?path=...&top=25` | Impact graph for a file |
+| `GET /repos/{repo_id}/impact?path=...&top=10` | Impacted files list (co-changed neighbors) |
+| `GET /repos/{repo_id}/coupling/graph?path=...` | Coupling graph with metric filtering |
+| `GET /repos/{repo_id}/files?sort_by=commits&sort_dir=desc` | High-activity files for presets |
 
 ---
 

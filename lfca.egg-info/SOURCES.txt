@@ -26,6 +26,7 @@ lfca/clustering/base.py
 lfca/clustering/components.py
 lfca/clustering/dbscan.py
 lfca/clustering/hierarchical.py
+lfca/clustering/insights.py
 lfca/clustering/label_propagation.py
 lfca/clustering/louvain.py
 lfca/clustering/registry.py

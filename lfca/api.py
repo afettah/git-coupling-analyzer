@@ -18,6 +18,7 @@ import pyarrow.dataset as ds
 from lfca.config import RepoPaths, CouplingConfig
 from lfca.storage import Storage
 from lfca.sync import build_file_tree, get_folder_list
+from lfca.clustering.insights import calculate_cluster_insights, compare_clusters
 from lfca.logging_utils import get_logger
 
 logger = get_logger(__name__)
@@ -289,11 +290,18 @@ def list_files(
     q: str | None = None,
     current_only: bool = True,
     limit: int = 500,
+    sort_by: str = "path",
+    sort_dir: str = "asc",
     data_dir: str = "data"
 ) -> List[FileInfo]:
     """List files, optionally filtered by path prefix."""
     storage = get_storage(repo_id, data_dir)
     try:
+        if sort_by not in {"path", "commits"}:
+            raise HTTPException(status_code=400, detail="sort_by must be 'path' or 'commits'")
+        if sort_dir.lower() not in {"asc", "desc"}:
+            raise HTTPException(status_code=400, detail="sort_dir must be 'asc' or 'desc'")
+
         if current_only:
             query = """
                 SELECT file_id, path_current, exists_at_head, total_commits
@@ -310,8 +318,11 @@ def list_files(
         if q:
             query += " AND path_current LIKE ?"
             params.append(f"{q}%")
-        
-        query += f" ORDER BY path_current LIMIT {limit}"
+
+        sort_key = "path_current" if sort_by == "path" else "total_commits"
+        direction = "DESC" if sort_dir.lower() == "desc" else "ASC"
+
+        query += f" ORDER BY {sort_key} {direction} LIMIT {limit}"
         
         rows = storage.conn.execute(query, params).fetchall()
         return [
@@ -564,6 +575,12 @@ def analysis_status(repo_id: str, data_dir: str = "data") -> dict:
 
 # --- Clustering ---
 
+class SaveSnapshotRequest(BaseModel):
+    name: str
+    result: dict
+    data_dir: str = "data"
+
+
 @app.get("/repos/{repo_id}/clustering/algorithms")
 def list_clustering_algorithms(repo_id: str) -> list[dict]:
     """List available clustering algorithms with their parameters."""
@@ -624,9 +641,92 @@ def run_clustering(repo_id: str, request: ClusterRequest) -> dict:
             {**request.params, "weight_column": request.weight_column, "min_weight": request.min_weight}
         )
         
+        # Calculate insights
+        result = calculate_cluster_insights(storage, result, edges=edges_list)
+        
         return result.to_dict()
     finally:
         storage.close()
+
+
+@app.get("/repos/{repo_id}/clustering/snapshots")
+def list_snapshots(repo_id: str, data_dir: str = "data") -> list[dict]:
+    """List available clustering snapshots."""
+    paths = _paths(repo_id, data_dir)
+    if not paths.snapshots_dir.exists():
+        return []
+    
+    snapshots = []
+    for f in paths.snapshots_dir.glob("*.json"):
+        try:
+            with open(f, "r") as f_in:
+                data = json.load(f_in)
+                snapshots.append({
+                    "id": f.stem,
+                    "name": data.get("name", f.stem),
+                    "algorithm": data.get("result", {}).get("algorithm", "unknown"),
+                    "created_at": datetime.datetime.fromtimestamp(f.stat().st_mtime).isoformat()
+                })
+        except Exception:
+            logger.warning(f"Failed to read snapshot {f}")
+            
+    return sorted(snapshots, key=lambda x: x["created_at"], reverse=True)
+
+
+@app.post("/repos/{repo_id}/clustering/snapshots")
+def save_snapshot(repo_id: str, request: SaveSnapshotRequest) -> dict:
+    """Save a clustering snapshot."""
+    paths = _paths(repo_id, request.data_dir)
+    paths.ensure_dirs()
+    
+    snapshot_id = "".join(c if c.isalnum() else "_" for c in request.name.lower())
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{snapshot_id}_{timestamp}.json"
+    
+    snapshot_path = paths.snapshots_dir / filename
+    with open(snapshot_path, "w") as f_out:
+        json.dump({
+            "name": request.name,
+            "result": request.result
+        }, f_out)
+        
+    return {"id": filename.replace(".json", ""), "status": "saved"}
+
+
+@app.get("/repos/{repo_id}/clustering/snapshots/{snapshot_id}")
+def get_snapshot(repo_id: str, snapshot_id: str, data_dir: str = "data") -> dict:
+    """Load a clustering snapshot."""
+    paths = _paths(repo_id, data_dir)
+    snapshot_path = paths.snapshots_dir / f"{snapshot_id}.json"
+    
+    if not snapshot_path.exists():
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+        
+    with open(snapshot_path, "r") as f_in:
+        return json.load(f_in)
+
+
+@app.get("/repos/{repo_id}/clustering/compare")
+def compare_snapshots_endpoint(
+    repo_id: str,
+    base: str,
+    head: str,
+    data_dir: str = "data"
+) -> dict:
+    """Compare two clustering snapshots."""
+    paths = _paths(repo_id, data_dir)
+    
+    base_path = paths.snapshots_dir / f"{base}.json"
+    head_path = paths.snapshots_dir / f"{head}.json"
+    
+    if not base_path.exists() or not head_path.exists():
+        raise HTTPException(status_code=404, detail="One or both snapshots not found")
+        
+    with open(base_path, "r") as f1, open(head_path, "r") as f2:
+        base_data = json.load(f1)
+        head_data = json.load(f2)
+        
+    return compare_clusters(base_data['result'], head_data['result'])
 
 
 # Legacy endpoint compatibility
