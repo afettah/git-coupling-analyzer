@@ -7,6 +7,8 @@ from lfca.config import RepoPaths
 from lfca.edges import EdgeBuilder, EdgeConfig
 from lfca.extract import ExtractConfig, HistoryExtractor
 from lfca.mirror import mirror_repo
+from lfca.logging_utils import setup_logging
+import logging
 
 
 def _iter_transactions_from_parquet(
@@ -62,12 +64,15 @@ def _iter_transactions_from_parquet(
 
 
 def _cmd_mirror(args: argparse.Namespace) -> None:
-    mirror_repo(Path(args.repo_path), RepoPaths(Path(args.data_dir), args.repo_id))
+    paths = RepoPaths(Path(args.data_dir), args.repo_id)
+    setup_logging(log_file=paths.artifacts_root / "mirror.log", verbose=args.verbose)
+    mirror_repo(Path(args.repo_path), paths)
 
 
 def _cmd_analyze(args: argparse.Namespace) -> None:
     repo_path = Path(args.repo_path)
     paths = RepoPaths(Path(args.data_dir), args.repo_id)
+    setup_logging(log_file=paths.artifacts_root / "analysis.log", verbose=args.verbose)
     mirror_repo(repo_path, paths)
 
     extractor = HistoryExtractor(
@@ -98,17 +103,23 @@ def _cmd_analyze(args: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Logical File Coupling Analyzer")
-    parser.add_argument("--data-dir", default="data", help="Directory for LFCA artifacts")
-    parser.add_argument("--repo-id", required=True, help="Repository id")
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument("--data-dir", default="data", help="Directory for LFCA artifacts")
+    parent_parser.add_argument("--repo-id", required=True, help="Repository id")
+    parent_parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
 
+    parser = argparse.ArgumentParser(description="Logical File Coupling Analyzer")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    mirror = subparsers.add_parser("mirror", help="Create or update a mirror")
+    mirror = subparsers.add_parser(
+        "mirror", help="Create or update a mirror", parents=[parent_parser]
+    )
     mirror.add_argument("repo_path", help="Path to repository")
     mirror.set_defaults(func=_cmd_mirror)
 
-    analyze = subparsers.add_parser("analyze", help="Analyze a repository")
+    analyze = subparsers.add_parser(
+        "analyze", help="Analyze a repository", parents=[parent_parser]
+    )
     analyze.add_argument("repo_path", help="Path to repository")
     analyze.add_argument("--since", help="Analyze since date", default=None)
     analyze.add_argument("--until", help="Analyze until date", default=None)
@@ -130,6 +141,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
+    
+    # Global logging to data dir
+    setup_logging(log_file=Path(args.data_dir) / "lfca.log", verbose=args.verbose)
+    
     args.func(args)
 
 

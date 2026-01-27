@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Iterable, List
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -17,10 +18,22 @@ from lfca.edges import EdgeBuilder, EdgeConfig
 from lfca.extract import ExtractConfig, HistoryExtractor
 from lfca.git import count_commits
 from lfca.mirror import mirror_repo
+from lfca.logging_utils import get_logger, setup_logging
 import pyarrow.parquet as pq
 import pyarrow.dataset as ds
 
+logger = get_logger(__name__)
+
 app = FastAPI(title="LFCA API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
 if _STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
@@ -118,8 +131,22 @@ def _read_status(path: Path) -> dict | None:
     return json.loads(path.read_text())
 
 
+class RepoInfo(BaseModel):
+    id: str
+    name: str
+    path: str
+    last_analyzed: str | None = None
+    state: str = "not_started"
+
+
+class CreateRepoRequest(BaseModel):
+    path: str
+    name: str | None = None
+    data_dir: str = "data"
+
+
 class AnalyzeRequest(BaseModel):
-    repo_path: str
+    repo_path: str | None = None
     since: str | None = None
     until: str | None = None
     max_files_per_commit: int = 300
@@ -143,6 +170,80 @@ def index() -> FileResponse:
     if not _STATIC_DIR.exists():
         raise HTTPException(status_code=404, detail="Static frontend not found")
     return FileResponse(_STATIC_DIR / "index.html")
+
+
+@app.get("/repos", response_model=List[RepoInfo])
+def list_repositories(data_dir: str = "data") -> List[RepoInfo]:
+    repos_base = Path(data_dir) / "repos"
+    if not repos_base.exists():
+        return []
+    
+    results = []
+    for repo_dir in repos_base.iterdir():
+        if not repo_dir.is_dir():
+            continue
+        
+        repo_id = repo_dir.name
+        paths = _paths(repo_id, data_dir)
+        status = _read_status(_analysis_status_path(paths))
+        
+        # Try to find original path and name from status or config if we saved it
+        # For now, we'll infer it or return defaults
+        repo_path = ""
+        repo_name = repo_id
+        
+        last_analyzed = None
+        state = "not_started"
+        if status:
+            state = status.get("state", "not_started")
+            last_analyzed = status.get("updated_at")
+            # If we had saved the path in status
+            # repo_path = status.get("repo_path", "")
+
+        results.append(RepoInfo(
+            id=repo_id,
+            name=repo_name,
+            path=repo_path,
+            last_analyzed=last_analyzed,
+            state=state
+        ))
+    return results
+
+
+@app.post("/repos", response_model=RepoInfo)
+def create_repository(request: CreateRepoRequest) -> RepoInfo:
+    repo_path = Path(request.path)
+    if not repo_path.exists():
+        raise HTTPException(status_code=400, detail=f"Path does not exist: {request.path}")
+    
+    if request.name:
+        repo_name = request.name
+    else:
+        repo_name = repo_path.name or "unknown"
+    
+    # Simple slugify for repo_id
+    repo_id = "".join(c if c.isalnum() else "_" for c in repo_name.lower())
+    
+    paths = _paths(repo_id, request.data_dir)
+    paths.ensure_dirs()
+    
+    # Save a marker/initial status so we know about this repo
+    status_path = _analysis_status_path(paths)
+    if not status_path.exists():
+        _write_status(status_path, {
+            "state": "not_started",
+            "repo_path": str(repo_path),
+            "repo_name": repo_name,
+            "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        })
+    
+    return RepoInfo(
+        id=repo_id,
+        name=repo_name,
+        path=str(repo_path),
+        state="not_started"
+    )
 
 
 @app.get("/repos/{repo_id}/folders/tree")
@@ -190,8 +291,31 @@ def list_files(repo_id: str, q: str | None = None, limit: int = 200, data_dir: s
 def _run_analysis_job(repo_id: str, request: AnalyzeRequest) -> None:
     paths = _paths(repo_id, request.data_dir)
     status_path = _analysis_status_path(paths)
-    started_at = datetime.datetime.utcnow().isoformat()
-    total_commits = count_commits(Path(request.repo_path), since=request.since, until=request.until)
+    started_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    
+    repo_path = request.repo_path
+    if not repo_path:
+        status = _read_status(status_path)
+        if status:
+            repo_path = status.get("repo_path")
+    
+    if not repo_path:
+        _write_status(
+            status_path,
+            {
+                "state": "failed",
+                "stage": "error",
+                "error": "Missing repo_path in request and not found in existing repo config.",
+                "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            },
+        )
+        return
+    
+    # Setup per-repo logging
+    setup_logging(log_file=paths.artifacts_root / "analysis.log")
+    logger.info(f"Background analysis started for repo: {repo_id} at {repo_path}")
+
+    total_commits = count_commits(Path(repo_path), since=request.since, until=request.until)
     _write_status(
         status_path,
         {
@@ -202,12 +326,13 @@ def _run_analysis_job(repo_id: str, request: AnalyzeRequest) -> None:
             "progress": 0.0,
             "started_at": started_at,
             "updated_at": started_at,
+            "repo_path": str(repo_path), # Keep path
         },
     )
     try:
-        mirror_repo(Path(request.repo_path), paths)
+        mirror_repo(Path(repo_path), paths)
         extractor = HistoryExtractor(
-            Path(request.repo_path),
+            Path(repo_path),
             paths,
             ExtractConfig(
                 max_files_per_commit=request.max_files_per_commit,
@@ -228,7 +353,8 @@ def _run_analysis_job(repo_id: str, request: AnalyzeRequest) -> None:
                     "total_commits": total_commits,
                     "progress": progress,
                     "started_at": started_at,
-                    "updated_at": datetime.datetime.utcnow().isoformat(),
+                    "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                    "repo_path": str(repo_path),
                 },
             )
 
@@ -243,7 +369,8 @@ def _run_analysis_job(repo_id: str, request: AnalyzeRequest) -> None:
                 "total_commits": total_commits,
                 "progress": 1.0 if total_commits == 0 else min(stats.commit_count / total_commits, 1.0),
                 "started_at": started_at,
-                "updated_at": datetime.datetime.utcnow().isoformat(),
+                "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "repo_path": str(repo_path),
             },
         )
 
@@ -274,9 +401,11 @@ def _run_analysis_job(repo_id: str, request: AnalyzeRequest) -> None:
                 "change_count": stats.change_count,
                 "transaction_count": stats.transaction_count,
                 "started_at": started_at,
-                "updated_at": datetime.datetime.utcnow().isoformat(),
+                "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "repo_path": str(repo_path),
             },
         )
+        logger.info(f"Background analysis completed for repo: {repo_id}")
     except Exception as exc:
         _write_status(
             status_path,
@@ -288,9 +417,11 @@ def _run_analysis_job(repo_id: str, request: AnalyzeRequest) -> None:
                 "progress": 0.0,
                 "error": str(exc),
                 "started_at": started_at,
-                "updated_at": datetime.datetime.utcnow().isoformat(),
+                "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "repo_path": str(repo_path),
             },
         )
+        logger.exception(f"Background analysis failed for repo: {repo_id}")
         raise
 
 

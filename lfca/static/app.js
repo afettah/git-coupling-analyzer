@@ -79,7 +79,7 @@ const renderTree = (tree) => {
     button.addEventListener("click", () => {
       const path = collectPath(button);
       filePathInput.value = path;
-      loadFileSuggestions().catch(() => {});
+      loadFileSuggestions().catch(() => { });
     });
     li.appendChild(button);
     if (Object.keys(subtree).length > 0) {
@@ -305,6 +305,15 @@ const renderAnalysisStatus = (status) => {
     analysisProgress.style.width = "0%";
     return;
   }
+
+  if (status.state === "failed") {
+    analysisStatus.textContent = `❌ Failed: ${status.stage ?? "error"}`;
+    analysisMeta.innerHTML = `<span class="error-text">${status.error ?? "Unknown error"}</span>`;
+    analysisProgress.style.width = "0%";
+    analysisProgress.style.backgroundColor = "#ef4444";
+    return;
+  }
+
   const processed = status.processed_commits ?? 0;
   const total = status.total_commits ?? 0;
   const percent = Math.round((status.progress ?? 0) * 100);
@@ -313,6 +322,7 @@ const renderAnalysisStatus = (status) => {
     ? `${processed} / ${total} commits (${percent}%)`
     : `${processed} commits processed`;
   analysisProgress.style.width = `${percent}%`;
+  analysisProgress.style.backgroundColor = "#22c55e";
 };
 
 const loadAnalysisStatus = async () => {
@@ -365,20 +375,19 @@ const renderClusterResults = (results) => {
   }
   const topClusters = results.clusters.slice(0, 5);
   clusterResults.innerHTML = `
-    <div class="cluster-summary">Top ${topClusters.length} clusters (of ${
-    results.cluster_count
-  })</div>
+    <div class="cluster-summary">Top ${topClusters.length} clusters (of ${results.cluster_count
+    })</div>
     <ul>
       ${topClusters
-        .map(
-          (cluster) => `
+      .map(
+        (cluster) => `
         <li>
           <div class="cluster-title">Cluster ${cluster.id} · ${cluster.size} files</div>
           <div class="cluster-files">${cluster.files.slice(0, 5).join("<br />")}</div>
         </li>
       `
-        )
-        .join("")}
+      )
+      .join("")}
     </ul>
   `;
 };
@@ -433,7 +442,7 @@ const startCluster = async () => {
 };
 
 filePathInput.addEventListener("input", () => {
-  loadFileSuggestions().catch(() => {});
+  loadFileSuggestions().catch(() => { });
 });
 
 loadImpactButton.addEventListener("click", () => {
@@ -471,11 +480,11 @@ const refreshStatus = async () => {
     }
   }
   if (analysis?.state === "complete") {
-    loadFileSuggestions().catch(() => {});
+    loadFileSuggestions().catch(() => { });
   }
 };
 
-refreshStatus().catch(() => {});
+refreshStatus().catch(() => { });
 setInterval(() => {
-  refreshStatus().catch(() => {});
+  refreshStatus().catch(() => { });
 }, 5000);

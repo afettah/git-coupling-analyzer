@@ -1,0 +1,2 @@
+[console_scripts]
+lfca = lfca.cli:main

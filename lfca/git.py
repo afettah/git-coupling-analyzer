@@ -76,6 +76,8 @@ def iter_log(repo_path: Path, since: str | None = None, until: str | None = None
 
     try:
         for token in tokens:
+            if not token:
+                continue
             if token == _COMMIT_MARKER:
                 if current_header is not None:
                     yield current_header, current_changes
@@ -104,7 +106,9 @@ def iter_log(repo_path: Path, since: str | None = None, until: str | None = None
             if current_header is None:
                 continue
 
-            status = token
+            status = token.strip()
+            if not status:
+                continue
             if status.startswith("R") or status.startswith("C"):
                 old_path = next(tokens, "")
                 new_path = next(tokens, "")

@@ -19,7 +19,8 @@ class FileIndex:
             """
             CREATE TABLE IF NOT EXISTS file_index (
                 file_id INTEGER PRIMARY KEY,
-                path_current TEXT UNIQUE NOT NULL
+                path_current TEXT UNIQUE NOT NULL,
+                path_latest TEXT
             )
             """
         )
@@ -61,13 +62,27 @@ class FileIndex:
         ).fetchone()
         return int(row[0]) if row else None
 
-    def set_file_id(self, file_id: int, path: str) -> None:
-        self._conn.execute(
-            "INSERT OR REPLACE INTO file_index (file_id, path_current) VALUES (?, ?)",
-            (file_id, path),
-        )
+    def set_file_id(self, file_id: int, path: str, path_latest: str | None = None) -> None:
+        if path_latest:
+            self._conn.execute(
+                "INSERT OR REPLACE INTO file_index (file_id, path_current, path_latest) VALUES (?, ?, ?)",
+                (file_id, path, path_latest),
+            )
+        else:
+            self._conn.execute(
+                "INSERT OR REPLACE INTO file_index (file_id, path_current, path_latest) "
+                "VALUES (?, ?, (SELECT path_latest FROM file_index WHERE file_id = ?))",
+                (file_id, path, file_id),
+            )
 
     def update_path(self, file_id: int, new_path: str) -> None:
+        # Check if the path is already taken by another file_id
+        # In git history (backwards), this can happen if a file was renamed from A to B,
+        # and then later (earlier in history) something else was at A.
+        self._conn.execute(
+            "UPDATE file_index SET path_current = '__tmp:' || file_id WHERE path_current = ?",
+            (new_path,)
+        )
         self._conn.execute(
             "UPDATE file_index SET path_current = ? WHERE file_id = ?",
             (new_path, file_id),

@@ -1,3 +1,17 @@
+Metadata-Version: 2.4
+Name: lfca
+Version: 0.1.0
+Summary: Logical File Coupling Analyzer (LFCA)
+Author: LFCA
+License: MIT
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: pyarrow>=14.0.0
+Provides-Extra: api
+Requires-Dist: fastapi>=0.110.0; extra == "api"
+Requires-Dist: uvicorn>=0.27.0; extra == "api"
+Requires-Dist: pydantic>=2.6.0; extra == "api"
+
 # Logical File Coupling Analyzer (LFCA)
 
 LFCA is a high-performance, artifact-first system for mining Git history to detect logical file coupling at scale.
@@ -21,7 +35,7 @@ sparse graphs to avoid pair explosion.
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ".[api]"
+pip install -e ".[api]"
 ```
 
 ### 2. Setup Frontend
@@ -35,10 +49,10 @@ npm run dev
 In a new terminal (with venv activated):
 ```bash
 # Analyze a repository
-python -m lfca analyze /path/to/repo --data-dir data --repo-id myrepo
+lfca analyze /path/to/repo --data-dir data --repo-id myrepo
 
 # Start the API server
-python -m uvicorn lfca.api:app --reload
+uvicorn lfca.api:app --reload
 ```
 
 Open <http://localhost:5173/> (the Vite dev server) or <http://localhost:8000/> (for the API docs/legacy static UI).
@@ -47,10 +61,10 @@ Open <http://localhost:5173/> (the Vite dev server) or <http://localhost:8000/> 
 ```bash
 # Clone and analyze
 git clone https://github.com/octocat/Hello-World.git /tmp/hello-world
-python -m lfca analyze /tmp/hello-world --data-dir data --repo-id hello-world
+lfca analyze /tmp/hello-world --data-dir data --repo-id hello-world
 
 # Run servers
-python -m uvicorn lfca.api:app --reload &
+uvicorn lfca.api:app --reload &
 cd frontend && npm run dev
 ```
 
@@ -70,5 +84,5 @@ Artifacts are stored under `data/repos/<repo_id>/artifacts/v1/`:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -e .
+pip install -e .
 ```

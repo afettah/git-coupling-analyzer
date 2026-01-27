@@ -59,14 +59,14 @@ def _load_file_index(paths: RepoPaths, folders: Iterable[str]) -> dict[int, str]
     folders = _normalized_folders(folders)
     with sqlite3.connect(index_path) as conn:
         if not folders:
-            rows = conn.execute("SELECT file_id, path_current FROM file_index").fetchall()
+            rows = conn.execute("SELECT file_id, COALESCE(path_latest, path_current) FROM file_index").fetchall()
         else:
             filters = []
             params: list[str] = []
             for folder in folders:
-                filters.append("(path_current = ? OR path_current LIKE ?)")
-                params.extend([folder, f"{folder}/%"])
-            query = f"SELECT file_id, path_current FROM file_index WHERE {' OR '.join(filters)}"
+                filters.append("(path_current = ? OR path_current LIKE ? OR path_latest = ? OR path_latest LIKE ?)")
+                params.extend([folder, f"{folder}/%", folder, f"{folder}/%"])
+            query = f"SELECT file_id, COALESCE(path_latest, path_current) FROM file_index WHERE {' OR '.join(filters)}"
             rows = conn.execute(query, params).fetchall()
     return {int(file_id): path for file_id, path in rows}
 
