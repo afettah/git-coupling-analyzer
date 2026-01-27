@@ -1,0 +1,85 @@
+body {
+  font-family: "Inter", system-ui, sans-serif;
+  margin: 0;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+header {
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 24px 32px;
+}
+
+header h1 {
+  margin: 0 0 8px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 32px;
+  background: #e2e8f0;
+}
+
+.controls label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+}
+
+.controls input {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #94a3b8;
+}
+
+.controls button {
+  align-self: flex-end;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  padding: 16px 32px 32px;
+}
+
+section {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.tree ul {
+  list-style: none;
+  padding-left: 16px;
+}
+
+.tree-node {
+  background: transparent;
+  border: none;
+  color: #1d4ed8;
+  cursor: pointer;
+  text-align: left;
+  padding: 2px 0;
+}
+
+.node-label {
+  font-size: 10px;
+  fill: #0f172a;
+}
+
+#graphLegend {
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: #334155;
+}
