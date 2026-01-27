@@ -43,6 +43,13 @@ header h1 {
   background: #2563eb;
   color: white;
   cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.controls button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
 }
 
 main {
@@ -57,6 +64,20 @@ section {
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.graph-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.graph-subtitle {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
 }
 
 .tree ul {
@@ -79,7 +100,59 @@ section {
 }
 
 #graphLegend {
-  margin-top: 12px;
   font-size: 0.9rem;
   color: #334155;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 8px 12px;
+  min-width: 160px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.card {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.card h3 {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.meta {
+  margin-top: 8px;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.mono {
+  font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, SFMono-Regular, Menlo, monospace;
+  word-break: break-all;
+}
+
+ol,
+ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+ol li,
+ul li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  font-size: 0.9rem;
+}
+
+.lineage-list li {
+  justify-content: space-between;
 }

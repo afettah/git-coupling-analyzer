@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
+from itertools import islice
 from pathlib import Path
 from typing import Iterable
 
@@ -17,6 +18,8 @@ from lfca.storage import ParquetSink
 class ExtractConfig:
     max_files_per_commit: int = 300
     bulk_policy: str = "downweight"
+    merge_policy: str = "include"  # include, exclude, downweight
+    parallel_postprocessing: bool = False
 
 
 @dataclass
@@ -79,9 +82,12 @@ class HistoryExtractor:
         stats = ExtractStats()
         file_commit_counts: Counter[int] = Counter()
 
+        path_cache: dict[str, int] = {}
+
         for header, changes in iter_log(self.repo_path, since=since, until=until):
             stats.commit_count += 1
             is_merge = len(header.parents) > 1
+            include_in_edges = not (is_merge and self.config.merge_policy == "exclude")
             commits_sink.write_rows(
                 [
                     {
@@ -100,53 +106,64 @@ class HistoryExtractor:
             file_ids_in_commit: set[int] = set()
             change_rows = []
             tx_rows = []
-            for status, path, old_path in changes:
-                if not path:
-                    continue
 
-                file_id = None
-                if old_path:
-                    file_id = index.get_file_id(old_path)
-                if file_id is None:
-                    file_id = index.get_file_id(path)
+            with index.transaction():
+                for status, path, old_path in changes:
+                    if not path:
+                        continue
 
-                if file_id is None:
-                    file_id = index.next_file_id()
-                    index.set_file_id(file_id, path)
-                    lineage_open[file_id] = (path, header.commit_oid)
-                else:
-                    index.update_path(file_id, path)
+                    file_id = None
+                    if old_path:
+                        file_id = path_cache.get(old_path)
+                        if file_id is None:
+                            file_id = index.get_file_id(old_path)
+                    if file_id is None:
+                        file_id = path_cache.get(path)
+                    if file_id is None:
+                        file_id = index.get_file_id(path)
 
-                if file_id in lineage_open:
-                    previous_path, start_commit = lineage_open[file_id]
-                    if previous_path != path:
-                        index.add_lineage(file_id, previous_path, start_commit, header.commit_oid)
+                    if file_id is None:
+                        file_id = index.next_file_id()
+                        index.set_file_id(file_id, path)
                         lineage_open[file_id] = (path, header.commit_oid)
+                    else:
+                        index.update_path(file_id, path)
 
-                change_rows.append(
-                    {
-                        "commit_oid": header.commit_oid,
-                        "file_id": file_id,
-                        "path": path,
-                        "status": status,
-                        "old_path": old_path,
-                        "commit_ts": header.committer_ts,
-                    }
-                )
-                file_ids_in_commit.add(file_id)
+                    path_cache[path] = file_id
+                    if old_path:
+                        path_cache.pop(old_path, None)
+
+                    if file_id in lineage_open:
+                        previous_path, start_commit = lineage_open[file_id]
+                        if previous_path != path:
+                            index.add_lineage(file_id, previous_path, start_commit, header.commit_oid)
+                            lineage_open[file_id] = (path, header.commit_oid)
+
+                    change_rows.append(
+                        {
+                            "commit_oid": header.commit_oid,
+                            "file_id": file_id,
+                            "path": path,
+                            "status": status,
+                            "old_path": old_path,
+                            "commit_ts": header.committer_ts,
+                        }
+                    )
+                    file_ids_in_commit.add(file_id)
 
             stats.change_count += len(change_rows)
             changes_sink.write_rows(change_rows)
 
-            for file_id in file_ids_in_commit:
-                tx_rows.append(
-                    {
-                        "commit_oid": header.commit_oid,
-                        "file_id": file_id,
-                        "commit_ts": header.committer_ts,
-                    }
-                )
-                file_commit_counts[file_id] += 1
+            if include_in_edges:
+                for file_id in file_ids_in_commit:
+                    tx_rows.append(
+                        {
+                            "commit_oid": header.commit_oid,
+                            "file_id": file_id,
+                            "commit_ts": header.committer_ts,
+                        }
+                    )
+                    file_commit_counts[file_id] += 1
 
             stats.transaction_count += len(tx_rows)
             transactions_sink.write_rows(tx_rows)
@@ -159,8 +176,17 @@ class HistoryExtractor:
         transactions_sink.close()
         index.close()
 
-        self._write_file_stats(file_commit_counts)
-        self._write_lineage()
+        if self.config.parallel_postprocessing:
+            from concurrent.futures import ThreadPoolExecutor
+
+            with ThreadPoolExecutor() as executor:
+                stats_future = executor.submit(self._write_file_stats, file_commit_counts)
+                lineage_future = executor.submit(self._write_lineage)
+                stats_future.result()
+                lineage_future.result()
+        else:
+            self._write_file_stats(file_commit_counts)
+            self._write_lineage()
         return stats
 
     def _write_file_stats(self, file_commit_counts: Counter[int]) -> None:
@@ -175,17 +201,22 @@ class HistoryExtractor:
                 ]
             ),
         )
-        rows = []
+        batch_size = 1000
         cursor = index._conn.execute("SELECT file_id, path_current FROM file_index")
-        for file_id, path in cursor.fetchall():
-            rows.append(
-                {
-                    "file_id": file_id,
-                    "path_current": path,
-                    "commit_count": int(file_commit_counts.get(file_id, 0)),
-                }
+        while True:
+            rows = cursor.fetchmany(batch_size)
+            if not rows:
+                break
+            sink.write_rows(
+                [
+                    {
+                        "file_id": file_id,
+                        "path_current": path,
+                        "commit_count": int(file_commit_counts.get(file_id, 0)),
+                    }
+                    for file_id, path in rows
+                ]
             )
-        sink.write_rows(rows)
         sink.close()
         index.close()
 
@@ -202,16 +233,22 @@ class HistoryExtractor:
                 ]
             ),
         )
-        rows = []
-        for file_id, path, start_commit, end_commit in index.iter_lineage():
-            rows.append(
-                {
-                    "file_id": file_id,
-                    "path": path,
-                    "start_commit_oid": start_commit,
-                    "end_commit_oid": end_commit,
-                }
+        batch_size = 1000
+        iterator = iter(index.iter_lineage())
+        while True:
+            batch = list(islice(iterator, batch_size))
+            if not batch:
+                break
+            sink.write_rows(
+                [
+                    {
+                        "file_id": file_id,
+                        "path": path,
+                        "start_commit_oid": start_commit,
+                        "end_commit_oid": end_commit,
+                    }
+                    for file_id, path, start_commit, end_commit in batch
+                ]
             )
-        sink.write_rows(rows)
         sink.close()
         index.close()
