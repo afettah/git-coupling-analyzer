@@ -4,7 +4,7 @@ from collections import Counter
 from dataclasses import dataclass
 from itertools import islice
 from pathlib import Path
-from typing import Iterable
+from typing import Callable, Iterable
 
 import pyarrow as pa
 
@@ -35,7 +35,12 @@ class HistoryExtractor:
         self.paths = paths
         self.config = config or ExtractConfig()
 
-    def run(self, since: str | None = None, until: str | None = None) -> ExtractStats:
+    def run(
+        self,
+        since: str | None = None,
+        until: str | None = None,
+        progress_callback: Callable[[int], None] | None = None,
+    ) -> ExtractStats:
         self.paths.ensure_dirs()
         index = FileIndex(self.paths.indexes_dir / "file_index.sqlite")
 
@@ -86,6 +91,8 @@ class HistoryExtractor:
 
         for header, changes in iter_log(self.repo_path, since=since, until=until):
             stats.commit_count += 1
+            if progress_callback:
+                progress_callback(stats.commit_count)
             is_merge = len(header.parents) > 1
             include_in_edges = not (is_merge and self.config.merge_policy == "exclude")
             commits_sink.write_rows(
