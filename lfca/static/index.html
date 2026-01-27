@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LFCA Impact Explorer</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  </head>
+  <body>
+    <header>
+      <h1>LFCA Impact Explorer</h1>
+      <p>
+        Load coupling data produced by <code>lfca analyze</code> and explore related files.
+      </p>
+    </header>
+
+    <section class="controls">
+      <label>
+        Repo ID
+        <input id="repoId" value="demo" />
+      </label>
+      <label>
+        Data dir
+        <input id="dataDir" value="data" />
+      </label>
+      <label>
+        File path
+        <input id="filePath" list="filePaths" placeholder="src/module.py" />
+        <datalist id="filePaths"></datalist>
+      </label>
+      <label>
+        Top edges
+        <input id="topEdges" type="number" min="5" max="200" value="25" />
+      </label>
+      <button id="loadImpact">Load impact</button>
+      <button id="loadTree">Load folder tree</button>
+    </section>
+
+    <main>
+      <section class="tree">
+        <h2>Folder tree</h2>
+        <div id="treeContainer">No tree loaded.</div>
+      </section>
+      <section class="graph">
+        <h2>Impact graph</h2>
+        <div id="graphContainer">
+          <svg id="graph" width="900" height="600" role="img" aria-label="Impact graph"></svg>
+        </div>
+        <div id="graphLegend"></div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

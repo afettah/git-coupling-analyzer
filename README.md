@@ -18,6 +18,24 @@ lfca mirror /path/to/repo --data-dir data --repo-id myrepo
 lfca analyze /path/to/repo --data-dir data --repo-id myrepo
 ```
 
+## API + visualization
+The optional API package serves coupling results and a lightweight front-end.
+
+```bash
+pip install -e ".[api]"
+uvicorn lfca.api:app --reload
+```
+
+Open <http://localhost:8000/> to browse the impact explorer. Enter the same `repo_id`
+and `data_dir` you used during analysis, then pick a file path to visualize.
+
+### Example with a public repo
+```bash
+git clone https://github.com/octocat/Hello-World.git /tmp/hello-world
+lfca analyze /tmp/hello-world --data-dir data --repo-id hello-world
+uvicorn lfca.api:app --reload
+```
+
 ## Output layout
 Artifacts are stored under `data/repos/<repo_id>/artifacts/v1/`:
 - `commits.parquet`, `changes.parquet`, `transactions.parquet`, `file_stats.parquet`
@@ -36,4 +54,3 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -e .
 ```
-
