@@ -1,9 +1,13 @@
 const repoInput = document.getElementById("repoId");
 const dataDirInput = document.getElementById("dataDir");
+const repoPathInput = document.getElementById("repoPath");
+const sinceInput = document.getElementById("sinceDate");
+const untilInput = document.getElementById("untilDate");
 const filePathInput = document.getElementById("filePath");
 const filePathsList = document.getElementById("filePaths");
 const loadImpactButton = document.getElementById("loadImpact");
 const loadTreeButton = document.getElementById("loadTree");
+const startAnalysisButton = document.getElementById("startAnalysis");
 const treeContainer = document.getElementById("treeContainer");
 const graphLegend = document.getElementById("graphLegend");
 const focusPath = document.getElementById("focusPath");
@@ -11,20 +15,38 @@ const focusStats = document.getElementById("focusStats");
 const impactList = document.getElementById("impactList");
 const folderImpactList = document.getElementById("folderImpactList");
 const lineageList = document.getElementById("lineageList");
+const analysisStatus = document.getElementById("analysisStatus");
+const analysisProgress = document.getElementById("analysisProgress");
+const analysisMeta = document.getElementById("analysisMeta");
+const clusterAlgorithm = document.getElementById("clusterAlgorithm");
+const clusterMinWeight = document.getElementById("clusterMinWeight");
+const clusterFolders = document.getElementById("clusterFolders");
+const startClusterButton = document.getElementById("startCluster");
+const clusterStatus = document.getElementById("clusterStatus");
+const clusterResults = document.getElementById("clusterResults");
 const svg = d3.select("#graph");
 const width = Number(svg.attr("width"));
 const height = Number(svg.attr("height"));
 
 const apiBase = "";
 
-const fetchJson = async (url) => {
-  const response = await fetch(url);
+const fetchJson = async (url, options = {}) => {
+  const finalOptions = { ...options };
+  if (finalOptions.body && !finalOptions.headers) {
+    finalOptions.headers = { "Content-Type": "application/json" };
+  }
+  const response = await fetch(url, finalOptions);
   if (!response.ok) {
     const detail = await response.text();
     throw new Error(detail || response.statusText);
   }
   return response.json();
 };
+
+const postJson = (url, payload) =>
+  fetchJson(url, { method: "POST", body: JSON.stringify(payload) });
+
+const clusterRunIdKey = (repoId) => `lfca:clusterRun:${repoId}`;
 
 const loadFileSuggestions = async () => {
   const repoId = repoInput.value.trim();
@@ -276,6 +298,140 @@ const loadImpact = async () => {
   renderLineage(lineage);
 };
 
+const renderAnalysisStatus = (status) => {
+  if (!status || status.state === "not_started") {
+    analysisStatus.textContent = "No analysis started.";
+    analysisMeta.textContent = "";
+    analysisProgress.style.width = "0%";
+    return;
+  }
+  const processed = status.processed_commits ?? 0;
+  const total = status.total_commits ?? 0;
+  const percent = Math.round((status.progress ?? 0) * 100);
+  analysisStatus.textContent = `${status.state} · ${status.stage ?? "idle"}`;
+  analysisMeta.textContent = total
+    ? `${processed} / ${total} commits (${percent}%)`
+    : `${processed} commits processed`;
+  analysisProgress.style.width = `${percent}%`;
+};
+
+const loadAnalysisStatus = async () => {
+  const repoId = repoInput.value.trim();
+  const dataDir = dataDirInput.value.trim();
+  if (!repoId) {
+    return;
+  }
+  const status = await fetchJson(
+    `${apiBase}/repos/${repoId}/analysis/status?${new URLSearchParams({ data_dir: dataDir })}`
+  );
+  renderAnalysisStatus(status);
+  return status;
+};
+
+const startAnalysis = async () => {
+  const repoId = repoInput.value.trim();
+  const dataDir = dataDirInput.value.trim();
+  const repoPath = repoPathInput.value.trim();
+  if (!repoId || !repoPath) {
+    analysisStatus.textContent = "Enter repo id and repo path to start analysis.";
+    return;
+  }
+  analysisStatus.textContent = "Starting analysis...";
+  await postJson(`${apiBase}/repos/${repoId}/analysis/start`, {
+    repo_path: repoPath,
+    since: sinceInput.value.trim() || null,
+    until: untilInput.value.trim() || null,
+    data_dir: dataDir,
+  });
+  await loadAnalysisStatus();
+};
+
+const renderClusterStatus = (status) => {
+  if (!status || status.state === "not_started") {
+    clusterStatus.textContent = "No clustering run yet.";
+    return;
+  }
+  clusterStatus.textContent = `${status.state} · ${status.stage ?? "idle"}`;
+};
+
+const renderClusterResults = (results) => {
+  if (!results) {
+    clusterResults.textContent = "";
+    return;
+  }
+  if (!results.clusters?.length) {
+    clusterResults.innerHTML = "<p>No clusters found.</p>";
+    return;
+  }
+  const topClusters = results.clusters.slice(0, 5);
+  clusterResults.innerHTML = `
+    <div class="cluster-summary">Top ${topClusters.length} clusters (of ${
+    results.cluster_count
+  })</div>
+    <ul>
+      ${topClusters
+        .map(
+          (cluster) => `
+        <li>
+          <div class="cluster-title">Cluster ${cluster.id} · ${cluster.size} files</div>
+          <div class="cluster-files">${cluster.files.slice(0, 5).join("<br />")}</div>
+        </li>
+      `
+        )
+        .join("")}
+    </ul>
+  `;
+};
+
+const loadClusterStatus = async (runId) => {
+  const repoId = repoInput.value.trim();
+  const dataDir = dataDirInput.value.trim();
+  if (!repoId || !runId) {
+    return null;
+  }
+  const status = await fetchJson(
+    `${apiBase}/repos/${repoId}/clusters/${runId}/status?${new URLSearchParams({
+      data_dir: dataDir,
+    })}`
+  );
+  renderClusterStatus(status);
+  return status;
+};
+
+const loadClusterResults = async (runId) => {
+  const repoId = repoInput.value.trim();
+  const dataDir = dataDirInput.value.trim();
+  if (!repoId || !runId) {
+    return;
+  }
+  const results = await fetchJson(
+    `${apiBase}/repos/${repoId}/clusters/${runId}?${new URLSearchParams({ data_dir: dataDir })}`
+  );
+  renderClusterResults(results);
+};
+
+const startCluster = async () => {
+  const repoId = repoInput.value.trim();
+  const dataDir = dataDirInput.value.trim();
+  if (!repoId) {
+    clusterStatus.textContent = "Enter a repo id first.";
+    return;
+  }
+  clusterStatus.textContent = "Starting clustering...";
+  const folders = clusterFolders.value
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const response = await postJson(`${apiBase}/repos/${repoId}/clusters/start`, {
+    algorithm: clusterAlgorithm.value,
+    min_weight: Number(clusterMinWeight.value || 0),
+    folders,
+    data_dir: dataDir,
+  });
+  localStorage.setItem(clusterRunIdKey(repoId), response.run_id);
+  await loadClusterStatus(response.run_id);
+};
+
 filePathInput.addEventListener("input", () => {
   loadFileSuggestions().catch(() => {});
 });
@@ -291,3 +447,35 @@ loadTreeButton.addEventListener("click", () => {
     treeContainer.textContent = `Error: ${err.message}`;
   });
 });
+
+startAnalysisButton.addEventListener("click", () => {
+  startAnalysis().catch((err) => {
+    analysisStatus.textContent = `Error: ${err.message}`;
+  });
+});
+
+startClusterButton.addEventListener("click", () => {
+  startCluster().catch((err) => {
+    clusterStatus.textContent = `Error: ${err.message}`;
+  });
+});
+
+const refreshStatus = async () => {
+  const analysis = await loadAnalysisStatus().catch(() => null);
+  const repoId = repoInput.value.trim();
+  if (repoId) {
+    const runId = localStorage.getItem(clusterRunIdKey(repoId));
+    const status = await loadClusterStatus(runId).catch(() => null);
+    if (status?.state === "complete") {
+      await loadClusterResults(runId).catch(() => null);
+    }
+  }
+  if (analysis?.state === "complete") {
+    loadFileSuggestions().catch(() => {});
+  }
+};
+
+refreshStatus().catch(() => {});
+setInterval(() => {
+  refreshStatus().catch(() => {});
+}, 5000);

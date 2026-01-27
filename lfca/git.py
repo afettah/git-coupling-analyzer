@@ -118,3 +118,13 @@ def iter_log(repo_path: Path, since: str | None = None, until: str | None = None
     finally:
         proc.stdout.close()
         proc.wait()
+
+
+def count_commits(repo_path: Path, since: str | None = None, until: str | None = None) -> int:
+    args = ["git", "-C", str(repo_path), "rev-list", "--count", "HEAD"]
+    if since:
+        args.append(f"--since={since}")
+    if until:
+        args.append(f"--until={until}")
+    output = subprocess.check_output(args, stderr=subprocess.STDOUT)
+    return int(output.decode("utf-8").strip() or 0)
