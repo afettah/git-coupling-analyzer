@@ -12,6 +12,18 @@ sparse graphs to avoid pair explosion.
 - **Folder filters on current tree**: includes files by current path while tracking historical moves.
 
 ## Quick start
+### Requirements
+- Python 3.10+
+- Git (for analyzing repositories)
+
+### Install dependencies
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+### Run analysis
 ```bash
 # Create or update a mirror and analyze
 lfca mirror /path/to/repo --data-dir data --repo-id myrepo
