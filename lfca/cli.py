@@ -9,8 +9,33 @@ from lfca.extract import ExtractConfig, HistoryExtractor
 from lfca.mirror import mirror_repo
 
 
-def _iter_transactions_from_parquet(paths: RepoPaths):
+def _iter_transactions_from_parquet(
+    paths: RepoPaths,
+    merge_policy: str = "include",
+    merge_downweight: float = 0.5,
+):
     import pyarrow.parquet as pq
+
+    def commit_weights() -> dict[str, float]:
+        if merge_policy == "include":
+            return {}
+        commits_path = paths.artifacts_root / "commits.parquet"
+        if not commits_path.exists():
+            return {}
+        commits_table = pq.read_table(commits_path, columns=["commit_oid", "is_merge"])
+        weights: dict[str, float] = {}
+        for commit_oid, is_merge in zip(
+            commits_table.column(0).to_pylist(), commits_table.column(1).to_pylist()
+        ):
+            if not is_merge:
+                continue
+            if merge_policy == "exclude":
+                weights[commit_oid] = 0.0
+            elif merge_policy == "downweight":
+                weights[commit_oid] = merge_downweight
+        return weights
+
+    merge_weights = commit_weights()
 
     parquet_file = pq.ParquetFile(paths.artifacts_root / "transactions.parquet")
     current_commit = None
@@ -23,13 +48,17 @@ def _iter_transactions_from_parquet(paths: RepoPaths):
             if current_commit is None:
                 current_commit = commit_oid
             if commit_oid != current_commit:
-                yield current_files
+                weight = merge_weights.get(current_commit, 1.0)
+                if weight:
+                    yield (current_files, weight) if weight != 1.0 else current_files
                 current_commit = commit_oid
                 current_files = []
             current_files.append(int(file_id))
 
     if current_files:
-        yield current_files
+        weight = merge_weights.get(current_commit, 1.0)
+        if weight:
+            yield (current_files, weight) if weight != 1.0 else current_files
 
 
 def _cmd_mirror(args: argparse.Namespace) -> None:
@@ -44,17 +73,26 @@ def _cmd_analyze(args: argparse.Namespace) -> None:
     extractor = HistoryExtractor(
         repo_path,
         paths,
-        ExtractConfig(max_files_per_commit=args.max_files_per_commit, bulk_policy=args.bulk_policy),
+        ExtractConfig(
+            max_files_per_commit=args.max_files_per_commit,
+            bulk_policy=args.bulk_policy,
+            merge_policy=args.merge_policy,
+            parallel_postprocessing=args.parallel_postprocessing,
+        ),
     )
     extractor.run(since=args.since, until=args.until)
 
-    transactions = _iter_transactions_from_parquet(paths)
+    transactions = _iter_transactions_from_parquet(
+        paths, merge_policy=args.merge_policy, merge_downweight=args.merge_downweight
+    )
     EdgeBuilder(
         paths,
         EdgeConfig(
             max_files_per_commit=args.max_files_per_commit,
             bulk_policy=args.bulk_policy,
             topk_edges_per_file=args.topk_edges_per_file,
+            merge_policy=args.merge_policy,
+            merge_downweight=args.merge_downweight,
         ),
     ).build(transactions)
 
@@ -77,6 +115,13 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument("--max-files-per-commit", type=int, default=300)
     analyze.add_argument("--bulk-policy", choices=["exclude", "downweight"], default="downweight")
     analyze.add_argument("--topk-edges-per-file", type=int, default=50)
+    analyze.add_argument(
+        "--merge-policy",
+        choices=["include", "exclude", "downweight"],
+        default="include",
+    )
+    analyze.add_argument("--merge-downweight", type=float, default=0.5)
+    analyze.add_argument("--parallel-postprocessing", action="store_true")
     analyze.set_defaults(func=_cmd_analyze)
 
     return parser

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Optional
@@ -12,6 +13,8 @@ class FileIndex:
 
     def __post_init__(self) -> None:
         self._conn = sqlite3.connect(self.db_path)
+        self._conn.execute("PRAGMA journal_mode=WAL")
+        self._conn.execute("PRAGMA synchronous=NORMAL")
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS file_index (
@@ -36,6 +39,17 @@ class FileIndex:
     def close(self) -> None:
         self._conn.commit()
         self._conn.close()
+
+    @contextmanager
+    def transaction(self) -> Iterable[None]:
+        self._conn.execute("BEGIN")
+        try:
+            yield
+        except Exception:
+            self._conn.rollback()
+            raise
+        else:
+            self._conn.commit()
 
     def next_file_id(self) -> int:
         row = self._conn.execute("SELECT COALESCE(MAX(file_id), 0) + 1 FROM file_index").fetchone()

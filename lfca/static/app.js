@@ -6,6 +6,11 @@ const loadImpactButton = document.getElementById("loadImpact");
 const loadTreeButton = document.getElementById("loadTree");
 const treeContainer = document.getElementById("treeContainer");
 const graphLegend = document.getElementById("graphLegend");
+const focusPath = document.getElementById("focusPath");
+const focusStats = document.getElementById("focusStats");
+const impactList = document.getElementById("impactList");
+const folderImpactList = document.getElementById("folderImpactList");
+const lineageList = document.getElementById("lineageList");
 const svg = d3.select("#graph");
 const width = Number(svg.attr("width"));
 const height = Number(svg.attr("height"));
@@ -97,8 +102,12 @@ const loadTree = async () => {
 const renderGraph = (graph) => {
   svg.selectAll("*").remove();
   graphLegend.innerHTML = "";
+  focusPath.textContent = "";
+  focusStats.textContent = "";
 
-  const link = svg
+  const graphGroup = svg.append("g");
+
+  const link = graphGroup
     .append("g")
     .attr("stroke", "#94a3b8")
     .attr("stroke-opacity", 0.8)
@@ -107,7 +116,7 @@ const renderGraph = (graph) => {
     .join("line")
     .attr("stroke-width", (d) => Math.max(1, d.weight * 5));
 
-  const node = svg
+  const node = graphGroup
     .append("g")
     .attr("stroke", "#0f172a")
     .attr("stroke-width", 1)
@@ -135,7 +144,9 @@ const renderGraph = (graph) => {
         })
     );
 
-  const labels = svg
+  node.append("title").text((d) => d.path);
+
+  const labels = graphGroup
     .append("g")
     .selectAll("text")
     .data(graph.nodes)
@@ -159,10 +170,65 @@ const renderGraph = (graph) => {
     labels.attr("x", (d) => d.x + 10).attr("y", (d) => d.y + 4);
   });
 
+  svg.call(
+    d3.zoom().scaleExtent([0.4, 2.5]).on("zoom", (event) => {
+      graphGroup.attr("transform", event.transform);
+    })
+  );
+
+  const focusNode = graph.nodes.find((n) => n.id === graph.focus_id);
+  focusPath.textContent = focusNode?.path ?? "";
+  focusStats.textContent = `${graph.nodes.length} nodes · ${graph.edges.length} edges`;
   graphLegend.innerHTML = `
-    <div><strong>Focus:</strong> ${graph.nodes.find((n) => n.id === graph.focus_id)?.path}</div>
+    <div><strong>Focus:</strong> ${focusNode?.path ?? "Unknown"}</div>
+    <div><strong>Nodes:</strong> ${graph.nodes.length}</div>
     <div><strong>Edges:</strong> ${graph.edges.length}</div>
   `;
+};
+
+const renderImpactList = (rows) => {
+  impactList.innerHTML = "";
+  if (!rows.length) {
+    impactList.innerHTML = "<li>No impacts found.</li>";
+    return;
+  }
+  rows.forEach((row) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="mono">${row.path ?? "unknown"}</span><span>${row.weight_jaccard.toFixed(
+      3
+    )}</span>`;
+    impactList.appendChild(li);
+  });
+};
+
+const renderFolderImpacts = (rows) => {
+  folderImpactList.innerHTML = "";
+  if (!rows.length) {
+    folderImpactList.innerHTML = "<li>No folder impacts found.</li>";
+    return;
+  }
+  rows.forEach((row) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="mono">${row.folder}</span><span>${row.weight_total.toFixed(3)}</span>`;
+    folderImpactList.appendChild(li);
+  });
+};
+
+const renderLineage = (rows) => {
+  lineageList.innerHTML = "";
+  if (!rows.length) {
+    lineageList.innerHTML = "<li>No lineage data found.</li>";
+    return;
+  }
+  rows.forEach((row) => {
+    const li = document.createElement("li");
+    const endLabel = row.end_commit_oid ? row.end_commit_oid.slice(0, 8) : "present";
+    li.innerHTML = `<span class="mono">${row.path}</span><span>${row.start_commit_oid.slice(
+      0,
+      8
+    )} → ${endLabel}</span>`;
+    lineageList.appendChild(li);
+  });
 };
 
 const loadImpact = async () => {
@@ -182,6 +248,32 @@ const loadImpact = async () => {
   });
   const graph = await fetchJson(`${apiBase}/repos/${repoId}/impact/graph?${params}`);
   renderGraph(graph);
+
+  const impacts = await fetchJson(`${apiBase}/repos/${repoId}/impact?${params}`);
+  const nodePaths = new Map(graph.nodes.map((node) => [node.id, node.path]));
+  const impactsWithPath = impacts.map((row) => ({
+    ...row,
+    path: nodePaths.get(row.src_file_id === graph.focus_id ? row.dst_file_id : row.src_file_id),
+  }));
+  renderImpactList(impactsWithPath);
+
+  const folderParams = new URLSearchParams({
+    data_dir: dataDir,
+    path: filePath,
+    top: "8",
+    depth: "2",
+  });
+  const folderImpacts = await fetchJson(
+    `${apiBase}/repos/${repoId}/impact/folders?${folderParams}`
+  );
+  renderFolderImpacts(folderImpacts);
+
+  const lineage = await fetchJson(
+    `${apiBase}/repos/${repoId}/files/${encodeURIComponent(filePath)}/lineage?${new URLSearchParams({
+      data_dir: dataDir,
+    })}`
+  );
+  renderLineage(lineage);
 };
 
 filePathInput.addEventListener("input", () => {
