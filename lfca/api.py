@@ -466,12 +466,95 @@ def get_coupling_graph(
                 "source": focus_id,
                 "target": e["file_id"],
                 "weight": e[metric],
-                "pair_count": e["pair_count"]
+                "pair_count": e["pair_count"],
+                "src_count": e.get("src_count", 0),  # These might need to be added to get_edges_for_file
+                "dst_count": e.get("dst_count", 0),
+                "jaccard": e.get("jaccard", 0),
+                "jaccard_weighted": e.get("jaccard_weighted", 0),
+                "p_dst_given_src": e.get("p_dst_given_src", 0),
+                "p_src_given_dst": e.get("p_src_given_dst", 0),
             }
             for e in edges_data
         ]
         
         return {"nodes": nodes, "edges": edges, "focus_id": focus_id}
+    finally:
+        storage.close()
+
+
+# --- Evidence ---
+
+@app.get("/repos/{repo_id}/coupling/evidence")
+def get_edge_evidence(
+    repo_id: str,
+    src_id: int,
+    dst_id: int,
+    limit: int = 20,
+    data_dir: str = "data"
+) -> dict:
+    """Get commit-level evidence for a coupling edge."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        # 1. Get file paths for context
+        rows = storage.conn.execute("""
+            SELECT file_id, path_current FROM files WHERE file_id IN (?, ?)
+        """, (src_id, dst_id)).fetchall()
+        path_map = {r[0]: r[1] for r in rows}
+        
+        # 2. Find common commits from changes.parquet
+        changes_path = storage.parquet_dir / "changes.parquet"
+        if not changes_path.exists():
+            return {"commits": []}
+            
+        dataset = ds.dataset(changes_path)
+        
+        # Get commits for src
+        src_table = dataset.to_table(
+            filter=ds.field("file_id") == src_id,
+            columns=["commit_oid"]
+        )
+        src_oids = set(src_table.to_pylist())
+        
+        # Get commits for dst
+        dst_table = dataset.to_table(
+            filter=ds.field("file_id") == dst_id,
+            columns=["commit_oid"]
+        )
+        dst_oids = set(dst_table.to_pylist())
+        
+        # Common OIDs
+        common_oids = {d["commit_oid"] for d in src_table.to_pylist()} & {d["commit_oid"] for d in dst_table.to_pylist()}
+        
+        if not common_oids:
+            return {"commits": [], "src_path": path_map.get(src_id), "dst_path": path_map.get(dst_id)}
+            
+        # 3. Get commit details from commits.parquet
+        commits_path = storage.parquet_dir / "commits.parquet"
+        if not commits_path.exists():
+             return {"commits": [{"oid": oid} for oid in list(common_oids)[:limit]]}
+             
+        commits_dataset = ds.dataset(commits_path)
+        # Convert to list for filtering
+        oid_list = list(common_oids)
+        
+        # Filter commits. We use a scanner or to_table with filter
+        # pyarrow filter 'in' is supported in newer versions
+        commit_table = commits_dataset.to_table(
+            filter=ds.field("commit_oid").isin(oid_list[:100]), # Limit OIDs to avoid huge filter
+            columns=["commit_oid", "message_subject", "author_name", "authored_ts"]
+        )
+        
+        commits = commit_table.to_pylist()
+        # Sort by timestamp desc
+        commits.sort(key=lambda x: x["authored_ts"], reverse=True)
+        
+        return {
+            "src_id": src_id,
+            "src_path": path_map.get(src_id),
+            "dst_id": dst_id,
+            "dst_path": path_map.get(dst_id),
+            "commits": commits[:limit]
+        }
     finally:
         storage.close()
 
@@ -578,6 +661,13 @@ def analysis_status(repo_id: str, data_dir: str = "data") -> dict:
 class SaveSnapshotRequest(BaseModel):
     name: str
     result: dict
+    tags: List[str] | None = None
+    data_dir: str = "data"
+
+
+class UpdateSnapshotRequest(BaseModel):
+    name: str | None = None
+    tags: List[str] | None = None
     data_dir: str = "data"
 
 
@@ -661,11 +751,26 @@ def list_snapshots(repo_id: str, data_dir: str = "data") -> list[dict]:
         try:
             with open(f, "r") as f_in:
                 data = json.load(f_in)
+                result = data.get("result", {}) or {}
+                clusters = result.get("clusters", []) or []
+                cluster_count = result.get("cluster_count") or len(clusters)
+                file_count = 0
+                avg_coupling = 0.0
+                if clusters:
+                    for cluster in clusters:
+                        files = cluster.get("files") or []
+                        file_count += len(files) or cluster.get("size", 0)
+                        avg_coupling += cluster.get("avg_coupling", 0.0)
+                    avg_coupling = avg_coupling / len(clusters)
                 snapshots.append({
                     "id": f.stem,
                     "name": data.get("name", f.stem),
                     "algorithm": data.get("result", {}).get("algorithm", "unknown"),
-                    "created_at": datetime.datetime.fromtimestamp(f.stat().st_mtime).isoformat()
+                    "created_at": datetime.datetime.fromtimestamp(f.stat().st_mtime).isoformat(),
+                    "cluster_count": cluster_count,
+                    "file_count": file_count,
+                    "avg_coupling": avg_coupling,
+                    "tags": data.get("tags", [])
                 })
         except Exception:
             logger.warning(f"Failed to read snapshot {f}")
@@ -687,7 +792,8 @@ def save_snapshot(repo_id: str, request: SaveSnapshotRequest) -> dict:
     with open(snapshot_path, "w") as f_out:
         json.dump({
             "name": request.name,
-            "result": request.result
+            "result": request.result,
+            "tags": request.tags or []
         }, f_out)
         
     return {"id": filename.replace(".json", ""), "status": "saved"}
@@ -704,6 +810,102 @@ def get_snapshot(repo_id: str, snapshot_id: str, data_dir: str = "data") -> dict
         
     with open(snapshot_path, "r") as f_in:
         return json.load(f_in)
+
+
+@app.put("/repos/{repo_id}/clustering/snapshots/{snapshot_id}")
+def update_snapshot(repo_id: str, snapshot_id: str, request: UpdateSnapshotRequest) -> dict:
+    paths = _paths(repo_id, request.data_dir)
+    snapshot_path = paths.snapshots_dir / f"{snapshot_id}.json"
+
+    if not snapshot_path.exists():
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+
+    with open(snapshot_path, "r") as f_in:
+        data = json.load(f_in)
+
+    if request.name is not None:
+        data["name"] = request.name
+    if request.tags is not None:
+        data["tags"] = request.tags
+
+    with open(snapshot_path, "w") as f_out:
+        json.dump(data, f_out)
+
+    return {"status": "updated", "id": snapshot_id}
+
+
+@app.delete("/repos/{repo_id}/clustering/snapshots/{snapshot_id}")
+def delete_snapshot(repo_id: str, snapshot_id: str, data_dir: str = "data") -> dict:
+    paths = _paths(repo_id, data_dir)
+    snapshot_path = paths.snapshots_dir / f"{snapshot_id}.json"
+
+    if not snapshot_path.exists():
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+
+    snapshot_path.unlink()
+    return {"status": "deleted", "id": snapshot_id}
+
+
+@app.get("/repos/{repo_id}/clustering/snapshots/{snapshot_id}/edges")
+def snapshot_edges(repo_id: str, snapshot_id: str, limit: int = 50, data_dir: str = "data") -> dict:
+    paths = _paths(repo_id, data_dir)
+    snapshot_path = paths.snapshots_dir / f"{snapshot_id}.json"
+
+    if not snapshot_path.exists():
+        raise HTTPException(status_code=404, detail="Snapshot not found")
+
+    with open(snapshot_path, "r") as f_in:
+        data = json.load(f_in)
+
+    clusters = data.get("result", {}).get("clusters", []) or []
+    if not clusters:
+        return {"edges": []}
+
+    file_to_cluster = {}
+    file_ids = []
+    for cluster in clusters:
+        cluster_id = cluster.get("id")
+        for fid in cluster.get("file_ids", []):
+            file_to_cluster[fid] = cluster_id
+            file_ids.append(fid)
+
+    if not file_ids:
+        return {"edges": []}
+
+    storage = get_storage(repo_id, data_dir)
+    try:
+        placeholders = ",".join("?" * len(file_ids))
+        rows = storage.conn.execute(f"""
+            SELECT src_file_id, dst_file_id, jaccard
+            FROM edges
+            WHERE src_file_id IN ({placeholders}) AND dst_file_id IN ({placeholders})
+        """, file_ids + file_ids).fetchall()
+
+        aggregates = {}
+        for src_id, dst_id, weight in rows:
+            src_cluster = file_to_cluster.get(src_id)
+            dst_cluster = file_to_cluster.get(dst_id)
+            if src_cluster is None or dst_cluster is None or src_cluster == dst_cluster:
+                continue
+            key = tuple(sorted((src_cluster, dst_cluster)))
+            if key not in aggregates:
+                aggregates[key] = {"sum": 0.0, "count": 0}
+            aggregates[key]["sum"] += weight
+            aggregates[key]["count"] += 1
+
+        edges = [
+            {
+                "from_cluster": key[0],
+                "to_cluster": key[1],
+                "coupling_strength": (value["sum"] / value["count"]) if value["count"] else 0.0
+            }
+            for key, value in aggregates.items()
+        ]
+
+        edges.sort(key=lambda e: e["coupling_strength"], reverse=True)
+        return {"edges": edges[:limit]}
+    finally:
+        storage.close()
 
 
 @app.get("/repos/{repo_id}/clustering/compare")

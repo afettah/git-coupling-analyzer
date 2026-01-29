@@ -1,0 +1,77 @@
+/**
+ * File Tree View Component
+ * 
+ * Renders a hierarchical tree view of files.
+ */
+
+import { ExternalLink } from 'lucide-react';
+import type { TreeNode, RepoUrlConfig } from '../types';
+import { buildFileUrl } from '../utils';
+
+export interface FileTreeViewProps {
+    node: TreeNode;
+    repoUrlConfig?: RepoUrlConfig;
+    depth?: number;
+}
+
+export function FileTreeView({ node, repoUrlConfig, depth = 0 }: FileTreeViewProps) {
+    return (
+        <div className="space-y-1">
+            {node.children.map((child: TreeNode) => (
+                <div key={child.path} style={{ marginLeft: depth * 12 }}>
+                    <div className="text-sm text-slate-200 font-medium">
+                        📁 {child.name}
+                    </div>
+                    {child.files.map((file: string) => (
+                        <FileItem
+                            key={file}
+                            path={file}
+                            displayPath={child.path + '/' + file.split('/').pop()}
+                            repoUrlConfig={repoUrlConfig}
+                        />
+                    ))}
+                    {child.children.length > 0 && (
+                        <FileTreeView
+                            node={child}
+                            depth={depth + 1}
+                            repoUrlConfig={repoUrlConfig}
+                        />
+                    )}
+                </div>
+            ))}
+            {node.files.map((file: string) => (
+                <FileItem
+                    key={file}
+                    path={file}
+                    repoUrlConfig={repoUrlConfig}
+                />
+            ))}
+        </div>
+    );
+}
+
+interface FileItemProps {
+    path: string;
+    displayPath?: string;
+    repoUrlConfig?: RepoUrlConfig;
+}
+
+function FileItem({ path, displayPath, repoUrlConfig }: FileItemProps) {
+    return (
+        <div className="flex items-center gap-1 text-xs text-slate-400 ml-4">
+            <span>📄 {displayPath || path}</span>
+            {repoUrlConfig && (
+                <a
+                    href={buildFileUrl(repoUrlConfig, path)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-500 hover:text-sky-400"
+                >
+                    <ExternalLink className="w-3 h-3" />
+                </a>
+            )}
+        </div>
+    );
+}
+
+export default FileTreeView;

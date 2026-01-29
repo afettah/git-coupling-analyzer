@@ -145,7 +145,9 @@ class Storage:
                 e.jaccard,
                 e.jaccard_weighted,
                 e.p_dst_given_src,
-                e.p_src_given_dst
+                e.p_src_given_dst,
+                e.src_count,
+                e.dst_count
             FROM edges e
             JOIN files f ON e.dst_file_id = f.file_id
             WHERE e.src_file_id = ? 
@@ -161,7 +163,9 @@ class Storage:
                 e.jaccard,
                 e.jaccard_weighted,
                 e.p_src_given_dst as p_dst_given_src,
-                e.p_dst_given_src as p_src_given_dst
+                e.p_dst_given_src as p_src_given_dst,
+                e.dst_count as src_count,
+                e.src_count as dst_count
             FROM edges e
             JOIN files f ON e.src_file_id = f.file_id
             WHERE e.dst_file_id = ?
@@ -184,7 +188,9 @@ class Storage:
                 "jaccard": r[3],
                 "jaccard_weighted": r[4],
                 "p_dst_given_src": r[5],
-                "p_src_given_dst": r[6]
+                "p_src_given_dst": r[6],
+                "src_count": r[7],
+                "dst_count": r[8]
             }
             for r in rows
         ]

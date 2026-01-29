@@ -8,10 +8,11 @@ import FolderTree from './FolderTree';
 interface AnalysisDashboardProps {
     repo: RepoInfo;
     onBack: () => void;
+    activeTab: 'graph' | 'tree' | 'clustering' | 'settings';
+    onTabChange: (tab: 'graph' | 'tree' | 'clustering' | 'settings') => void;
 }
 
-export default function AnalysisDashboard({ repo, onBack }: AnalysisDashboardProps) {
-    const [activeTab, setActiveTab] = useState<'graph' | 'tree' | 'clustering' | 'settings'>('graph');
+export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange }: AnalysisDashboardProps) {
     const [status, setStatus] = useState<AnalysisStatus | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -65,28 +66,28 @@ export default function AnalysisDashboard({ repo, onBack }: AnalysisDashboardPro
                 <nav className="flex-1 p-4 space-y-2">
                     <TabButton
                         active={activeTab === 'graph'}
-                        onClick={() => setActiveTab('graph')}
+                        onClick={() => onTabChange('graph')}
                         icon={<Network size={18} />}
                         label="Impact Graph"
                         disabled={!isComplete}
                     />
                     <TabButton
                         active={activeTab === 'tree'}
-                        onClick={() => setActiveTab('tree')}
+                        onClick={() => onTabChange('tree')}
                         icon={<BarChart3 size={18} />}
                         label="Folder Tree"
                         disabled={!isComplete}
                     />
                     <TabButton
                         active={activeTab === 'clustering'}
-                        onClick={() => setActiveTab('clustering')}
+                        onClick={() => onTabChange('clustering')}
                         icon={<Box size={18} />}
                         label="Clustering"
                         disabled={!isComplete}
                     />
                     <TabButton
                         active={activeTab === 'settings'}
-                        onClick={() => setActiveTab('settings')}
+                        onClick={() => onTabChange('settings')}
                         icon={<Settings2 size={18} />}
                         label="Analysis Options"
                     />

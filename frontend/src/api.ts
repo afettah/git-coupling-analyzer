@@ -205,14 +205,34 @@ export const getClusteringAlgorithms = (repoId: string) =>
 export const runClustering = (repoId: string, config: ClusterConfig) =>
     api.post<ClusterResult>(`/repos/${repoId}/clustering/run`, config).then(res => res.data);
 
-export const saveClusteringSnapshot = (repoId: string, name: string, result: ClusterResult) =>
-    api.post(`/repos/${repoId}/clustering/snapshots`, { name, result }).then(res => res.data);
+export const saveClusteringSnapshot = (repoId: string, name: string, result: ClusterResult, tags?: string[]) =>
+    api.post(`/repos/${repoId}/clustering/snapshots`, { name, result, tags }).then(res => res.data);
 
 export const getClusteringSnapshots = (repoId: string) =>
-    api.get<Array<{ id: string; name: string; algorithm: string; created_at: string }>>(`/repos/${repoId}/clustering/snapshots`).then(res => res.data);
+    api.get<Array<{
+        id: string;
+        name: string;
+        algorithm: string;
+        created_at: string;
+        cluster_count?: number;
+        file_count?: number;
+        avg_coupling?: number;
+        tags?: string[];
+    }>>(`/repos/${repoId}/clustering/snapshots`).then(res => res.data);
 
 export const getClusteringSnapshot = (repoId: string, snapshotId: string) =>
     api.get<{ name: string; result: ClusterResult }>(`/repos/${repoId}/clustering/snapshots/${snapshotId}`).then(res => res.data);
+
+export const updateClusteringSnapshot = (repoId: string, snapshotId: string, payload: { name?: string; tags?: string[] }) =>
+    api.put(`/repos/${repoId}/clustering/snapshots/${snapshotId}`, payload).then(res => res.data);
+
+export const deleteClusteringSnapshot = (repoId: string, snapshotId: string) =>
+    api.delete(`/repos/${repoId}/clustering/snapshots/${snapshotId}`).then(res => res.data);
+
+export const getClusteringSnapshotEdges = (repoId: string, snapshotId: string) =>
+    api.get<{ edges: Array<{ from_cluster: number; to_cluster: number; coupling_strength: number; shared_files?: string[] }> }>(
+        `/repos/${repoId}/clustering/snapshots/${snapshotId}/edges`
+    ).then(res => res.data);
 
 export const compareClusteringSnapshots = (repoId: string, base: string, head: string) =>
     api.get<ComparisonResult>(`/repos/${repoId}/clustering/compare`, { params: { base, head } }).then(res => res.data);

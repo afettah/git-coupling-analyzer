@@ -44,7 +44,7 @@ sparse graphs to avoid pair explosion.
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ".[api]"
+python -m pip install -e ".[all]"
 ```
 
 ### 2. Setup Frontend

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import * as d3 from 'd3';
 import { getImpactGraph, getImpact, getLineage, listFiles, type ApiErrorInfo } from '../api';
 import { Search, Info, History } from 'lucide-react';
@@ -8,8 +9,11 @@ interface ImpactGraphProps {
 }
 
 export default function ImpactGraph({ repoId }: ImpactGraphProps) {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const urlPath = searchParams.get('path') || '';
+
     const svgRef = useRef<SVGSVGElement>(null);
-    const [filePath, setFilePath] = useState('');
+    const [filePath, setFilePath] = useState(urlPath);
     const [topEdges] = useState(25);
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<any>(null);
@@ -132,9 +136,11 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                 });
                 const paths = files.map((f) => f.path).filter(Boolean);
                 setSuggestedPaths(paths);
-                if (!filePath && paths.length && !autoLoaded) {
+
+                // If no path in URL, try to auto-load the first preset
+                if (!urlPath && paths.length && !autoLoaded) {
                     setFilePath(paths[0]);
-                    await loadData(paths[0]);
+                    setSearchParams({ path: paths[0] }, { replace: true });
                     setAutoLoaded(true);
                 }
             } catch (e) {
@@ -143,7 +149,14 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
         };
 
         loadPresets();
-    }, [autoLoaded, filePath, loadData, repoId]);
+    }, [autoLoaded, urlPath, repoId, setSearchParams]);
+
+    useEffect(() => {
+        if (urlPath) {
+            setFilePath(urlPath);
+            loadData(urlPath);
+        }
+    }, [urlPath, loadData]);
 
     const drag = (simulation: any) => {
         function dragstarted(event: any) {
@@ -177,7 +190,7 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                             placeholder="Search file path..."
                             value={filePath}
                             onChange={(e) => setFilePath(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && loadData(filePath)}
+                            onKeyDown={(e) => e.key === 'Enter' && setSearchParams({ path: filePath })}
                             className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm focus:border-sky-500 outline-none"
                         />
                         {errorMessage && (
@@ -190,8 +203,7 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                                     <button
                                         key={path}
                                         onClick={() => {
-                                            setFilePath(path);
-                                            loadData(path);
+                                            setSearchParams({ path });
                                         }}
                                         className="px-2 py-0.5 rounded border border-slate-800 text-slate-300 hover:text-sky-300 hover:border-sky-400"
                                         title={path}
@@ -203,7 +215,7 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                         )}
                     </div>
                     <button
-                        onClick={() => loadData(filePath)}
+                        onClick={() => setSearchParams({ path: filePath })}
                         disabled={loading}
                         className="bg-sky-500 hover:bg-sky-400 text-slate-900 px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap"
                     >
