@@ -12,7 +12,7 @@ import { exportToSvg, exportToBlob } from '@excalidraw/excalidraw';
 import { RefreshCw, Download, Image } from 'lucide-react';
 import type { ClusterData, ClusterEdge } from '../types';
 import { sortClustersByRank, downloadBlob } from '../utils';
-import { CouplingLegend, Button } from '../ui';
+import { CouplingLegend, Button } from '@/components/shared';
 import { generateExcalidrawElements } from './excalidraw/elementGenerator';
 
 // Set asset path for Excalidraw fonts

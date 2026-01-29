@@ -20,6 +20,7 @@ export interface FilterableCluster {
     total_churn?: number;
     total_changes?: number;
     change_count?: number;
+    common_authors?: any[];
 }
 
 /** Filter clusters based on filter state */
@@ -36,14 +37,13 @@ export function filterClusters<T extends FilterableCluster>(
         const files = cluster.files || [];
         const coupling = cluster.avg_coupling ?? 0;
         const fileCount = files.length || cluster.size || 0;
+        const churn = cluster.total_churn || 0;
+        const authorCount = cluster.common_authors?.length || 0;
 
         // Search match
         const matchesSearch = !filters.search ||
             name.includes(searchLower) ||
             files.some(f => f.toLowerCase().includes(searchLower));
-
-        // Minimum cluster size
-        const matchesMinSize = fileCount >= filters.minClusterSize;
 
         // Coupling range
         const matchesCoupling = coupling >= filters.couplingRange[0] &&
@@ -53,12 +53,21 @@ export function filterClusters<T extends FilterableCluster>(
         const matchesFileCount = fileCount >= filters.fileRange[0] &&
             fileCount <= filters.fileRange[1];
 
+        // Churn range
+        const matchesChurn = churn >= (filters.churnRange?.[0] ?? 0) &&
+            churn <= (filters.churnRange?.[1] ?? Infinity);
+
+        // Author count range
+        const matchesAuthors = authorCount >= (filters.authorRange?.[0] ?? 0) &&
+            authorCount <= (filters.authorRange?.[1] ?? Infinity);
+
         // Directory filter
         const matchesDirectory = !dirLower ||
             files.some(f => f.toLowerCase().includes(dirLower));
 
-        return matchesSearch && matchesMinSize && matchesCoupling &&
-            matchesFileCount && matchesDirectory;
+        return matchesSearch && matchesCoupling &&
+            matchesFileCount && matchesChurn &&
+            matchesAuthors && matchesDirectory;
     });
 }
 

@@ -8,7 +8,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import type { ClusterData, RepoUrlConfig, ModalViewMode } from '../types';
 import { buildFileTree, formatNumber, formatPercent } from '../utils';
-import { Modal, Select, Button } from '../ui';
+import { Modal, Select, Button } from '@/components/shared';
 import { FileTreeView } from './FileTreeView';
 import { FileListView } from './FileListView';
 import { FolderSummaryView } from './FolderSummaryView';

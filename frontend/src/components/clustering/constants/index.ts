@@ -2,59 +2,46 @@
  * Clustering Module Constants
  * 
  * Centralized constants for colors, thresholds, and configuration values.
+ * Re-exports from design-tokens for backward compatibility.
  */
 
+import { colors, getCouplingColor as getColor, COUPLING_THRESHOLDS } from '@/design-tokens';
+
 // ============================================================
-// Color Palettes
+// Color Palettes (Re-exported from design-tokens)
 // ============================================================
 
 /** Color palette for cluster visualization */
-export const CLUSTER_PALETTE = [
-    '#38bdf8', '#22c55e', '#f97316', '#e879f9', '#facc15',
-    '#60a5fa', '#34d399', '#fb7185', '#a78bfa', '#fbbf24',
-    '#2dd4bf', '#f472b6', '#818cf8', '#fb923c', '#4ade80',
-    '#c084fc', '#fcd34d', '#67e8f9', '#f87171', '#a3e635'
-] as const;
+export const CLUSTER_PALETTE = colors.clusters;
 
 /** Color for unclustered/grayed items */
-export const UNCLUSTERED_COLOR = '#64748b';
-export const GRAYED_COLOR = '#374151';
+export const UNCLUSTERED_COLOR = colors.unclustered;
+export const GRAYED_COLOR = colors.grayed;
 
 /** Coupling strength color thresholds */
 export const COUPLING_COLORS = {
-    veryHigh: { threshold: 0.8, color: '#ef4444' },  // Red
-    high: { threshold: 0.6, color: '#f97316' },       // Orange
-    medium: { threshold: 0.4, color: '#facc15' },     // Yellow
-    low: { threshold: 0.2, color: '#22c55e' },        // Green
-    veryLow: { threshold: 0, color: '#38bdf8' }       // Blue
+    veryHigh: { threshold: COUPLING_THRESHOLDS.veryHigh, color: colors.coupling.veryHigh },
+    high: { threshold: COUPLING_THRESHOLDS.high, color: colors.coupling.high },
+    medium: { threshold: COUPLING_THRESHOLDS.medium, color: colors.coupling.medium },
+    low: { threshold: COUPLING_THRESHOLDS.low, color: colors.coupling.low },
+    veryLow: { threshold: 0, color: colors.coupling.veryLow }
 } as const;
 
 /** Get color based on coupling strength */
-export function getCouplingColor(coupling: number): string {
-    if (coupling >= COUPLING_COLORS.veryHigh.threshold) return COUPLING_COLORS.veryHigh.color;
-    if (coupling >= COUPLING_COLORS.high.threshold) return COUPLING_COLORS.high.color;
-    if (coupling >= COUPLING_COLORS.medium.threshold) return COUPLING_COLORS.medium.color;
-    if (coupling >= COUPLING_COLORS.low.threshold) return COUPLING_COLORS.low.color;
-    return COUPLING_COLORS.veryLow.color;
-}
+export const getCouplingColor = getColor;
 
 /** District level colors for treemap visualization */
-export const DISTRICT_COLORS = [
-    '#1e293b', // Level 0 - darkest
-    '#334155', // Level 1
-    '#475569', // Level 2
-    '#64748b', // Level 3
-    '#94a3b8'  // Level 4 - lightest
-] as const;
+export const DISTRICT_COLORS = colors.district;
 
 // ============================================================
 // Default Filter Values
 // ============================================================
 
 export const DEFAULT_FILTER_STATE = {
-    minClusterSize: 2,
     couplingRange: [0.05, 1] as [number, number],
     fileRange: [0, 100] as [number, number],
+    churnRange: [0, 10000] as [number, number],
+    authorRange: [0, 50] as [number, number],
     search: ''
 } as const;
 

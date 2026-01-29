@@ -8,7 +8,7 @@
 import { memo } from 'react';
 import { SlidersHorizontal, Grid3X3, Table2 } from 'lucide-react';
 import type { ClusterFilterState, ViewMode, SortField, SortOrder } from '../types';
-import { Select, NumberInput, SearchInput, RangeSlider } from '../ui';
+import { Select, NumberInput, SearchInput, RangeSlider } from '@/components/shared';
 
 // ============================================================
 // Types
@@ -21,6 +21,8 @@ export interface ViewFiltersBarProps {
     filters: ClusterFilterState;
     onFiltersChange: (filters: ClusterFilterState) => void;
     maxFileCount: number;
+    maxChurn?: number;
+    maxAuthorCount?: number;
     filteredCount: number;
     totalCount: number;
 
@@ -83,6 +85,8 @@ export const ViewFiltersBar = memo(function ViewFiltersBar({
     filters,
     onFiltersChange,
     maxFileCount,
+    maxChurn = 10000,
+    maxAuthorCount = 50,
     filteredCount,
     totalCount,
     viewMode,
@@ -130,8 +134,8 @@ export const ViewFiltersBar = memo(function ViewFiltersBar({
                                 key={option.value}
                                 onClick={() => onViewModeChange(option.value)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors ${viewMode === option.value
-                                        ? 'bg-sky-500/20 text-sky-400'
-                                        : 'text-slate-400 hover:text-slate-200'
+                                    ? 'bg-sky-500/20 text-sky-400'
+                                    : 'text-slate-400 hover:text-slate-200'
                                     }`}
                             >
                                 {option.icon}
@@ -180,16 +184,6 @@ export const ViewFiltersBar = memo(function ViewFiltersBar({
                     />
                 )}
 
-                {/* Min cluster size */}
-                <NumberInput
-                    value={filters.minClusterSize}
-                    onChange={(v) => updateFilter('minClusterSize', v)}
-                    label="Min files"
-                    min={1}
-                    max={100}
-                    width="w-16"
-                />
-
                 {/* Search */}
                 <SearchInput
                     value={filters.search}
@@ -212,7 +206,7 @@ export const ViewFiltersBar = memo(function ViewFiltersBar({
             </div>
 
             {/* Bottom Row: Range Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <RangeSlider
                     label="Coupling range"
                     min={0}
@@ -226,11 +220,27 @@ export const ViewFiltersBar = memo(function ViewFiltersBar({
                 />
 
                 <RangeSlider
-                    label="File count range"
+                    label="Files range"
                     min={0}
                     max={maxFileCount}
                     value={filters.fileRange}
                     onChange={(v) => updateFilter('fileRange', v)}
+                />
+
+                <RangeSlider
+                    label="Churn range"
+                    min={0}
+                    max={maxChurn}
+                    value={filters.churnRange}
+                    onChange={(v) => updateFilter('churnRange', v)}
+                />
+
+                <RangeSlider
+                    label="Authors range"
+                    min={0}
+                    max={maxAuthorCount}
+                    value={filters.authorRange}
+                    onChange={(v) => updateFilter('authorRange', v)}
                 />
             </div>
 

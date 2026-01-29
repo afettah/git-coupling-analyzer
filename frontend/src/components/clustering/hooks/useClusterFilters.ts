@@ -40,6 +40,8 @@ export interface UseClusterFiltersReturn {
     filteredClusters: ReturnType<typeof enrichClustersWithNames>;
     stats: ReturnType<typeof calculateClusterStats>;
     maxFileCount: number;
+    maxChurn: number;
+    maxAuthorCount: number;
 }
 
 export function useClusterFilters({
@@ -47,15 +49,21 @@ export function useClusterFilters({
     initialFilters = {},
     initialSort = DEFAULT_SORT
 }: UseClusterFiltersOptions): UseClusterFiltersReturn {
-    // Calculate max file count for range sliders
-    const maxFileCount = useMemo(() => {
-        return Math.max(...clusters.map(c => c.files?.length || c.size || 0), 100);
+    // Calculate max values for range sliders
+    const { maxFileCount, maxChurn, maxAuthorCount } = useMemo(() => {
+        return {
+            maxFileCount: Math.max(...clusters.map(c => c.files?.length || c.size || 0), 100),
+            maxChurn: Math.max(...clusters.map((c: any) => c.total_churn || 0), 1000),
+            maxAuthorCount: Math.max(...clusters.map((c: any) => c.common_authors?.length || 0), 10)
+        };
     }, [clusters]);
 
     // Initialize filter state with defaults and provided initial values
     const [filters, setFilters] = useState<ClusterFilterState>(() => ({
         ...DEFAULT_FILTER_STATE,
         fileRange: [0, maxFileCount],
+        churnRange: [0, maxChurn],
+        authorRange: [0, maxAuthorCount],
         ...initialFilters
     }));
 
@@ -75,11 +83,13 @@ export function useClusterFilters({
     const resetFilters = useCallback(() => {
         setFilters({
             ...DEFAULT_FILTER_STATE,
-            fileRange: [0, maxFileCount]
+            fileRange: [0, maxFileCount],
+            churnRange: [0, maxChurn],
+            authorRange: [0, maxAuthorCount]
         });
         setSortBy(DEFAULT_SORT.field);
         setSortOrder(DEFAULT_SORT.order);
-    }, [maxFileCount]);
+    }, [maxFileCount, maxChurn, maxAuthorCount]);
 
     // Enrich clusters with smart names
     const clustersWithNames = useMemo(() => {
@@ -107,7 +117,9 @@ export function useClusterFilters({
         setSortOrder,
         filteredClusters,
         stats,
-        maxFileCount
+        maxFileCount,
+        maxChurn,
+        maxAuthorCount
     };
 }
 

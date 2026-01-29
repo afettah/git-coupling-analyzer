@@ -1,13 +1,12 @@
 /**
- * Cluster Filter Bar Component (Refactored)
+ * Cluster Filter Bar Component
  * 
  * Composable filter controls for cluster views.
- * Single responsibility: rendering filter UI and dispatching changes.
  */
 
 import { SlidersHorizontal } from 'lucide-react';
 import type { ClusterFilterState, ViewMode, SortField, SortOrder } from '../types';
-import { Select, NumberInput, SearchInput, RangeSlider } from '../ui';
+import { Select, NumberInput, SearchInput, RangeSlider } from '@/components/shared';
 
 export interface ClusterFilterBarProps {
     // View and sort controls
@@ -26,6 +25,8 @@ export interface ClusterFilterBarProps {
     depth: number;
     onDepthChange: (depth: number) => void;
     maxFileCount: number;
+    maxChurn?: number;
+    maxAuthorCount?: number;
 
     // Optional additional filters
     showDirectory?: boolean;
@@ -63,8 +64,8 @@ export function ClusterFilterBar({
     onFiltersChange,
     depth,
     onDepthChange,
-    maxFileCount,
-    showDirectory = false,
+    maxFileCount, maxChurn = 10000,
+    maxAuthorCount = 50, showDirectory = false,
     directory,
     onDirectoryChange
 }: ClusterFilterBarProps) {
@@ -114,15 +115,6 @@ export function ClusterFilterBar({
                     width="w-16"
                 />
 
-                <NumberInput
-                    value={filters.minClusterSize}
-                    onChange={(v) => updateFilter('minClusterSize', v)}
-                    label="Min files"
-                    min={1}
-                    max={100}
-                    width="w-16"
-                />
-
                 <SearchInput
                     value={filters.search}
                     onChange={(v) => updateFilter('search', v)}
@@ -132,7 +124,7 @@ export function ClusterFilterBar({
             </div>
 
             {/* Bottom Row: Range Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <RangeSlider
                     label="Coupling range"
                     min={0}
@@ -146,11 +138,27 @@ export function ClusterFilterBar({
                 />
 
                 <RangeSlider
-                    label="File count range"
+                    label="Files range"
                     min={0}
                     max={maxFileCount}
                     value={filters.fileRange}
                     onChange={(v) => updateFilter('fileRange', v)}
+                />
+
+                <RangeSlider
+                    label="Churn range"
+                    min={0}
+                    max={maxChurn}
+                    value={filters.churnRange}
+                    onChange={(v) => updateFilter('churnRange', v)}
+                />
+
+                <RangeSlider
+                    label="Authors range"
+                    min={0}
+                    max={maxAuthorCount}
+                    value={filters.authorRange}
+                    onChange={(v) => updateFilter('authorRange', v)}
                 />
             </div>
 

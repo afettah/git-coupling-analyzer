@@ -99,9 +99,10 @@ export type ColorMode = 'cluster' | 'coupling';
 
 /** Unified filter state for clusters */
 export interface ClusterFilterState {
-    minClusterSize: number;
     couplingRange: [number, number];
     fileRange: [number, number];
+    churnRange: [number, number];
+    authorRange: [number, number];
     search: string;
 }
 

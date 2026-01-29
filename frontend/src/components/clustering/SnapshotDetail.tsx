@@ -91,18 +91,21 @@ export default function SnapshotDetail({ repoId }: SnapshotDetailProps) {
 
     // Process clusters with shared filters
     const clusters = result?.clusters || [];
-    const maxFileCount = useMemo(
-        () => Math.max(1, ...clusters.map(c => c.files?.length || c.size || 0)),
-        [clusters]
-    );
+    const { maxFileCount, maxChurn, maxAuthorCount } = useMemo(() => ({
+        maxFileCount: Math.max(1, ...clusters.map(c => c.files?.length || c.size || 0)),
+        maxChurn: Math.max(1, ...clusters.map((c: any) => c.total_churn || 0)),
+        maxAuthorCount: Math.max(1, ...clusters.map((c: any) => c.common_authors?.length || 0))
+    }), [clusters]);
 
-    // Update file range when maxFileCount changes
+    // Update ranges when data changes
     useEffect(() => {
         setFilters(prev => ({
             ...prev,
-            fileRange: [prev.fileRange[0], Math.max(prev.fileRange[1], maxFileCount)]
+            fileRange: [prev.fileRange[0], Math.max(prev.fileRange[1], maxFileCount)],
+            churnRange: [prev.churnRange[0], Math.max(prev.churnRange[1], maxChurn)],
+            authorRange: [prev.authorRange[0], Math.max(prev.authorRange[1], maxAuthorCount)]
         }));
-    }, [maxFileCount]);
+    }, [maxFileCount, maxChurn, maxAuthorCount]);
 
     // Enrich clusters with names
     const clustersWithNames = useMemo(
@@ -162,6 +165,8 @@ export default function SnapshotDetail({ repoId }: SnapshotDetailProps) {
                 filters={filters}
                 onFiltersChange={setFilters}
                 maxFileCount={maxFileCount}
+                maxChurn={maxChurn}
+                maxAuthorCount={maxAuthorCount}
                 filteredCount={filteredClusters.length}
                 totalCount={clusters.length}
                 activeView={activeView}

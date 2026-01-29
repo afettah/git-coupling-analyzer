@@ -133,7 +133,7 @@ export {
 } from './hooks';
 
 // ============================================================
-// UI Components
+// UI Components (Re-exported from shared library)
 // ============================================================
 
 export {
@@ -149,8 +149,10 @@ export {
     LoadingState,
     EmptyState,
     CouplingLegend,
-    ClusterFilters,
-} from './ui';
+} from '@/components/shared';
+
+// Clustering-specific filter component
+export { ClusterFilters } from './ui';
 
 // ============================================================
 // Feature Components

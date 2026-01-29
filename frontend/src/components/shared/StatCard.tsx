@@ -1,8 +1,10 @@
 /**
- * Stat Card Component
+ * StatCard Component
  * 
  * Displays a metric with label in a compact card format.
  */
+
+import { cn } from '@/lib/utils';
 
 export interface StatCardProps {
     label: string;
@@ -17,13 +19,13 @@ const colorStyles = {
     success: 'text-emerald-400',
     warning: 'text-amber-400',
     danger: 'text-rose-400',
-    info: 'text-sky-400'
+    info: 'text-sky-400',
 };
 
 const sizeStyles = {
     sm: { value: 'text-lg', label: 'text-[10px]' },
     md: { value: 'text-2xl', label: 'text-xs' },
-    lg: { value: 'text-3xl', label: 'text-sm' }
+    lg: { value: 'text-3xl', label: 'text-sm' },
 };
 
 export function StatCard({
@@ -31,18 +33,16 @@ export function StatCard({
     value,
     color = 'default',
     size = 'sm',
-    className = ''
+    className,
 }: StatCardProps) {
     return (
-        <div className={`bg-slate-950 p-3 rounded-xl border border-slate-800 ${className}`}>
-            <div className={`font-bold ${colorStyles[color]} ${sizeStyles[size].value}`}>
+        <div className={cn('bg-slate-950 p-3 rounded-xl border border-slate-800', className)}>
+            <div className={cn('font-bold', colorStyles[color], sizeStyles[size].value)}>
                 {value}
             </div>
-            <div className={`uppercase text-slate-500 ${sizeStyles[size].label}`}>
+            <div className={cn('uppercase text-slate-500', sizeStyles[size].label)}>
                 {label}
             </div>
         </div>
     );
 }
-
-export default StatCard;

@@ -1,11 +1,12 @@
 /**
  * Modal Component
  * 
- * Reusable modal dialog with consistent styling.
+ * Accessible modal dialog with keyboard handling.
  */
 
 import { useCallback, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface ModalProps {
     open: boolean;
@@ -23,7 +24,7 @@ const sizeStyles = {
     md: 'max-w-2xl',
     lg: 'max-w-4xl',
     xl: 'max-w-5xl',
-    full: 'max-w-[95vw]'
+    full: 'max-w-[95vw]',
 };
 
 export function Modal({
@@ -34,7 +35,7 @@ export function Modal({
     children,
     footer,
     size = 'lg',
-    className = ''
+    className,
 }: ModalProps) {
     // Handle escape key
     useEffect(() => {
@@ -69,7 +70,13 @@ export function Modal({
             className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6"
             onClick={handleBackdropClick}
         >
-            <div className={`bg-slate-900 border border-slate-800 rounded-2xl w-full ${sizeStyles[size]} max-h-[90vh] overflow-hidden flex flex-col ${className}`}>
+            <div
+                className={cn(
+                    'bg-slate-900 border border-slate-800 rounded-2xl w-full max-h-[90vh] overflow-hidden flex flex-col',
+                    sizeStyles[size],
+                    className
+                )}
+            >
                 {/* Header */}
                 {(title || subtitle) && (
                     <div className="p-5 border-b border-slate-800 flex items-center justify-between flex-shrink-0">
@@ -101,5 +108,3 @@ export function Modal({
         </div>
     );
 }
-
-export default Modal;

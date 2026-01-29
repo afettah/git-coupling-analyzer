@@ -1,27 +1,28 @@
 /**
- * Coupling Legend Component
+ * CouplingLegend Component
  * 
  * Visual legend showing coupling strength color mapping.
  */
 
-import { COUPLING_COLORS } from '../constants';
+import { colors, COUPLING_THRESHOLDS } from '@/design-tokens';
+import { cn } from '@/lib/utils';
 
 export interface CouplingLegendProps {
     className?: string;
     compact?: boolean;
 }
 
-export function CouplingLegend({ className = '', compact = false }: CouplingLegendProps) {
-    const items = [
-        { label: 'High (80%+)', color: COUPLING_COLORS.veryHigh.color },
-        { label: 'Medium (60-80%)', color: COUPLING_COLORS.high.color },
-        { label: 'Low (40-60%)', color: COUPLING_COLORS.medium.color },
-        { label: 'Very low (<40%)', color: COUPLING_COLORS.low.color }
-    ];
+const items = [
+    { label: 'High (80%+)', color: colors.coupling.veryHigh },
+    { label: 'Medium (60-80%)', color: colors.coupling.high },
+    { label: 'Low (40-60%)', color: colors.coupling.medium },
+    { label: 'Very low (<40%)', color: colors.coupling.low },
+];
 
+export function CouplingLegend({ className, compact = false }: CouplingLegendProps) {
     if (compact) {
         return (
-            <div className={`flex items-center gap-3 text-xs text-slate-400 ${className}`}>
+            <div className={cn('flex items-center gap-3 text-xs text-slate-400', className)}>
                 {items.map(item => (
                     <span key={item.color} className="flex items-center gap-1">
                         <span
@@ -36,7 +37,7 @@ export function CouplingLegend({ className = '', compact = false }: CouplingLege
     }
 
     return (
-        <div className={`flex items-center gap-2 text-xs text-slate-400 ${className}`}>
+        <div className={cn('flex items-center gap-2 text-xs text-slate-400', className)}>
             {items.map(item => (
                 <span key={item.color} className="flex items-center gap-1.5">
                     <span
@@ -50,4 +51,5 @@ export function CouplingLegend({ className = '', compact = false }: CouplingLege
     );
 }
 
-export default CouplingLegend;
+// Re-export for convenience
+export { COUPLING_THRESHOLDS };
