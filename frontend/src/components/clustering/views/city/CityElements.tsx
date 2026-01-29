@@ -5,8 +5,12 @@
 import React, { useState, useMemo, memo, useCallback, useRef } from 'react';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import type { BuildingData, DistrictData } from '../types';
-import { DISTRICT_COLORS } from '../constants';
+import type { BuildingData, DistrictData } from '../../types/index';
+import { DISTRICT_COLORS } from '../../constants';
+
+// Default colors
+const DEFAULT_SELECTED_COLOR = '#fbbf24';
+const DEFAULT_HOVERED_COLOR = '#60a5fa';
 
 // ============================================================
 // Building Component
@@ -16,40 +20,42 @@ interface BuildingProps {
     building: BuildingData;
     onClick?: () => void;
     isSelected?: boolean;
-    showLabel?: boolean;
+    selectedColor?: string;
+    hoveredColor?: string;
 }
 
 export const Building = memo(function Building({
     building,
     onClick,
     isSelected = false,
-    showLabel = true
+    selectedColor = DEFAULT_SELECTED_COLOR,
+    hoveredColor = DEFAULT_HOVERED_COLOR
 }: BuildingProps) {
     const [hovered, setHovered] = useState(false);
     const meshRef = useRef<THREE.Mesh>(null);
 
-    const handlePointerOver = useCallback((e: THREE.Event) => {
+    const handlePointerOver = useCallback((e: { stopPropagation: () => void }) => {
         e.stopPropagation();
         setHovered(true);
         document.body.style.cursor = 'pointer';
     }, []);
 
-    const handlePointerOut = useCallback((e: THREE.Event) => {
+    const handlePointerOut = useCallback((e: { stopPropagation: () => void }) => {
         e.stopPropagation();
         setHovered(false);
         document.body.style.cursor = 'auto';
     }, []);
 
-    const handleClick = useCallback((e: THREE.Event) => {
+    const handleClick = useCallback((e: { stopPropagation: () => void }) => {
         e.stopPropagation();
         onClick?.();
     }, [onClick]);
 
     const color = useMemo(() => {
-        if (isSelected) return '#fbbf24';
-        if (hovered) return '#60a5fa';
+        if (isSelected) return selectedColor;
+        if (hovered) return hoveredColor;
         return building.color;
-    }, [isSelected, hovered, building.color]);
+    }, [isSelected, hovered, building.color, selectedColor, hoveredColor]);
 
     const emissive = useMemo(() => {
         if (hovered || isSelected) return color;
@@ -77,7 +83,7 @@ export const Building = memo(function Building({
                 />
             </mesh>
 
-            {showLabel && hovered && (
+            {hovered && (
                 <Text
                     position={[0, building.height + 0.5, 0]}
                     fontSize={0.3}
@@ -100,16 +106,18 @@ export const Building = memo(function Building({
 
 interface DistrictFloorProps {
     district: DistrictData;
-    showLabel?: boolean;
+    customColors?: string[];
 }
 
 export const DistrictFloor = memo(function DistrictFloor({
     district,
-    showLabel = true
+    customColors
 }: DistrictFloorProps) {
+    const colors = customColors || DISTRICT_COLORS;
+
     const color = useMemo(() => {
-        return DISTRICT_COLORS[district.level % DISTRICT_COLORS.length];
-    }, [district.level]);
+        return colors[district.level % colors.length];
+    }, [district.level, colors]);
 
     const yOffset = useMemo(() => {
         return -0.02 * (district.level + 1);
@@ -160,12 +168,15 @@ export const DistrictFloor = memo(function DistrictFloor({
 interface DistrictLabelProps {
     district: DistrictData;
     maxLabelLength?: number;
+    customColors?: string[];
 }
 
 export const DistrictLabel = memo(function DistrictLabel({
     district,
-    maxLabelLength = 15
+    maxLabelLength = 15,
+    customColors
 }: DistrictLabelProps) {
+    const colors = customColors || DISTRICT_COLORS;
     const labelText = useMemo(() => {
         const name = district.name;
         if (name.length > maxLabelLength) {
@@ -210,8 +221,8 @@ export const DistrictLabel = memo(function DistrictLabel({
     }, [district.labelPosition]);
 
     const color = useMemo(() => {
-        return DISTRICT_COLORS[district.level % DISTRICT_COLORS.length];
-    }, [district.level]);
+        return colors[district.level % colors.length];
+    }, [district.level, colors]);
 
     if (district.width < 1 || district.depth < 1) {
         return null;
@@ -241,14 +252,16 @@ interface BuildingsProps {
     buildings: BuildingData[];
     selectedPath?: string | null;
     onSelectBuilding?: (building: BuildingData) => void;
-    showLabels?: boolean;
+    selectedColor?: string;
+    hoveredColor?: string;
 }
 
 export const Buildings = memo(function Buildings({
     buildings,
     selectedPath,
     onSelectBuilding,
-    showLabels = true
+    selectedColor,
+    hoveredColor
 }: BuildingsProps) {
     return (
         <group>
@@ -258,7 +271,8 @@ export const Buildings = memo(function Buildings({
                     building={building}
                     isSelected={selectedPath === building.fullPath}
                     onClick={() => onSelectBuilding?.(building)}
-                    showLabel={showLabels}
+                    selectedColor={selectedColor}
+                    hoveredColor={hoveredColor}
                 />
             ))}
         </group>
@@ -272,18 +286,20 @@ export const Buildings = memo(function Buildings({
 interface DistrictsProps {
     districts: DistrictData[];
     showLabels?: boolean;
+    customColors?: string[];
 }
 
 export const Districts = memo(function Districts({
     districts,
-    showLabels = true
+    showLabels = true,
+    customColors
 }: DistrictsProps) {
     return (
         <group>
             {districts.map((district, index) => (
                 <React.Fragment key={`${district.path}-${index}`}>
-                    <DistrictFloor district={district} />
-                    {showLabels && <DistrictLabel district={district} />}
+                    <DistrictFloor district={district} customColors={customColors} />
+                    {showLabels && <DistrictLabel district={district} customColors={customColors} />}
                 </React.Fragment>
             ))}
         </group>

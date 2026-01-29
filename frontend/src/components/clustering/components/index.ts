@@ -17,3 +17,4 @@ export { FolderSummaryView, type FolderSummaryViewProps } from './FolderSummaryV
 
 // Filter components
 export { ClusterFilterBar, type ClusterFilterBarProps } from './ClusterFilterBar';
+export { ViewFiltersBar, type ViewFiltersBarProps, type ActiveView } from './ViewFiltersBar';

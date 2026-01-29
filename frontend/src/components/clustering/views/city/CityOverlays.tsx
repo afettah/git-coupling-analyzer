@@ -6,7 +6,7 @@
 
 import React, { memo } from 'react';
 import { Settings, Info, Box, Layers, RotateCcw, Eye, EyeOff, Maximize2, Minimize2, Palette } from 'lucide-react';
-import type { BuildingData } from '../types';
+import type { BuildingData } from '../../types/index';
 import { CouplingLegend } from '../../ui';
 import { formatPercent } from '../../utils';
 
@@ -98,7 +98,6 @@ function getCouplingTextColor(coupling: number): string {
 
 interface CityControlsProps {
     colorBy: 'cluster' | 'coupling';
-    onColorByChange: (value: 'cluster' | 'coupling') => void;
     showLabels: boolean;
     onShowLabelsChange: (value: boolean) => void;
     autoRotate: boolean;
@@ -115,7 +114,6 @@ interface CityControlsProps {
 
 export const CityControls = memo(function CityControls({
     colorBy,
-    onColorByChange,
     showLabels,
     onShowLabelsChange,
     autoRotate,
@@ -130,11 +128,11 @@ export const CityControls = memo(function CityControls({
     onOpenSettings
 }: CityControlsProps) {
     return (
-        <div className="absolute top-4 left-4 bg-slate-800/95 rounded-lg p-4 min-w-56 shadow-xl border border-slate-700">
+        <div className="absolute top-4 left-4 bg-slate-800/95 rounded-lg p-4 min-w-52 shadow-xl border border-slate-700">
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2 text-white">
                     <Settings size={16} />
-                    <span className="font-semibold">City Settings</span>
+                    <span className="font-semibold text-sm">3D Settings</span>
                 </div>
                 <div className="flex gap-1">
                     {onOpenSettings && (
@@ -159,23 +157,11 @@ export const CityControls = memo(function CityControls({
             </div>
 
             <div className="space-y-4">
-                {/* Color By */}
-                <ControlGroup label="Color by">
-                    <div className="flex gap-1">
-                        <ToggleButton
-                            active={colorBy === 'cluster'}
-                            onClick={() => onColorByChange('cluster')}
-                            icon={<Layers size={14} />}
-                            label="Cluster"
-                        />
-                        <ToggleButton
-                            active={colorBy === 'coupling'}
-                            onClick={() => onColorByChange('coupling')}
-                            icon={<Box size={14} />}
-                            label="Coupling"
-                        />
-                    </div>
-                </ControlGroup>
+                {/* Color mode indicator */}
+                <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-700/50 rounded px-2 py-1.5">
+                    {colorBy === 'cluster' ? <Layers size={12} /> : <Box size={12} />}
+                    <span>Colored by {colorBy}</span>
+                </div>
 
                 {/* Height Scale */}
                 <ControlGroup label="Building Height">
@@ -256,34 +242,6 @@ const ControlGroup = memo(function ControlGroup({ label, children }: ControlGrou
             <label className="text-xs text-slate-400 mb-1 block">{label}</label>
             {children}
         </div>
-    );
-});
-
-interface ToggleButtonProps {
-    active: boolean;
-    onClick: () => void;
-    icon: React.ReactNode;
-    label: string;
-}
-
-const ToggleButton = memo(function ToggleButton({
-    active,
-    onClick,
-    icon,
-    label
-}: ToggleButtonProps) {
-    return (
-        <button
-            onClick={onClick}
-            className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded text-xs transition-colors
-                ${active
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                }`}
-        >
-            {icon}
-            {label}
-        </button>
     );
 });
 

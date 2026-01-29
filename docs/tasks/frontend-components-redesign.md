@@ -1,64 +1,13 @@
 # Task: Frontend Components Redesign
 
-**Status:** In Progress (Phase 2 Partially Complete)  
+**Status:** TODO  
 **Priority:** High  
 
 ---
 
 ## Overview
 
-A comprehensive redesign of the frontend architecture to improve reusability, consistency, and developer experience. This task introduces a shared component library, unified design patterns, simplified APIs, and better customization support across the application.
-
----
-
-## Current Progress
-
-### ✅ Completed
-- **UI Components Library** (`components/clustering/ui/`): Created reusable UI components including:
-  - `Button` — Multiple variants and sizes
-  - `Select` — Dropdown with options
-  - `SearchInput` — Search input with icon
-  - `NumberInput` — Numeric input with label
-  - `RangeSlider` — Dual-handle range slider
-  - `ToggleButton` — Toggle/switch button
-  - `StatCard` — Statistics display card
-  - `Modal` — Modal dialog
-  - `Spinner` / `LoadingState` — Loading indicators
-  - `EmptyState` — Empty state placeholder
-  - `CouplingLegend` — Coupling color legend
-  - Barrel exports via `ui/index.ts`
-
-- **Constants Module** (`components/clustering/constants/`): Centralized constants including:
-  - `CLUSTER_PALETTE` — Color palette for clusters
-  - `COUPLING_COLORS` — Coupling strength colors with thresholds
-  - `DISTRICT_COLORS` — Treemap visualization colors
-  - `DEFAULT_FILTER_STATE` — Default filter values
-  - `EXCALIDRAW_CONFIG` — Diagram configuration
-  - `CITY_CONFIG` — ProjectCity visualization config
-  - `getCouplingColor()` — Helper function for coupling colors
-
-- **Refactored Components**: 
-  - `ClusterFilterBar` — Uses `RangeSlider`, `Select`, `NumberInput`, `SearchInput` from `ui/`
-  - `ClusterModal` — Uses `Modal`, `Select`, `Button` from `ui/`
-  - `ExcalidrawView` — Uses `ClusterFilters`, `CouplingLegend`, `Button` from `ui/`
-  - `ProjectCity` — Uses `Spinner` from `ui/`
-
-- **Custom Hooks** (`components/clustering/hooks/`):
-  - `useSnapshots` — Snapshot management
-  - `useSelection` — Selection state management
-  - `useClusterFilters` — Filter state management
-
-### 🔄 In Progress
-- Migration of remaining components to use shared UI components
-- Legacy `ClusterFilters.tsx` still uses inline range inputs (not migrated to `RangeSlider`)
-
-### ❌ Not Started
-- `design-tokens/` folder structure (colors, spacing, typography as separate modules)
-- `config/ui.config.ts` — Centralized UI configuration file
-- `components/shared/` — Global shared components (outside clustering module)
-- `styles/variables.css` — CSS custom properties for theming
-- Storybook integration for component documentation
-- Accessibility audit
+A comprehensive redesign of the frontend architecture to improve reusability, consistency, and developer experience. This task introduces a **global shared component library**, unified design patterns, simplified APIs, and better customization support across **all application features**.
 
 ---
 
@@ -465,69 +414,115 @@ frontend/src/
 
 ---
 
-## Migration Plan
+## TODO: Implementation Plan
 
-### Phase 1: Foundation ✅ COMPLETE
-1. ~~Create `design-tokens/` with colors, spacing, typography~~ → Created as `constants/index.ts`
-2. ~~Create `config/ui.config.ts` with default values~~ → Defaults in `constants/index.ts`
-3. ~~Set up `components/shared/` folder structure~~ → Created as `clustering/ui/`
-4. ~~Create barrel exports (`index.ts` files)~~ → Done in `ui/index.ts`
+### Phase 1: Foundation (Design System)
+- [ ] Create `design-tokens/` folder with colors, spacing, typography modules
+- [ ] Create `config/ui.config.ts` with default UI values
+- [ ] Create `styles/variables.css` with CSS custom properties
+- [ ] Set up path alias `@/` for cleaner imports
 
-### Phase 2: Core Components ✅ MOSTLY COMPLETE
-1. ~~Build `RangeSlider` component with dual handles~~ → Done
-2. ~~Build `Button`, `Card`, `Input` components~~ → Done (Button, NumberInput, SearchInput, Select)
-3. ~~Build `EmptyState`, `LoadingSpinner` components~~ → Done (EmptyState, Spinner, LoadingState)
-4. ❌ Write Storybook stories for each component → Not started
+### Phase 2: Global Shared Components
+- [ ] Create `components/shared/` folder structure
+- [ ] Build core components:
+  - [ ] `Button` — Multiple variants (primary, secondary, ghost, danger) and sizes
+  - [ ] `Card` — With compound components (Header, Body, Footer)
+  - [ ] `Modal` — Dialog with overlay and keyboard handling
+  - [ ] `RangeSlider` — Dual-handle range selector (use @radix-ui/react-slider)
+  - [ ] `Select` — Dropdown with options
+  - [ ] `SearchInput` — Input with search icon and debounce
+  - [ ] `NumberInput` — Numeric input with min/max/step
+  - [ ] `StatCard` — Statistics display card
+  - [ ] `EmptyState` — Empty state placeholder with icon and action
+  - [ ] `LoadingSpinner` — Loading indicator
+  - [ ] `ErrorBanner` — Error message display
+  - [ ] `Badge` — Small label/tag component
+  - [ ] `ProgressBar` — Progress indicator
+- [ ] Create barrel exports (`index.ts`) for all shared components
+- [ ] Add TypeScript types for all component props
 
-### Phase 3: Migration 🔄 IN PROGRESS
-1. ❌ Replace inline styles with design tokens → Partially done in refactored components
-2. Swap dual sliders → `RangeSlider` in:
-   - ~~`ClusterFilterBar.tsx`~~ ✅ Done
-   - `ClusterFilters.tsx` ❌ Still uses inline inputs
-   - `ImpactGraph.tsx` ❌ Not migrated
-3. ~~Extract repeated patterns into shared components~~ → Done for clustering module
-4. ~~Update imports to use barrel exports~~ → Done for `ui/` components
+### Phase 3: Global Migration
+- [ ] Migrate all features to use `@/components/shared`:
+  - [ ] `components/clustering/` — Replace local `ui/` with shared components
+  - [ ] `components/ImpactGraph.tsx` — Use shared Button, RangeSlider, Card
+  - [ ] `components/AnalysisDashboard.tsx` — Use shared StatCard, Button, Modal
+  - [ ] `components/RepoList.tsx` — Use shared Card, Button, EmptyState
+  - [ ] `components/FolderTree.tsx` — Use design tokens for colors/spacing
+  - [ ] `components/CreateRepoModal.tsx` — Use shared Modal, Button, Input
+  - [ ] `components/ErrorNotification.tsx` — Use shared ErrorBanner
+- [ ] Replace all inline styles with design tokens
+- [ ] Replace all dual sliders with single `RangeSlider` component
+- [ ] Update imports to use barrel exports
 
-### Phase 4: Polish ❌ NOT STARTED
-1. Add component documentation
-2. Create usage examples
-3. Performance audit (bundle size, rendering)
-4. Accessibility audit (ARIA, keyboard navigation)
+### Phase 4: Shared Hooks
+- [ ] Create `hooks/` folder at root level for shared hooks:
+  - [ ] `useDebounce` — Debounced value
+  - [ ] `useLocalStorage` — Persistent state
+  - [ ] `useMediaQuery` — Responsive breakpoints
+  - [ ] `useClickOutside` — Click outside detection
+- [ ] Migrate feature-specific hooks that are reusable
+
+### Phase 5: Polish
+- [ ] Add component documentation (JSDoc comments)
+- [ ] Set up Storybook for component catalog
+- [ ] Write Storybook stories for all shared components
+- [ ] Performance audit (bundle size, rendering)
+- [ ] Accessibility audit (ARIA, keyboard navigation)
 
 ---
 
-## Files Impacted
+## Files to Create
 
-| File | Action | Priority | Status |
-|------|--------|----------|--------|
-| `components/clustering/ui/` | Create component library | High | ✅ Done |
-| `components/clustering/constants/` | Create design constants | High | ✅ Done |
-| `components/clustering/hooks/` | Create custom hooks | High | ✅ Done |
-| `components/clustering/components/ClusterFilterBar.tsx` | Use shared components | High | ✅ Done |
-| `components/clustering/components/ClusterModal.tsx` | Use shared components | High | ✅ Done |
-| `components/clustering/views/ExcalidrawView.tsx` | Use shared components | High | ✅ Done |
-| `components/clustering/views/ProjectCity.tsx` | Use shared components | Medium | ✅ Done |
-| `components/clustering/ClusterFilters.tsx` | Refactor to use RangeSlider | High | ❌ Pending |
-| `design-tokens/` (new) | Create design system | Medium | ❌ Not started |
-| `config/ui.config.ts` (new) | Create configuration | Medium | ❌ Not started |
-| `components/shared/` (new) | Global shared components | Medium | ❌ Not started |
-| `components/ImpactGraph.tsx` | Use shared components | Medium | ❌ Not started |
-| `components/AnalysisDashboard.tsx` | Use shared components | Medium | ❌ Not started |
-| `components/RepoList.tsx` | Use shared Card, Button | Low | ❌ Not started |
-| `components/FolderTree.tsx` | Use design tokens | Low | ❌ Not started |
+| File/Folder | Description | Priority |
+|-------------|-------------|----------|
+| `design-tokens/index.ts` | Barrel export for design tokens | High |
+| `design-tokens/colors.ts` | Color palette and semantic colors | High |
+| `design-tokens/spacing.ts` | Spacing scale | High |
+| `design-tokens/typography.ts` | Font sizes, weights, line heights | High |
+| `design-tokens/borders.ts` | Border radii and widths | Medium |
+| `design-tokens/shadows.ts` | Shadow definitions | Medium |
+| `design-tokens/animations.ts` | Transitions and easing | Medium |
+| `config/ui.config.ts` | UI configuration constants | High |
+| `styles/variables.css` | CSS custom properties | High |
+| `components/shared/index.ts` | Barrel export for shared components | High |
+| `components/shared/Button/` | Button component | High |
+| `components/shared/Card/` | Card component | High |
+| `components/shared/Modal/` | Modal component | High |
+| `components/shared/RangeSlider/` | Dual-handle range slider | High |
+| `components/shared/Input/` | Input components (Text, Number, Search) | High |
+| `components/shared/DataDisplay/` | StatCard, Badge, ProgressBar | Medium |
+| `components/shared/Feedback/` | EmptyState, Spinner, ErrorBanner | Medium |
+| `components/shared/Filters/` | FilterPanel, FilterChip | Medium |
+| `components/shared/Layout/` | PageHeader, Section, Grid | Low |
+| `hooks/useDebounce.ts` | Debounce hook | Medium |
+| `hooks/useLocalStorage.ts` | LocalStorage hook | Medium |
+
+---
+
+## Files to Migrate
+
+| File | Changes Required | Priority |
+|------|------------------|----------|
+| `components/clustering/` | Replace local `ui/` imports with `@/components/shared` | High |
+| `components/ImpactGraph.tsx` | Use shared RangeSlider, Button, Card | High |
+| `components/AnalysisDashboard.tsx` | Use shared StatCard, Button, Modal | High |
+| `components/RepoList.tsx` | Use shared Card, Button, EmptyState | Medium |
+| `components/FolderTree.tsx` | Use design tokens | Medium |
+| `components/CreateRepoModal.tsx` | Use shared Modal, Button | Medium |
+| `components/AlgorithmInfoModal.tsx` | Use shared Modal | Medium |
+| `components/ErrorNotification.tsx` | Use shared ErrorBanner styles | Low |
 
 ---
 
 ## Success Criteria
 
-- [x] UI component library created with barrel exports (`clustering/ui/`)
-- [x] Design constants centralized (`clustering/constants/`)
-- [x] Custom hooks for state management (`clustering/hooks/`)
-- [x] `ClusterFilterBar` uses `RangeSlider` component
-- [ ] All range filters use single `RangeSlider` component (ClusterFilters.tsx pending)
-- [ ] Design tokens migrated to dedicated `design-tokens/` folder
-- [ ] Component import from `@/components/shared` works (global shared components)
-- [ ] No duplicate UI implementations across features
+- [ ] Global `components/shared/` library created with barrel exports
+- [ ] Design tokens in dedicated `design-tokens/` folder
+- [ ] CSS variables defined in `styles/variables.css`
+- [ ] Component imports work via `@/components/shared`
+- [ ] All features use shared components (no duplicate implementations)
+- [ ] All range filters use single `RangeSlider` component
+- [ ] Shared hooks available via `@/hooks`
 - [ ] Storybook coverage for all shared components
 - [ ] Bundle size impact < 5% increase
 - [ ] Accessibility score maintained or improved
@@ -564,7 +559,6 @@ import { cn, tokens } from '@/utils/styles';
 
 ## References
 
-- Current constants: `components/clustering/constants/index.ts`
-- Current types: `components/clustering/types.ts`
-- Existing hooks: `components/clustering/hooks/useSnapshots.ts`
-- Design inspiration: shadcn/ui, Radix Themes
+- Design inspiration: shadcn/ui, Radix Themes, Tailwind UI
+- Accessibility: @radix-ui/react-slider, @headlessui/react
+- Storybook: https://storybook.js.org/

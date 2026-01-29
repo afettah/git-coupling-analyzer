@@ -141,6 +141,7 @@ export {
     Select,
     SearchInput,
     NumberInput,
+    RangeSlider,
     ToggleButton,
     StatCard,
     Modal,
@@ -148,10 +149,8 @@ export {
     LoadingState,
     EmptyState,
     CouplingLegend,
+    ClusterFilters,
 } from './ui';
-
-// Note: RangeSlider should be imported from the existing location
-// export { RangeSlider } from './ui';
 
 // ============================================================
 // Feature Components

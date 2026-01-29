@@ -5,18 +5,10 @@ import {
     runClustering,
     getFolders,
     saveClusteringSnapshot,
-    getClusteringSnapshots,
-    getClusteringSnapshot,
-    compareClusteringSnapshots,
     type ClusterResult,
-    type ComparisonResult
 } from '../api';
 import AlgorithmInfoModal from './AlgorithmInfoModal';
-import {
-    Info, Save, Download, History, FileDown,
-    ChevronDown, ChevronUp, Flame, GitCommit, Users, Activity,
-    ArrowRight, GitMerge, PlusCircle, MinusCircle, AlertCircle
-} from 'lucide-react';
+import { Info, Activity } from 'lucide-react';
 
 interface ClusteringViewProps {
     repoId: string;
@@ -29,13 +21,6 @@ interface AlgorithmInfo {
     };
 }
 
-interface SnapshotInfo {
-    id: string;
-    name: string;
-    algorithm: string;
-    created_at: string;
-}
-
 export default function ClusteringView({ repoId }: ClusteringViewProps) {
     const navigate = useNavigate();
     const [algorithms, setAlgorithms] = useState<AlgorithmInfo[]>([]);
@@ -45,7 +30,7 @@ export default function ClusteringView({ repoId }: ClusteringViewProps) {
     const [folders, setFolders] = useState('');
     const [params, setParams] = useState<Record<string, any>>({});
     const [loading, setLoading] = useState(false);
-    const [results, setResults] = useState<ClusterResult | null>(null);
+    const [_results, setResults] = useState<ClusterResult | null>(null);
     const [availableFolders, setAvailableFolders] = useState<string[]>([]);
     const [infoModalOpen, setInfoModalOpen] = useState(false);
     const [snapshotName, setSnapshotName] = useState('');

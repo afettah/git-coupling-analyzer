@@ -2,6 +2,7 @@
  * Excalidraw View Component (Refactored)
  * 
  * Interactive diagram view for visualizing cluster relationships.
+ * Receives pre-filtered clusters from parent.
  */
 
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
@@ -9,10 +10,9 @@ import { Excalidraw } from '@excalidraw/excalidraw';
 // @ts-ignore - Export functions are available at runtime
 import { exportToSvg, exportToBlob } from '@excalidraw/excalidraw';
 import { RefreshCw, Download, Image } from 'lucide-react';
-import type { ClusterData, ClusterEdge, ClusterFilterState } from '../types';
-import { enrichClustersWithNames, sortClustersByRank, downloadBlob } from '../utils';
-import { DEFAULT_FILTER_STATE } from '../constants';
-import { ClusterFilters, CouplingLegend, Button } from '../ui';
+import type { ClusterData, ClusterEdge } from '../types';
+import { sortClustersByRank, downloadBlob } from '../utils';
+import { CouplingLegend, Button } from '../ui';
 import { generateExcalidrawElements } from './excalidraw/elementGenerator';
 
 // Set asset path for Excalidraw fonts
@@ -30,47 +30,16 @@ export function ExcalidrawView({ clusters, edges }: ExcalidrawViewProps) {
     const [key, setKey] = useState(0);
     const initializedRef = useRef(false);
 
-    // Filter state
-    const maxFileCount = useMemo(
-        () => Math.max(...clusters.map(c => c.files?.length || c.size || 0), 100),
+    // Sort clusters by rank for consistent visualization
+    const sortedClusters = useMemo(
+        () => sortClustersByRank(clusters),
         [clusters]
     );
 
-    const [filters, setFilters] = useState<ClusterFilterState>({
-        ...DEFAULT_FILTER_STATE,
-        fileRange: [0, maxFileCount]
-    });
-
-    // Process clusters: add names, filter, and sort
-    const processedClusters = useMemo(() => {
-        const withNames = enrichClustersWithNames(clusters);
-        const filtered = withNames.filter(cluster => {
-            const fileCount = cluster.files?.length || cluster.size || 0;
-            const coupling = cluster.avg_coupling || 0;
-            const name = cluster.name || '';
-
-            return (
-                fileCount >= filters.minClusterSize &&
-                coupling >= filters.couplingRange[0] &&
-                coupling <= filters.couplingRange[1] &&
-                fileCount >= filters.fileRange[0] &&
-                fileCount <= filters.fileRange[1] &&
-                (!filters.search || name.toLowerCase().includes(filters.search.toLowerCase()))
-            );
-        });
-        return sortClustersByRank(filtered);
-    }, [clusters, filters]);
-
-    // Filter edges to visible clusters
-    const filteredEdges = useMemo(() => {
-        const visibleIds = new Set(processedClusters.map(c => c.id));
-        return edges.filter(e => visibleIds.has(e.from_cluster) && visibleIds.has(e.to_cluster));
-    }, [edges, processedClusters]);
-
     // Generate Excalidraw elements
     const elements = useMemo(
-        () => generateExcalidrawElements(processedClusters, filteredEdges),
-        [processedClusters, filteredEdges]
+        () => generateExcalidrawElements(sortedClusters, edges),
+        [sortedClusters, edges]
     );
 
     // Update scene when API and elements are ready
@@ -145,17 +114,8 @@ export function ExcalidrawView({ clusters, edges }: ExcalidrawViewProps) {
                 </div>
             </div>
 
-            {/* Filters */}
-            <ClusterFilters
-                filters={filters}
-                onFiltersChange={setFilters}
-                maxFileCount={maxFileCount}
-                filteredCount={processedClusters.length}
-                totalCount={clusters.length}
-            />
-
             {/* Canvas */}
-            <div className="h-[70vh] border border-slate-800 rounded-2xl overflow-hidden bg-slate-950">
+            <div className="h-[70vh] min-h-[500px] border border-slate-800 rounded-2xl overflow-hidden bg-slate-950">
                 <Excalidraw
                     key={key}
                     initialData={{

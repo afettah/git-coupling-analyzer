@@ -4,10 +4,11 @@
  * Renders the Three.js scene with lighting, controls, and city elements.
  */
 
-import React, { memo, useMemo, Suspense } from 'react';
+import { memo, useMemo, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
-import type { BuildingData, DistrictData } from '../types';
+import { OrbitControls } from '@react-three/drei';
+import type { BuildingData, DistrictData } from '../../types/index';
+import type { CityColorSettings } from '../../hooks/useCitySettings';
 import { Buildings, Districts } from './CityElements';
 import { calculateCameraPosition } from './cameraUtils';
 
@@ -78,6 +79,7 @@ interface CityContentProps {
     selectedPath?: string | null;
     onSelectBuilding?: (building: BuildingData) => void;
     showLabels?: boolean;
+    colorSettings?: CityColorSettings;
 }
 
 const CityContent = memo(function CityContent({
@@ -87,27 +89,28 @@ const CityContent = memo(function CityContent({
     cityHeight,
     selectedPath,
     onSelectBuilding,
-    showLabels = true
+    showLabels = true,
+    colorSettings
 }: CityContentProps) {
+    const groundColor = colorSettings?.groundColor || '#1a1a2e';
+    const folderColors = colorSettings?.folderColors;
+
     return (
         <>
             <SceneLighting />
-            <Ground width={cityWidth} height={cityHeight} />
-            <Districts districts={districts} showLabels={showLabels} />
+            <Ground width={cityWidth} height={cityHeight} color={groundColor} />
+            <Districts
+                districts={districts}
+                showLabels={showLabels}
+                customColors={folderColors}
+            />
             <Buildings
                 buildings={buildings}
                 selectedPath={selectedPath}
                 onSelectBuilding={onSelectBuilding}
-                showLabels={showLabels}
+                selectedColor={colorSettings?.selectedColor}
+                hoveredColor={colorSettings?.hoveredColor}
             />
-            <ContactShadows
-                position={[cityWidth / 2, -0.05, cityHeight / 2]}
-                opacity={0.4}
-                scale={Math.max(cityWidth, cityHeight) * 1.5}
-                blur={1}
-                far={10}
-            />
-            <Environment preset="city" />
         </>
     );
 });
@@ -138,6 +141,7 @@ interface CitySceneProps {
     onSelectBuilding?: (building: BuildingData) => void;
     showLabels?: boolean;
     autoRotate?: boolean;
+    colorSettings?: CityColorSettings;
 }
 
 export const CityScene = memo(function CityScene({
@@ -148,7 +152,8 @@ export const CityScene = memo(function CityScene({
     selectedPath,
     onSelectBuilding,
     showLabels = true,
-    autoRotate = false
+    autoRotate = false,
+    colorSettings
 }: CitySceneProps) {
     const cameraSettings = useMemo(
         () => calculateCameraPosition(cityWidth, cityHeight),
@@ -175,6 +180,7 @@ export const CityScene = memo(function CityScene({
                     selectedPath={selectedPath}
                     onSelectBuilding={onSelectBuilding}
                     showLabels={showLabels}
+                    colorSettings={colorSettings}
                 />
             </Suspense>
             <OrbitControls

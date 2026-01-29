@@ -4,8 +4,8 @@
  * Implements squarified treemap layout for ProjectCity visualization.
  */
 
-import type { FileData, FolderNode, BuildingData, DistrictData } from '../types';
-import { CLUSTER_PALETTE, UNCLUSTERED_COLOR, getCouplingColor, CITY_CONFIG } from '../constants';
+import type { FileData, FolderNode, BuildingData, DistrictData } from '../../types/index';
+import { CLUSTER_PALETTE, UNCLUSTERED_COLOR, getCouplingColor, CITY_CONFIG } from '../../constants';
 
 const { buildingWidth, buildingSpacing, minDistrictSize } = CITY_CONFIG;
 
@@ -27,7 +27,7 @@ export function buildFolderTree(files: FileData[]): FolderNode {
         const filename = parts.pop()!;
         let current = root;
 
-        parts.forEach((part, index) => {
+        parts.forEach((part: string, index: number) => {
             const currentPath = parts.slice(0, index + 1).join('/');
             if (!current.children.has(part)) {
                 current.children.set(part, {
@@ -54,7 +54,7 @@ export function buildFolderTree(files: FileData[]): FolderNode {
 function calculateWeight(node: FolderNode): number {
     const fileWeight = node.files.length;
     let childWeight = 0;
-    node.children.forEach(child => {
+    node.children.forEach((child: FolderNode) => {
         childWeight += calculateWeight(child);
     });
     return fileWeight + childWeight;
@@ -183,7 +183,7 @@ export function layoutTreemap(
     if (root.depth >= maxDepth) return;
 
     const items: LayoutItem[] = [];
-    root.children.forEach(child => {
+    root.children.forEach((child: FolderNode) => {
         const weight = calculateWeight(child);
         if (weight > 0) {
             items.push({ node: child, file: null, weight });
@@ -251,7 +251,9 @@ export function collectDistricts(
     labelMargin: number
 ): void {
     if (node.width >= minDistrictSize && node.height >= minDistrictSize && node.path) {
-        const labelOnTop = node.depth % 2 === 1;
+        // Match the label position logic from layoutTreemap EXACTLY
+        // In layoutTreemap: labelOnTop = root.depth % 2 === 0 (even depth = top)
+        const labelOnTop = node.depth % 2 === 0;
         districts.push({
             x: node.x,
             z: node.y,
@@ -265,7 +267,7 @@ export function collectDistricts(
         });
     }
 
-    node.children.forEach(child => {
+    node.children.forEach((child: FolderNode) => {
         collectDistricts(child, districts, labelMargin);
     });
 }
@@ -276,13 +278,18 @@ export function collectBuildings(
     clusterIndexMap: Map<number, number>,
     heightScaleFactor: number,
     labelMargin: number,
-    colorBy: 'cluster' | 'coupling'
+    colorBy: 'cluster' | 'coupling',
+    customPalette?: string[],
+    customUnclusteredColor?: string
 ): void {
-    // Match the label position logic from layoutTreemap
-    // depth 0 = top, depth 1 = left, depth 2 = top, etc.
-    // But for building placement, we care about the NODE's depth
-    // For files in a node at depth N, the label is at the position determined by N % 2
-    const labelOnTop = node.depth % 2 === 1; // Labels are placed based on odd/even depth
+    // Use custom palette or default
+    const palette = customPalette || CLUSTER_PALETTE;
+    const unclusteredColor = customUnclusteredColor || UNCLUSTERED_COLOR;
+
+    // Match the label position logic from layoutTreemap EXACTLY
+    // In layoutTreemap: labelOnTop = root.depth % 2 === 0 (even depth = top)
+    // This must be consistent to position buildings correctly
+    const labelOnTop = node.depth % 2 === 0; // Even depth = label on top
     const padding = 0.4; // Slightly larger padding to ensure buildings stay inside
 
     let innerX: number, innerY: number, innerWidth: number, innerHeight: number;
@@ -316,7 +323,7 @@ export function collectBuildings(
         const scaledCellSize = cellSize * scale;
         const scaledBuildingWidth = buildingWidth * scale;
 
-        node.files.forEach((file, index) => {
+        node.files.forEach((file: FileData, index: number) => {
             const row = Math.floor(index / cols);
             const col = index % cols;
             const loc = file.loc || 100;
@@ -330,8 +337,8 @@ export function collectBuildings(
                 color = getCouplingColor(file.coupling);
             } else {
                 color = clusterIndex >= 0
-                    ? CLUSTER_PALETTE[clusterIndex % CLUSTER_PALETTE.length]
-                    : UNCLUSTERED_COLOR;
+                    ? palette[clusterIndex % palette.length]
+                    : unclusteredColor;
             }
 
             // Position buildings ensuring they stay within bounds
@@ -358,7 +365,7 @@ export function collectBuildings(
         });
     }
 
-    node.children.forEach(child => {
-        collectBuildings(child, buildings, clusterIndexMap, heightScaleFactor, labelMargin, colorBy);
+    node.children.forEach((child: FolderNode) => {
+        collectBuildings(child, buildings, clusterIndexMap, heightScaleFactor, labelMargin, colorBy, customPalette, customUnclusteredColor);
     });
 }

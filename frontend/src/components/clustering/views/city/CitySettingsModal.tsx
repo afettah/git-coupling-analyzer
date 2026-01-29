@@ -4,10 +4,9 @@
  * Modal for configuring city visualization settings (colors, palettes).
  */
 
-import React, { memo, useState } from 'react';
+import { memo, useState } from 'react';
 import { X, Palette, RotateCcw, Check, FolderOpen, Building, Layers } from 'lucide-react';
-import type { CityColorSettings, ColorPalette } from '../hooks/useCitySettings';
-import { DEFAULT_CLUSTER_PALETTES, DEFAULT_COLOR_SETTINGS, DEFAULT_FOLDER_COLORS } from '../hooks/useCitySettings';
+import type { CityColorSettings, ColorPalette } from '../../hooks/useCitySettings';
 
 // ============================================================
 // Props
@@ -25,42 +24,6 @@ interface CitySettingsModalProps {
 // ============================================================
 // Sub-Components
 // ============================================================
-
-interface ColorSwatchProps {
-    color: string;
-    isSelected?: boolean;
-    onClick?: () => void;
-    size?: 'sm' | 'md' | 'lg';
-}
-
-const ColorSwatch = memo(function ColorSwatch({
-    color,
-    isSelected,
-    onClick,
-    size = 'md'
-}: ColorSwatchProps) {
-    const sizeClasses = {
-        sm: 'w-4 h-4',
-        md: 'w-6 h-6',
-        lg: 'w-8 h-8'
-    };
-
-    return (
-        <button
-            onClick={onClick}
-            className={`
-                ${sizeClasses[size]} rounded-md border-2 transition-all
-                ${isSelected
-                    ? 'border-white ring-2 ring-blue-500 scale-110'
-                    : 'border-transparent hover:border-slate-400 hover:scale-105'
-                }
-                ${onClick ? 'cursor-pointer' : 'cursor-default'}
-            `}
-            style={{ backgroundColor: color }}
-            title={color}
-        />
-    );
-});
 
 interface ColorInputProps {
     label: string;
@@ -206,8 +169,8 @@ export const CitySettingsModal = memo(function CitySettingsModal({
                     <button
                         onClick={() => setActiveTab('palettes')}
                         className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'palettes'
-                                ? 'text-blue-400 border-b-2 border-blue-400 bg-slate-700/50'
-                                : 'text-slate-400 hover:text-white'
+                            ? 'text-blue-400 border-b-2 border-blue-400 bg-slate-700/50'
+                            : 'text-slate-400 hover:text-white'
                             }`}
                     >
                         <div className="flex items-center justify-center gap-2">
@@ -218,8 +181,8 @@ export const CitySettingsModal = memo(function CitySettingsModal({
                     <button
                         onClick={() => setActiveTab('colors')}
                         className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'colors'
-                                ? 'text-blue-400 border-b-2 border-blue-400 bg-slate-700/50'
-                                : 'text-slate-400 hover:text-white'
+                            ? 'text-blue-400 border-b-2 border-blue-400 bg-slate-700/50'
+                            : 'text-slate-400 hover:text-white'
                             }`}
                     >
                         <div className="flex items-center justify-center gap-2">

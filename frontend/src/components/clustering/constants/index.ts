@@ -89,11 +89,17 @@ export const EXCALIDRAW_CONFIG = {
 export const CITY_CONFIG = {
     buildingWidth: 0.6,
     buildingSpacing: 0.15,
+    maxDepth: 4,
+    heightScaleFactor: 1.5,
+    folderGap: 0.8,
+    labelMargin: 1.5,
+    minDistrictSize: 2,
+    baseCitySize: 20,
+    // Deprecated - use new names above
     defaultMaxDepth: 4,
     defaultHeightScale: 1.5,
     defaultFolderGap: 0.8,
-    defaultLabelMargin: 1.5,
-    minDistrictSize: 2
+    defaultLabelMargin: 1.5
 } as const;
 
 // ============================================================

@@ -4,8 +4,8 @@
  * Generates Excalidraw elements from cluster data.
  */
 
-import type { ClusterData, ClusterEdge } from '../types';
-import { getCouplingColor, EXCALIDRAW_CONFIG } from '../constants';
+import type { ClusterData, ClusterEdge } from '../../types';
+import { getCouplingColor, EXCALIDRAW_CONFIG } from '../../constants';
 
 const {
     boxWidth,
@@ -231,7 +231,7 @@ export function generateExcalidrawElements(
         const files = cluster.files || [];
         const displayFiles = files.slice(0, maxFilesPerCluster);
 
-        displayFiles.forEach((_, fileIndex) => {
+        displayFiles.forEach((_file: string, fileIndex: number) => {
             const fileRow = Math.floor(fileIndex / filesPerRow);
             const fileCol = fileIndex % filesPerRow;
             const fileX = x + filesStartX + fileCol * (fileBoxWidth + fileGap);

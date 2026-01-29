@@ -2,63 +2,23 @@
  * Clusters Tab Component (Refactored)
  * 
  * Main view for browsing and exploring clusters.
- * Uses composition of smaller components and hooks.
+ * Receives pre-filtered clusters from parent.
  */
 
-import { useState, useMemo, useCallback } from 'react';
-import type { ClusterResult } from '../../../api';
-import type { ClusterData, ClusterFilterState, SortField, SortOrder, ViewMode } from '../types';
-import { enrichClustersWithNames, filterAndSortClusters, exportClusterToCsv, exportAllClustersToCsv } from '../utils';
-import { DEFAULT_FILTER_STATE } from '../constants';
-import { ClusterCard, ClustersTable, ClusterModal, ClusterFilterBar } from '../components';
+import { useState, useCallback } from 'react';
+import type { ClusterData, ViewMode } from '../types';
+import { exportClusterToCsv, exportAllClustersToCsv } from '../utils';
+import { ClusterCard, ClustersTable, ClusterModal } from '../components';
 
 export interface ClustersTabProps {
-    snapshot: ClusterResult;
+    clusters: ClusterData[];
+    viewMode: ViewMode;
+    depth: number;
 }
 
-export function ClustersTab({ snapshot }: ClustersTabProps) {
-    // View state
-    const [viewMode, setViewMode] = useState<ViewMode>('cards');
-    const [depth, setDepth] = useState(3);
-
-    // Sort state
-    const [sortBy, setSortBy] = useState<SortField>('rank');
-    const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
-
-    // Filter state
-    const clusters = snapshot.clusters || [];
-    const maxFiles = useMemo(
-        () => Math.max(1, ...clusters.map(c => c.files?.length || c.size || 0)),
-        [clusters]
-    );
-
-    const [filters, setFilters] = useState<ClusterFilterState>(() => ({
-        ...DEFAULT_FILTER_STATE,
-        fileRange: [0, maxFiles]
-    }));
-
-    const [directory, setDirectory] = useState('');
-
+export function ClustersTab({ clusters, viewMode, depth }: ClustersTabProps) {
     // Modal state
     const [selectedCluster, setSelectedCluster] = useState<ClusterData | null>(null);
-
-    // Enrich clusters with smart names
-    const clustersWithNames = useMemo(
-        () => enrichClustersWithNames(clusters) as ClusterData[],
-        [clusters]
-    );
-
-    // Filter and sort clusters
-    const filteredClusters = useMemo(
-        () => filterAndSortClusters(
-            clustersWithNames,
-            filters,
-            sortBy,
-            sortOrder,
-            { directory, depth }
-        ),
-        [clustersWithNames, filters, sortBy, sortOrder, directory, depth]
-    );
 
     // Export handlers
     const handleExportCluster = useCallback((cluster: ClusterData) => {
@@ -66,8 +26,8 @@ export function ClustersTab({ snapshot }: ClustersTabProps) {
     }, []);
 
     const handleExportAll = useCallback(() => {
-        exportAllClustersToCsv(clustersWithNames);
-    }, [clustersWithNames]);
+        exportAllClustersToCsv(clusters);
+    }, [clusters]);
 
     const handleExplore = useCallback((cluster: ClusterData) => {
         setSelectedCluster(cluster);
@@ -78,28 +38,10 @@ export function ClustersTab({ snapshot }: ClustersTabProps) {
     }, []);
 
     return (
-        <div className="space-y-6">
-            {/* Filter Bar */}
-            <ClusterFilterBar
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                sortBy={sortBy}
-                onSortByChange={setSortBy}
-                sortOrder={sortOrder}
-                onSortOrderChange={setSortOrder}
-                filters={filters}
-                onFiltersChange={setFilters}
-                depth={depth}
-                onDepthChange={setDepth}
-                maxFileCount={maxFiles}
-                showDirectory
-                directory={directory}
-                onDirectoryChange={setDirectory}
-            />
-
+        <div className="space-y-4">
             {/* Summary Bar */}
             <div className="flex items-center justify-between text-xs text-slate-500">
-                <span>{filteredClusters.length} clusters shown</span>
+                <span>{clusters.length} clusters shown</span>
                 <button
                     onClick={handleExportAll}
                     className="text-sky-400 hover:text-sky-300"
@@ -111,12 +53,12 @@ export function ClustersTab({ snapshot }: ClustersTabProps) {
             {/* Clusters View */}
             {viewMode === 'table' ? (
                 <ClustersTable
-                    clusters={filteredClusters}
+                    clusters={clusters}
                     onExplore={handleExplore}
                 />
             ) : (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    {filteredClusters.map(cluster => (
+                    {clusters.map(cluster => (
                         <ClusterCard
                             key={cluster.id}
                             cluster={cluster}
@@ -129,7 +71,7 @@ export function ClustersTab({ snapshot }: ClustersTabProps) {
             )}
 
             {/* Empty State */}
-            {filteredClusters.length === 0 && (
+            {clusters.length === 0 && (
                 <div className="text-center py-12 text-slate-500">
                     No clusters match the current filters
                 </div>

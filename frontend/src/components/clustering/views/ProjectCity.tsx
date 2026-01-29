@@ -5,17 +5,18 @@
  * - Buildings represent files (height = LOC/complexity)
  * - Districts represent folders (treemap layout)
  * - Colors indicate clusters or coupling strength
+ * 
+ * Now receives filtered clusters from parent and shares filter bar.
  */
 
-import React, { useState, useMemo, useCallback, memo, useRef, useEffect } from 'react';
-import type { ClusterResult } from '../../../../api';
-import type { BuildingData, DistrictData, FileData, ClusterFilterState } from '../types';
-import { CITY_CONFIG, DEFAULT_FILTER_STATE } from '../constants';
+import { useState, useMemo, useCallback, memo, useRef, useEffect } from 'react';
+import type { ClusterResult } from '../../../api';
+import type { BuildingData, DistrictData, FileData, ClusterData } from '../types/index';
+import { CITY_CONFIG } from '../constants';
 import { CityScene } from './city/CityScene';
 import { CityControls, CityStats, CityLegend, BuildingInfoPanel } from './city/CityOverlays';
 import { CitySettingsModal } from './city/CitySettingsModal';
 import { buildFolderTree, layoutTreemap, collectBuildings, collectDistricts } from './city/treemap';
-import { Spinner } from '../ui';
 import { useCitySettings } from '../hooks';
 
 // ============================================================
@@ -24,6 +25,8 @@ import { useCitySettings } from '../hooks';
 
 interface ProjectCityProps {
     result: ClusterResult;
+    filteredClusters: ClusterData[];
+    colorBy: 'cluster' | 'coupling';
     clusterId?: number | null;
 }
 
@@ -31,34 +34,46 @@ interface ProjectCityProps {
 // Data Processing
 // ============================================================
 
+type ClusterType = ClusterResult['clusters'][number];
+
 function processClusterData(
     result: ClusterResult,
+    filteredClusters: ClusterData[],
     clusterId?: number | null
 ): { files: FileData[]; clusterIndexMap: Map<number, number> } {
     const clusterIndexMap = new Map<number, number>();
-    result.clusters.forEach((cluster, index) => {
+    result.clusters.forEach((cluster: ClusterType, index: number) => {
         clusterIndexMap.set(cluster.id, index);
     });
 
+    // Build coupling map from cluster-level avg_coupling (fallback since top_coupled_files may not exist)
     const fileCouplingMap = new Map<string, number>();
-    (result.top_coupled_files || []).forEach(([path, coupling]) => {
-        fileCouplingMap.set(path, coupling);
+    result.clusters.forEach((cluster: ClusterType) => {
+        const avgCoupling = cluster.avg_coupling || 0;
+        cluster.files.forEach((file: string) => {
+            fileCouplingMap.set(file, avgCoupling);
+        });
     });
 
     const fileClusterMap = new Map<string, number>();
-    result.clusters.forEach(cluster => {
-        cluster.files.forEach(file => {
+    result.clusters.forEach((cluster: ClusterType) => {
+        cluster.files.forEach((file: string) => {
             fileClusterMap.set(file, cluster.id);
         });
     });
 
-    // Get files - either from specific cluster or all
+    // Get files from filtered clusters (respects shared filter state)
+    const filteredClusterIds = new Set(filteredClusters.map(c => c.id));
+
     let files: string[];
     if (clusterId !== undefined && clusterId !== null) {
-        const cluster = result.clusters.find(c => c.id === clusterId);
+        const cluster = result.clusters.find((c: ClusterType) => c.id === clusterId);
         files = cluster ? cluster.files : [];
     } else {
-        files = result.clusters.flatMap(c => c.files);
+        // Only include files from filtered clusters
+        files = result.clusters
+            .filter((c: ClusterType) => filteredClusterIds.has(c.id))
+            .flatMap((c: ClusterType) => c.files);
     }
 
     const fileData: FileData[] = files.map(path => ({
@@ -81,6 +96,8 @@ function processClusterData(
 
 export const ProjectCity = memo(function ProjectCity({
     result,
+    filteredClusters,
+    colorBy,
     clusterId
 }: ProjectCityProps) {
     // Container ref for fullscreen
@@ -94,12 +111,11 @@ export const ProjectCity = memo(function ProjectCity({
         availablePalettes
     } = useCitySettings();
 
-    // View state
-    const [colorBy, setColorBy] = useState<'cluster' | 'coupling'>('cluster');
+    // View state (colorBy now comes from parent)
     const [showLabels, setShowLabels] = useState(true);
     const [autoRotate, setAutoRotate] = useState(false);
-    const [heightScale, setHeightScale] = useState(CITY_CONFIG.heightScaleFactor);
-    const [maxDepth, setMaxDepth] = useState(CITY_CONFIG.maxDepth);
+    const [heightScale, setHeightScale] = useState<number>(CITY_CONFIG.heightScaleFactor);
+    const [maxDepth, setMaxDepth] = useState<number>(CITY_CONFIG.maxDepth);
 
     // UI state
     const [selectedBuilding, setSelectedBuilding] = useState<BuildingData | null>(null);
@@ -135,10 +151,10 @@ export const ProjectCity = memo(function ProjectCity({
         };
     }, []);
 
-    // Process data
+    // Process data (now uses filtered clusters)
     const { files, clusterIndexMap } = useMemo(
-        () => processClusterData(result, clusterId),
-        [result, clusterId]
+        () => processClusterData(result, filteredClusters, clusterId),
+        [result, filteredClusters, clusterId]
     );
 
     // Build city layout - use custom palette from settings
@@ -186,15 +202,15 @@ export const ProjectCity = memo(function ProjectCity({
     // Cluster colors for legend - use custom palette
     const clusterColors = useMemo(() => {
         const palette = settings.colors.clusterPalette;
-        return result.clusters.map((cluster, index) => ({
+        return result.clusters.map((cluster: ClusterType, index: number) => ({
             color: palette[index % palette.length],
-            name: cluster.name || `Cluster ${cluster.id}`
+            name: `Cluster ${cluster.id}`
         }));
     }, [result.clusters, settings.colors.clusterPalette]);
 
     // Handlers
     const handleSelectBuilding = useCallback((building: BuildingData) => {
-        setSelectedBuilding(prev =>
+        setSelectedBuilding((prev: BuildingData | null) =>
             prev?.fullPath === building.fullPath ? null : building
         );
     }, []);
@@ -204,7 +220,6 @@ export const ProjectCity = memo(function ProjectCity({
     }, []);
 
     const handleReset = useCallback(() => {
-        setColorBy('cluster');
         setShowLabels(true);
         setAutoRotate(false);
         setHeightScale(CITY_CONFIG.heightScaleFactor);
@@ -223,79 +238,86 @@ export const ProjectCity = memo(function ProjectCity({
     // Empty state
     if (files.length === 0) {
         return (
-            <div className="h-full flex items-center justify-center bg-slate-900 text-slate-400">
+            <div className="h-[70vh] min-h-[500px] flex items-center justify-center bg-slate-900 rounded-2xl border border-slate-800 text-slate-400">
                 <div className="text-center">
                     <p className="text-lg mb-2">No files to visualize</p>
-                    <p className="text-sm">Select a cluster or ensure the analysis has files.</p>
+                    <p className="text-sm">Adjust the filters or ensure the analysis has files.</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div
-            ref={containerRef}
-            className={`relative h-full w-full ${isFullscreen ? 'bg-slate-900' : ''}`}
-        >
-            {/* 3D Scene */}
-            <CityScene
-                buildings={buildings}
-                districts={districts}
-                cityWidth={cityWidth}
-                cityHeight={cityHeight}
-                selectedPath={selectedBuilding?.fullPath}
-                onSelectBuilding={handleSelectBuilding}
-                showLabels={showLabels}
-                autoRotate={autoRotate}
-                colorSettings={settings.colors}
-            />
+        <div className="space-y-4">
+            {/* 3D Canvas Container with proper layout */}
+            <div
+                ref={containerRef}
+                className={`relative h-[70vh] min-h-[500px] border border-slate-800 rounded-2xl overflow-hidden ${isFullscreen ? 'bg-slate-900' : 'bg-slate-950'}`}
+            >
+                {/* 3D Scene */}
+                <CityScene
+                    buildings={buildings}
+                    districts={districts}
+                    cityWidth={cityWidth}
+                    cityHeight={cityHeight}
+                    selectedPath={selectedBuilding?.fullPath}
+                    onSelectBuilding={handleSelectBuilding}
+                    showLabels={showLabels}
+                    autoRotate={autoRotate}
+                    colorSettings={settings.colors}
+                />
 
-            {/* Controls Panel */}
-            <CityControls
-                colorBy={colorBy}
-                onColorByChange={setColorBy}
-                showLabels={showLabels}
-                onShowLabelsChange={setShowLabels}
-                autoRotate={autoRotate}
-                onAutoRotateChange={setAutoRotate}
-                heightScale={heightScale}
-                onHeightScaleChange={setHeightScale}
-                maxDepth={maxDepth}
-                onMaxDepthChange={setMaxDepth}
-                onReset={handleReset}
-                isFullscreen={isFullscreen}
-                onToggleFullscreen={handleToggleFullscreen}
-                onOpenSettings={handleOpenSettings}
-            />
+                {/* Controls Panel */}
+                <CityControls
+                    colorBy={colorBy}
+                    showLabels={showLabels}
+                    onShowLabelsChange={setShowLabels}
+                    autoRotate={autoRotate}
+                    onAutoRotateChange={setAutoRotate}
+                    heightScale={heightScale}
+                    onHeightScaleChange={setHeightScale}
+                    maxDepth={maxDepth}
+                    onMaxDepthChange={setMaxDepth}
+                    onReset={handleReset}
+                    isFullscreen={isFullscreen}
+                    onToggleFullscreen={handleToggleFullscreen}
+                    onOpenSettings={handleOpenSettings}
+                />
 
-            {/* Building Info Panel */}
-            <BuildingInfoPanel
-                building={selectedBuilding}
-                onClose={handleClearSelection}
-            />
+                {/* Building Info Panel */}
+                <BuildingInfoPanel
+                    building={selectedBuilding}
+                    onClose={handleClearSelection}
+                />
 
-            {/* Stats */}
-            <CityStats
-                buildingCount={buildings.length}
-                districtCount={districts.length}
-                clusterCount={result.clusters.length}
-            />
+                {/* Stats */}
+                <CityStats
+                    buildingCount={buildings.length}
+                    districtCount={districts.length}
+                    clusterCount={filteredClusters.length}
+                />
 
-            {/* Legend */}
-            <CityLegend
-                colorBy={colorBy}
-                clusterColors={clusterColors}
-            />
+                {/* Legend */}
+                <CityLegend
+                    colorBy={colorBy}
+                    clusterColors={clusterColors}
+                />
 
-            {/* Settings Modal */}
-            <CitySettingsModal
-                isOpen={isSettingsOpen}
-                onClose={handleCloseSettings}
-                settings={settings.colors}
-                onUpdateSettings={updateColorSettings}
-                onResetToDefaults={resetToDefaults}
-                availablePalettes={availablePalettes}
-            />
+                {/* Settings Modal */}
+                <CitySettingsModal
+                    isOpen={isSettingsOpen}
+                    onClose={handleCloseSettings}
+                    settings={settings.colors}
+                    onUpdateSettings={updateColorSettings}
+                    onResetToDefaults={resetToDefaults}
+                    availablePalettes={availablePalettes}
+                />
+            </div>
+
+            {/* Instructions */}
+            <div className="text-xs text-slate-500 text-center">
+                Drag to rotate • Scroll to zoom • Click buildings to select • Use controls to customize view
+            </div>
         </div>
     );
 });

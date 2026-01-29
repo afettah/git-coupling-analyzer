@@ -105,14 +105,9 @@ clustering/
 ## Remaining / Should Be Improved / Reviewed
 
 ### To Review
-- [ ] Verify all imports in existing files that consume the clustering module are updated
-- [ ] Test all functionality after refactoring (ClusteringHub, SnapshotDetail, etc.)
-- [ ] Check if RangeSlider component needs to be moved to `ui/` folder
 - [ ] Review if old files (original utils.ts, FilterBar.tsx, etc.) should be deleted or kept for reference
 
 ### To Improve
-- [ ] Add unit tests for utility functions (formatting, naming, filtering, tree)
-- [ ] Add Storybook stories for UI primitives
 - [ ] Consider adding error boundaries around views
 - [ ] Add loading skeletons for better UX
 - [ ] Consider lazy loading for heavy views (ProjectCity, ExcalidrawView)
@@ -123,8 +118,3 @@ clustering/
 - [ ] Add dark/light theme support to UI primitives
 - [ ] Add animation transitions between view modes
 - [ ] Consider extracting common patterns into shared workspace-level UI library
-
-### Documentation
-- [ ] Add JSDoc comments to exported functions
-- [ ] Create README.md for the clustering module explaining architecture
-- [ ] Document the cluster naming algorithm

@@ -15,3 +15,4 @@ export { Modal, type ModalProps } from './Modal';
 export { Spinner, LoadingState, type SpinnerProps, type LoadingStateProps } from './Spinner';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
 export { CouplingLegend, type CouplingLegendProps } from './CouplingLegend';
+export { ClusterFilters, type ClusterFiltersProps } from './ClusterFilters';
