@@ -1,5 +1,5 @@
 # Data folder
-data/**
+data/
 
 # Python
 __pycache__/
