@@ -1,6 +1,6 @@
 # Task: Coupling Quality Controls
 
-Status: Proposed
+**Status:** Proposed
 
 ## Problem
 Noise from generated files and tiny files reduces signal quality.

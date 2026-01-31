@@ -29,9 +29,12 @@ def sync_head_files(paths: RepoPaths, storage: Storage) -> int:
     return len(current_paths)
 
 
-def build_file_tree(storage: Storage) -> dict:
-    """Build hierarchical tree of current files."""
-    files = storage.get_current_files()
+def build_file_tree(storage: Storage, include_stats: bool = True) -> dict:
+    """Build hierarchical tree of current files with optional stats."""
+    if include_stats:
+        files = storage.get_current_files_with_stats()
+    else:
+        files = storage.get_current_files()
     
     tree = {}
     for f in files:
@@ -44,13 +47,29 @@ def build_file_tree(storage: Storage) -> dict:
                 node[part] = {"__type": "dir", "__children": {}}
             node = node[part]["__children"]
         
-        # Leaf file
+        # Leaf file with extended stats
         filename = parts[-1]
-        node[filename] = {
+        file_node = {
             "__type": "file",
             "file_id": f["file_id"],
-            "commits": f["total_commits"]
+            "commits": f["total_commits"] or 0,
         }
+        
+        # Add extended stats if available
+        if include_stats:
+            file_node.update({
+                "coupled_count": f.get("coupled_count", 0),
+                "max_coupling": f.get("max_coupling", 0),
+                "avg_coupling": f.get("avg_coupling", 0),
+                "strong_coupling_count": f.get("strong_coupling_count", 0),
+                "lines_added": f.get("lines_added", 0),
+                "lines_deleted": f.get("lines_deleted", 0),
+                "last_modified": f.get("last_modified"),
+                "last_author": f.get("last_author"),
+                "authors": f.get("authors", 0),
+            })
+        
+        node[filename] = file_node
     
     return tree
 

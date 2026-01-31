@@ -151,6 +151,7 @@ export const DistrictFloor = memo(function DistrictFloor({
                     yOffset + 0.01,
                     district.z + district.depth / 2
                 ]}
+                rotation={[-Math.PI / 2, 0, 0]}
             >
                 <edgesGeometry
                     args={[new THREE.PlaneGeometry(district.width, district.depth)]}

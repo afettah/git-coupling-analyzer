@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Excalidraw } from '@excalidraw/excalidraw';
+import "@excalidraw/excalidraw/index.css";
 // @ts-ignore - Export functions are available at runtime
 import { exportToSvg, exportToBlob } from '@excalidraw/excalidraw';
 import { RefreshCw, Download, Image } from 'lucide-react';

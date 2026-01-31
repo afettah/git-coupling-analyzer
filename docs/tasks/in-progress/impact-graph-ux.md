@@ -1,6 +1,6 @@
 # Task: Impact Graph UX
 
-Status: Need Review
+**Status:** Need Review
 
 ## Problem
 Impact Graph is unclear and often empty, creating user confusion.

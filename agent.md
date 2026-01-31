@@ -15,30 +15,27 @@
 
 ### Task Management
 
-Create and track work in `docs/tasks/`.
+Create and track work in `docs/tasks/in-progress/`. Move to `docs/tasks/done/` when completed.
 
 | Action | How |
 |--------|-----|
-| Create task | Create file: `docs/tasks/YYYYMMDD-task-name.md` |
+| Create task | Create file: `docs/tasks/in-progress/YYYYMMDD-task-name.md` |
 | Update task | Edit existing task file with progress/status |
-| Reference in code | Add comment: `// Task: docs/tasks/YYYYMMDD-task-name.md` |
+| Complete task | Move file from `in-progress/` to `done/` |
+| Reference in code | Add comment: `// Task: docs/tasks/[status]/YYYYMMDD-task-name.md` |
 
 **Task file format:**
 ```markdown
-# Task Name
+# Task: [Name]
 
-**Status:** planning | in-progress | done | blocked
-**Created:** YYYY-MM-DD
+**Status:** Proposed | In-Progress | Completed | Blocked
+**Priority:** High | Medium | Low
+
+## Problem
+...
 
 ## Goal
-Brief description of what needs to be done.
-
-## Progress
-- [ ] Step 1
-- [ ] Step 2
-
-## Notes
-Any relevant context or decisions.
+...
 ```
 
 ---
@@ -66,7 +63,9 @@ Any relevant context or decisions.
 ## Project Structure
 
 ```
-docs/tasks/           # Task tracking (YYYYMMDD-task-name.md)
+docs/tasks/
+├── in-progress/      # Active tasks (YYYYMMDD-task-name.md)
+└── done/             # Completed tasks
 frontend/src/
 ├── components/
 │   ├── shared/       # Reusable primitives
@@ -85,4 +84,4 @@ lfca/                 # Python backend
 - **CLI**: `lfca/cli.py`
 - **Clustering**: `lfca/clustering/` (algorithms in registry)
 - **Frontend API calls**: `frontend/src/api.ts`
-- **Tasks**: `docs/tasks/` (format: `YYYYMMDD-task-name.md`)
+- **Tasks**: `docs/tasks/in-progress/` (format: `YYYYMMDD-task-name.md`)

@@ -1,6 +1,6 @@
 # Task: Save & Reopen Clustering Results
 
-Status: Need Review
+**Status:** Need Review
 
 ## Problem
 Clustering results are not persisted, forcing re-computation and limiting sharing or comparison.

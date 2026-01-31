@@ -1,6 +1,6 @@
 # Task: Explain Coupling
 
-Status: Need Review
+**Status:** Need Review
 
 ## Problem
 Users see strong coupling but cannot understand why an edge is strong.

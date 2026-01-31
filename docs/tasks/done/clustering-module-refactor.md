@@ -1,4 +1,6 @@
-# Clustering Module Refactoring
+# Task: Clustering Module Refactoring
+
+**Status:** Completed
 
 ## Issue
 

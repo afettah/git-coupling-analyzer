@@ -95,6 +95,132 @@ class Storage:
             for r in rows
         ]
     
+    def get_current_files_with_stats(self) -> list[dict]:
+        """Get all files at HEAD with coupling stats and details."""
+        import pyarrow.dataset as ds
+        from datetime import datetime
+        
+        # Get basic file info
+        rows = self.conn.execute("""
+            SELECT 
+                f.file_id, 
+                f.path_current, 
+                f.total_commits,
+                f.first_commit_oid,
+                f.last_commit_oid
+            FROM files f
+            WHERE f.exists_at_head = TRUE AND f.path_current IS NOT NULL
+            ORDER BY f.path_current
+        """).fetchall()
+        
+        # Build file_id lookup
+        file_ids = {r[0] for r in rows}
+        
+        # Get coupling stats per file
+        coupling_stats = {}
+        for file_id in file_ids:
+            coupling_row = self.conn.execute("""
+                SELECT 
+                    COUNT(*) as coupled_count,
+                    MAX(jaccard) as max_coupling,
+                    AVG(jaccard) as avg_coupling,
+                    SUM(CASE WHEN jaccard > 0.5 THEN 1 ELSE 0 END) as strong_coupling_count
+                FROM (
+                    SELECT jaccard FROM edges WHERE src_file_id = ?
+                    UNION ALL
+                    SELECT jaccard FROM edges WHERE dst_file_id = ?
+                )
+            """, (file_id, file_id)).fetchone()
+            coupling_stats[file_id] = coupling_row
+        
+        # Get additional stats from parquet if available
+        changes_path = self.parquet_dir / "changes.parquet"
+        commits_path = self.parquet_dir / "commits.parquet"
+        
+        file_changes_stats = {}
+        file_last_modified = {}
+        file_authors = {}
+        
+        if changes_path.exists() and commits_path.exists():
+            try:
+                # Load changes and commits data
+                changes_ds = ds.dataset(changes_path)
+                commits_ds = ds.dataset(commits_path)
+                
+                changes_table = changes_ds.to_table()
+                commits_table = commits_ds.to_table()
+                
+                changes = changes_table.to_pylist()
+                commits_lookup = {c["commit_oid"]: c for c in commits_table.to_pylist()}
+                
+                # Calculate per-file stats
+                for change in changes:
+                    fid = change["file_id"]
+                    if fid not in file_ids:
+                        continue
+                        
+                    commit_info = commits_lookup.get(change["commit_oid"], {})
+                    author = commit_info.get("author_name", "Unknown")
+                    commit_ts = change.get("commit_ts") or commit_info.get("authored_ts")
+                    
+                    if fid not in file_changes_stats:
+                        file_changes_stats[fid] = {"lines_added": 0, "lines_deleted": 0}
+                    
+                    # Track lines if available (may not be in older data)
+                    file_changes_stats[fid]["lines_added"] += change.get("lines_added", 0) or 0
+                    file_changes_stats[fid]["lines_deleted"] += change.get("lines_deleted", 0) or 0
+                    
+                    # Track last modified
+                    if commit_ts:
+                        ts = commit_ts.as_py() if hasattr(commit_ts, 'as_py') else commit_ts
+                        if fid not in file_last_modified or ts > file_last_modified[fid]["ts"]:
+                            file_last_modified[fid] = {"ts": ts, "author": author}
+                    
+                    # Track unique authors
+                    if fid not in file_authors:
+                        file_authors[fid] = set()
+                    file_authors[fid].add(author)
+                    
+            except Exception as e:
+                # If parquet read fails, continue with basic stats
+                pass
+        
+        files = []
+        for r in rows:
+            file_id = r[0]
+            coupling_row = coupling_stats.get(file_id, (0, 0, 0, 0))
+            changes_stat = file_changes_stats.get(file_id, {})
+            last_mod = file_last_modified.get(file_id, {})
+            authors = file_authors.get(file_id, set())
+            
+            # Format last modified timestamp
+            last_modified_str = None
+            if last_mod.get("ts"):
+                ts = last_mod["ts"]
+                if isinstance(ts, datetime):
+                    last_modified_str = ts.isoformat()
+                elif hasattr(ts, 'isoformat'):
+                    last_modified_str = ts.isoformat()
+            
+            files.append({
+                "file_id": file_id,
+                "path": r[1],
+                "total_commits": r[2] or 0,
+                "first_commit_oid": r[3],
+                "last_commit_oid": r[4],
+                "coupled_count": coupling_row[0] if coupling_row else 0,
+                "max_coupling": round(coupling_row[1], 3) if coupling_row and coupling_row[1] else 0,
+                "avg_coupling": round(coupling_row[2], 3) if coupling_row and coupling_row[2] else 0,
+                "strong_coupling_count": coupling_row[3] if coupling_row else 0,
+                "lines_added": changes_stat.get("lines_added", 0),
+                "lines_deleted": changes_stat.get("lines_deleted", 0),
+                "last_modified": last_modified_str,
+                "last_author": last_mod.get("author"),
+                "authors": len(authors),
+            })
+        
+        return files
+    
     def update_head_status(self, current_paths: set[str]):
         """Mark which files exist at HEAD."""
         with self.transaction():
