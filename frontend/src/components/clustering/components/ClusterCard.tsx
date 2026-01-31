@@ -81,7 +81,7 @@ export function ClusterCard({
                         {formatPercent(cluster.avg_coupling)}
                     </span>
                 </div>
-                <ProgressBar 
+                <ProgressBar
                     value={(cluster.avg_coupling || 0) * 100}
                     max={100}
                     color={getCouplingColor(cluster.avg_coupling || 0)}
@@ -200,11 +200,10 @@ function FilePreviewItem({
     repoUrlConfig
 }: FilePreviewItemProps) {
     return (
-        <div className={`flex items-center justify-between rounded-lg px-3 py-2 ${
-            isHot 
-                ? 'bg-rose-500/10 border border-rose-500/30' 
+        <div className={`flex items-center justify-between rounded-lg px-3 py-2 ${isHot
+                ? 'bg-rose-500/10 border border-rose-500/30'
                 : 'bg-slate-950 border border-slate-800'
-        }`}>
+            }`}>
             <div className="flex items-center gap-2 min-w-0">
                 {isHot ? (
                     <div className="flex items-center gap-1.5">

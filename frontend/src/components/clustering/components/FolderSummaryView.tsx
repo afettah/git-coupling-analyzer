@@ -72,8 +72,8 @@ export function FolderSummaryView({ files }: FolderSummaryViewProps) {
                         const isExpanded = expandedFolders.has(folder.path);
                         return (
                             <>
-                                <tr 
-                                    key={folder.path} 
+                                <tr
+                                    key={folder.path}
                                     className="border-t border-slate-800 hover:bg-slate-900/50 cursor-pointer"
                                     onClick={() => toggleFolder(folder.path)}
                                 >
