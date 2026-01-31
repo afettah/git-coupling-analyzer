@@ -82,7 +82,7 @@ function aggregateFileStats(node: TreeNode): {
         lastModified: undefined as string | undefined,
         lastAuthor: undefined as string | undefined,
     };
-    
+
     const children = node.__children || {};
 
     for (const child of Object.values(children)) {
@@ -124,7 +124,7 @@ function aggregateFileStats(node: TreeNode): {
 // Check if file matches filter criteria
 function matchesFilter(node: TreeNode, filter: QuickFilter): boolean {
     if (node.__type === 'dir' || node.__children) return false;
-    
+
     switch (filter) {
         case 'hot':
             return (node.commits || 0) > 30;
@@ -161,11 +161,11 @@ function getCouplingColor(score: number): string {
 // Recency indicator
 function getRecencyIndicator(lastModified?: string): { color: string; label: string } {
     if (!lastModified) return { color: 'text-slate-600', label: '○' };
-    
+
     const date = new Date(lastModified);
     const now = new Date();
     const daysAgo = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (daysAgo > 365) return { color: 'text-slate-600', label: '○' };
     if (daysAgo > 180) return { color: 'text-emerald-400', label: '●' };
     if (daysAgo > 30) return { color: 'text-amber-400', label: '●' };
@@ -179,7 +179,7 @@ function formatRelativeTime(dateStr?: string): string {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return 'today';
     if (diffDays === 1) return 'yesterday';
     if (diffDays < 7) return `${diffDays}d ago`;
@@ -259,11 +259,10 @@ function SettingsPanel({
                             <button
                                 key={density}
                                 onClick={() => onSettingsChange({ ...settings, hintDensity: density })}
-                                className={`px-2 py-1 text-xs rounded ${
-                                    settings.hintDensity === density
+                                className={`px-2 py-1 text-xs rounded ${settings.hintDensity === density
                                         ? 'bg-sky-500/20 text-sky-400 border border-sky-500/50'
                                         : 'bg-slate-700 text-slate-400 border border-slate-600 hover:border-slate-500'
-                                }`}
+                                    }`}
                             >
                                 {density}
                             </button>
@@ -346,18 +345,16 @@ function QuickFiltersBar({
                     <button
                         key={f.id}
                         onClick={() => onToggle(f.id)}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border transition-all ${
-                            isActive 
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border transition-all ${isActive
                                 ? f.color
                                 : 'text-slate-400 bg-slate-800/50 border-slate-600 hover:border-slate-500'
-                        }`}
+                            }`}
                     >
                         <span>{f.icon}</span>
                         <span>{f.label}</span>
                         {count > 0 && (
-                            <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] ${
-                                isActive ? 'bg-white/20' : 'bg-slate-700'
-                            }`}>
+                            <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] ${isActive ? 'bg-white/20' : 'bg-slate-700'
+                                }`}>
                                 {count}
                             </span>
                         )}
@@ -520,7 +517,7 @@ function HoverTooltip({ info, position }: { info: HoverInfo; position: { x: numb
                                 <span className="text-slate-500 text-[10px]">Max Coupling</span>
                                 <div className="flex items-center gap-1">
                                     <div className="w-12 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                                        <div 
+                                        <div
                                             className="h-full bg-purple-500 rounded-full"
                                             style={{ width: `${info.maxCoupling * 100}%` }}
                                         />
@@ -572,7 +569,7 @@ function countFilters(tree: Record<string, TreeNode>): Record<QuickFilter, numbe
     const counts: Record<QuickFilter, number> = {
         hot: 0, stable: 0, recent: 0, coupled: 0, risky: 0
     };
-    
+
     function traverse(node: TreeNode) {
         if (node.__type === 'file') {
             for (const filter of Object.keys(counts) as QuickFilter[]) {
@@ -587,11 +584,11 @@ function countFilters(tree: Record<string, TreeNode>): Record<QuickFilter, numbe
             }
         }
     }
-    
+
     for (const node of Object.values(tree)) {
         traverse(node);
     }
-    
+
     return counts;
 }
 
@@ -683,7 +680,7 @@ export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
     // Check if node should be visible based on active filters
     const isNodeVisible = useCallback((node: TreeNode, isDir: boolean): boolean => {
         if (activeFilters.size === 0) return true;
-        
+
         if (isDir) {
             const children = node.__children || {};
             for (const child of Object.values(children)) {
@@ -692,7 +689,7 @@ export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
             }
             return false;
         }
-        
+
         for (const filter of activeFilters) {
             if (matchesFilter(node, filter)) return true;
         }
@@ -742,10 +739,9 @@ export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
             return (
                 <div key={fullPath}>
                     <div
-                        className={`group flex items-center gap-1 py-1.5 px-2 hover:bg-slate-800/70 rounded cursor-pointer text-sm transition-colors relative ${
-                            folderActivity === 'hot' ? 'bg-red-500/5' : 
-                            folderActivity === 'active' ? 'bg-amber-500/5' : ''
-                        }`}
+                        className={`group flex items-center gap-1 py-1.5 px-2 hover:bg-slate-800/70 rounded cursor-pointer text-sm transition-colors relative ${folderActivity === 'hot' ? 'bg-red-500/5' :
+                                folderActivity === 'active' ? 'bg-amber-500/5' : ''
+                            }`}
                         style={{ paddingLeft: `${depth * 16 + 8}px` }}
                         onClick={() => toggleExpand(fullPath)}
                         onMouseEnter={(e) => handleMouseEnter(e, hoverData)}
@@ -815,9 +811,8 @@ export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
         return (
             <div
                 key={fullPath}
-                className={`group flex items-center gap-1 py-1.5 px-2 hover:bg-slate-800/70 rounded cursor-pointer text-sm transition-colors ${
-                    isHotFile ? 'bg-red-500/5' : isHighCoupling ? 'bg-purple-500/5' : ''
-                }`}
+                className={`group flex items-center gap-1 py-1.5 px-2 hover:bg-slate-800/70 rounded cursor-pointer text-sm transition-colors ${isHotFile ? 'bg-red-500/5' : isHighCoupling ? 'bg-purple-500/5' : ''
+                    }`}
                 style={{ paddingLeft: `${depth * 16 + 24}px` }}
                 onClick={() => onFileSelect?.(fullPath)}
                 onMouseEnter={(e) => handleMouseEnter(e, fileHoverData)}
@@ -855,7 +850,7 @@ export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
                     className={`p-1.5 rounded transition-colors ${showSettings
                         ? 'bg-sky-500/20 text-sky-400'
                         : 'text-slate-500 hover:text-slate-400 hover:bg-slate-800'
-                    }`}
+                        }`}
                     title="Settings"
                 >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
