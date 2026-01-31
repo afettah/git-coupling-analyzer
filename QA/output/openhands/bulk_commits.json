@@ -1,0 +1,366 @@
+{
+  "analysis_date": "2026-01-31T22:01:28.485506",
+  "threshold": 50,
+  "bulk_commits_count": 75,
+  "bulk_commits": [
+    {
+      "commit_oid": "01ae22ef57d497f7cfdfba96a99b96af06be5a05",
+      "author": "accounts@rbren.io",
+      "date": "2024-08-20 00:44:54 +0800",
+      "subject": "Rename OpenDevin to OpenHands (#3472)",
+      "file_count": 387
+    },
+    {
+      "commit_oid": "4f0a454ed6dc8d03cbb38d821c31fcb399865c4c",
+      "author": "xingyao6@illinois.edu",
+      "date": "2024-08-01 22:07:39 +0000",
+      "subject": "[Arch] Support integration tests using EventStream Runtime (#3184)",
+      "file_count": 369
+    },
+    {
+      "commit_oid": "6132968324779299bbd60b22a41fd41e9efd6c1f",
+      "author": "xingyao@all-hands.dev",
+      "date": "2025-06-03 05:12:10 +0800",
+      "subject": "docs: migrate all docs from All-Hands-AI/docs to OpenHands repo (#8848)",
+      "file_count": 342
+    },
+    {
+      "commit_oid": "e37f7b0e0f37c99e3202889b5d5c3f8413e8ae4d",
+      "author": "ray.myers@gmail.com",
+      "date": "2025-09-04 15:44:54 -0400",
+      "subject": "Enterprise code and docker build (#10770)",
+      "file_count": 327
+    },
+    {
+      "commit_oid": "689d3c90466eb112f321c50b648063af905bda26",
+      "author": "neubig@gmail.com",
+      "date": "2025-05-08 03:59:13 +0000",
+      "subject": "Update pre-commit hook versions to most recent versions (#8343)",
+      "file_count": 296
+    },
+    {
+      "commit_oid": "3baeecb27c9a9e7dee27460549a5e019179415c7",
+      "author": "83104063+amanape@users.noreply.github.com",
+      "date": "2025-09-10 18:12:52 +0000",
+      "subject": "meta(frontend): Improve UX (#9845)",
+      "file_count": 269
+    },
+    {
+      "commit_oid": "7068a73ae7186834115677d4604f1e790ae85e4f",
+      "author": "10787084+tobitege@users.noreply.github.com",
+      "date": "2024-09-02 06:03:22 +0200",
+      "subject": "(enh) Improve CodeActAgent's file editing reliability (#3610)",
+      "file_count": 213
+    },
+    {
+      "commit_oid": "84a578ad20cef8c5475f2305e374918eba56e2fd",
+      "author": "xingyao@all-hands.dev",
+      "date": "2024-10-17 05:38:23 +0800",
+      "subject": "[test] remove integration tests from CI & move them into evaluation (#4447)",
+      "file_count": 207
+    },
+    {
+      "commit_oid": "bfdd7fd6204af4e827bce79b950d8ba6e481208a",
+      "author": "83104063+amanape@users.noreply.github.com",
+      "date": "2024-10-07 23:15:38 +0400",
+      "subject": "feat(frontend): UI overhaul (#3604)",
+      "file_count": 200
+    },
+    {
+      "commit_oid": "2f4b70159eacc51d84a5e1158ab694af387ad04c",
+      "author": "xingyao@all-hands.dev",
+      "date": "2025-05-07 12:15:52 +0800",
+      "subject": "Simplify workspace mounting with SANDBOX_VOLUMES (#8242)",
+      "file_count": 189
+    },
+    {
+      "commit_oid": "c2f46200c0d26a2bb3ef33417d88c3cfa0ab418c",
+      "author": "xingyao@all-hands.dev",
+      "date": "2025-08-13 21:13:19 +0200",
+      "subject": "chore(lint): Apply comprehensive linting and formatting fixes (#10287)",
+      "file_count": 164
+    },
+    {
+      "commit_oid": "b9b6cfd406814f453a1cfe46842cd7a7126b957b",
+      "author": "83104063+amanape@users.noreply.github.com",
+      "date": "2024-12-02 05:47:02 +0000",
+      "subject": "refactor(frontend) Refactor and move components (#5290)",
+      "file_count": 164
+    },
+    {
+      "commit_oid": "678436da30333240f01780f3fa5ac162b0a1d13a",
+      "author": "opendevin@all-hands.dev",
+      "date": "2024-11-25 08:35:52 -0500",
+      "subject": "Fix issue #5222: [Refactor]: Refactor the evaluation directory (#5223)",
+      "file_count": 152
+    },
+    {
+      "commit_oid": "0380070e98e8d59efa411fc74dd95aa49f0ea752",
+      "author": "xingyao6@illinois.edu",
+      "date": "2024-03-20 15:09:29 -0400",
+      "subject": "Abstraction that allows us to develop different agents, frontend, backend, and evaluation in parallel (#68)",
+      "file_count": 140
+    },
+    {
+      "commit_oid": "a47713ecb00676a26acbe405109602e96b87a8ee",
+      "author": "xingyao6@illinois.edu",
+      "date": "2024-07-06 03:38:05 +0800",
+      "subject": "[Arch] Remove supports for Background Commands (#2803)",
+      "file_count": 137
+    },
+    {
+      "commit_oid": "1eade7d188696095ffb534245b248decf5963518",
+      "author": "accounts@rbren.io",
+      "date": "2024-03-20 18:44:50 +0800",
+      "subject": "First pass at a control loop (#35)",
+      "file_count": 134
+    },
+    {
+      "commit_oid": "f3c6fd21226c85c784142de5cc0c4a1b669d04fb",
+      "author": "xingyao@all-hands.dev",
+      "date": "2025-10-08 08:22:39 -0400",
+      "subject": "Remove docs/ folder - migrated to separate repository (#11261)",
+      "file_count": 124
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "author": "enyst@users.noreply.github.com",
+      "date": "2025-08-17 00:33:17 +0000",
+      "subject": "Revert \"tests: reorganize unit tests into subdirectories mirroring source modules\" (#10437)",
+      "file_count": 124
+    },
+    {
+      "commit_oid": "f866da6bf2acad74b794976c9973dc18b0ed235f",
+      "author": "enyst@users.noreply.github.com",
+      "date": "2025-08-16 19:13:50 +0200",
+      "subject": "tests: reorganize unit tests into subdirectories mirroring source modules (#10427)",
+      "file_count": 124
+    },
+    {
+      "commit_oid": "fadcdc117ea30b2f9bcf8805447418a202114b2f",
+      "author": "accounts@rbren.io",
+      "date": "2024-05-02 17:01:54 +0000",
+      "subject": "Migrate to new folder structure in preparation for refactor (#1531)",
+      "file_count": 124
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "author": "enyst@users.noreply.github.com",
+      "date": "2025-08-19 01:11:07 +0200",
+      "subject": "tests: reorganize unit tests into subdirectories mirroring source modules (#10484)",
+      "file_count": 122
+    },
+    {
+      "commit_oid": "d9d19043f19bdf0421c7cfe14cd563d93a695eb1",
+      "author": "engel.nyst@gmail.com",
+      "date": "2025-12-30 00:21:29 +0100",
+      "subject": "chore: Mark V0 legacy files with clear headers and V1 pointers (#12165)",
+      "file_count": 121
+    },
+    {
+      "commit_oid": "6e4ac8e2cec9c8c0a0f640f511916dc3fc294e89",
+      "author": "tofarr@gmail.com",
+      "date": "2026-01-15 15:22:38 -0700",
+      "subject": "[APP-373] Update legacy v0 deprecation notice with version and removal date (#12455)",
+      "file_count": 119
+    },
+    {
+      "commit_oid": "415843476c9a71cbbe26639c2ab1df8c7c72d354",
+      "author": "55996465+Kaushikdkrikhanu@users.noreply.github.com",
+      "date": "2024-08-04 02:26:22 +0800",
+      "subject": "Feat: Add Vision Input Support for LLM with Vision Capabilities (#2848)",
+      "file_count": 116
+    },
+    {
+      "commit_oid": "f292f3a84d7bd30006d1d1e5402c8272b7f4e2a0",
+      "author": "tofarr@gmail.com",
+      "date": "2025-10-14 02:16:44 +0000",
+      "subject": "V1 Integration (#11183)",
+      "file_count": 115
+    },
+    {
+      "commit_oid": "cd58194d2a8aad4815a3251f90212d8a551dea44",
+      "author": "alex@a13x.io",
+      "date": "2024-04-29 10:00:51 -0700",
+      "subject": "docs(docs): start implementing docs website (#1372)",
+      "file_count": 114
+    },
+    {
+      "commit_oid": "cfefc47439497c8b8c70e9b1b4717167ee4a0b47",
+      "author": "136044586+zch-cc@users.noreply.github.com",
+      "date": "2024-03-22 23:26:37 +0800",
+      "subject": "Move regression tests to evaluation/ (#86)",
+      "file_count": 114
+    },
+    {
+      "commit_oid": "205f0234e8996f707ec596b7bf4cdb3836a2975b",
+      "author": "accounts@rbren.io",
+      "date": "2025-05-28 21:48:34 +0200",
+      "subject": "Rename Conversation to ServerConversation and AppConfig to OpenHandsConfig (#8754)",
+      "file_count": 111
+    },
+    {
+      "commit_oid": "d37b2973b2ba408b625623d467c61955365b26c2",
+      "author": "enyst@users.noreply.github.com",
+      "date": "2024-07-07 21:04:23 +0000",
+      "subject": "Refactoring: event stream based agent history (#2709)",
+      "file_count": 107
+    },
+    {
+      "commit_oid": "d5e66b4f3a7f9cbf0fa8facd4e83f50a743e6ea0",
+      "author": "chuck@all-hands.dev",
+      "date": "2026-01-15 22:03:31 -0500",
+      "subject": "SAAS: Introducing orgs (phase 1) (#11265)",
+      "file_count": 106
+    },
+    {
+      "commit_oid": "1725627c7d25b089fbdd7697eaa1ba3143f6bb0a",
+      "author": "83104063+amanape@users.noreply.github.com",
+      "date": "2024-11-25 06:59:02 +0000",
+      "subject": "chore: Convert camelCase file names to kebab-case (#5209)",
+      "file_count": 106
+    },
+    {
+      "commit_oid": "bc31fb15fecb5841040180e067b64363106cff34",
+      "author": "10787084+tobitege@users.noreply.github.com",
+      "date": "2024-09-04 17:58:30 +0200",
+      "subject": "(fix) CodeActAgent: fix issues with vision support in prompts (#3665)",
+      "file_count": 106
+    },
+    {
+      "commit_oid": "531683abaedfd705ea62a9e0a582c137e9c04699",
+      "author": "83104063+amanape@users.noreply.github.com",
+      "date": "2025-10-20 20:57:40 +0400",
+      "subject": "feat(frontend): V1 conversation API (PARTIAL) (#11336)",
+      "file_count": 101
+    },
+    {
+      "commit_oid": "b028bd46bbd8694898699d8d373871be792610bd",
+      "author": "accounts@rbren.io",
+      "date": "2024-05-13 23:14:15 +0000",
+      "subject": "Use messages to drive tasks (#1688)",
+      "file_count": 96
+    },
+    {
+      "commit_oid": "7c27e599186e61d2ab80a3d6f2213bec6d0f8407",
+      "author": "95044293+dorbanianas@users.noreply.github.com",
+      "date": "2024-03-28 23:40:30 -0400",
+      "subject": "feat: Ad/regression tests using pytest (#329)",
+      "file_count": 92
+    },
+    {
+      "commit_oid": "152f99c64fd13cbc6c7fa32c26d4b025542a0043",
+      "author": "tofarr@gmail.com",
+      "date": "2024-10-03 13:40:55 -0400",
+      "subject": "Chore Bump python version (#3545)",
+      "file_count": 89
+    },
+    {
+      "commit_oid": "d9ba45dae814de8ad3258176b47a4ab40667b1bc",
+      "author": "alex@a13x.io",
+      "date": "2024-05-02 18:29:41 +0000",
+      "subject": "ci(docs): only generate autogen python docs on deploy (#1501)",
+      "file_count": 89
+    },
+    {
+      "commit_oid": "e6847e9e61bf77422f413ce2cb04f6a29ce4211e",
+      "author": "enyst@users.noreply.github.com",
+      "date": "2024-10-08 00:34:18 +0000",
+      "subject": "Move agenthub within openhands (#4130)",
+      "file_count": 88
+    },
+    {
+      "commit_oid": "25d9cf28905c2f5ece4e2a5fb6256952b27ad620",
+      "author": "rohitvinodmalhotra@gmail.com",
+      "date": "2025-08-18 02:11:20 -0400",
+      "subject": "[Refactor]: Add LLMRegistry for llm services (#9589)",
+      "file_count": 84
+    },
+    {
+      "commit_oid": "1c7cdbefddcdb122a2e76f27ff3c0fb1face2053",
+      "author": "xingyao6@illinois.edu",
+      "date": "2024-05-01 08:40:00 -0400",
+      "subject": "feat(CodeActAgent): Support Agent-User Interaction during Task Execution and the Full Integration of CodeActAgent (#1290)",
+      "file_count": 81
+    },
+    {
+      "commit_oid": "b5e00f577c408867c23a92e61c5b323018828ba0",
+      "author": "accounts@rbren.io",
+      "date": "2025-10-26 01:52:45 +0200",
+      "subject": "Replace All-Hands-AI references with OpenHands (#11287)",
+      "file_count": 80
+    },
+    {
+      "commit_oid": "9b371b1b5fa004a10db8fffb07edb5cd538bc29b",
+      "author": "liboxuan@connect.hku.hk",
+      "date": "2024-05-28 20:01:16 -0700",
+      "subject": "Refactor agent delegation and tweak micro agents (#1910)",
+      "file_count": 79
+    },
+    {
+      "commit_oid": "31b244f95ecc1d8e165ce21777fb6e94e1e79632",
+      "author": "xingyao6@illinois.edu",
+      "date": "2024-08-06 17:21:45 +0000",
+      "subject": "[Refactor, Evaluation] Refactor and clean up evaluation harness to remove global config and use EventStreamRuntime (#3230)",
+      "file_count": 78
+    },
+    {
+      "commit_oid": "0c2ebfd6e11c6f833390b1314f1cf878a766b3b8",
+      "author": "6035284+Borda@users.noreply.github.com",
+      "date": "2024-04-29 15:41:58 -0700",
+      "subject": "Ruff: use I rule for isort (#1410)",
+      "file_count": 78
+    },
+    {
+      "commit_oid": "242c4a0df6a140b6299e0de8b73c3382dbc416ca",
+      "author": "accounts@rbren.io",
+      "date": "2024-05-07 21:13:08 +0000",
+      "subject": "Remove extra message actions (#1608)",
+      "file_count": 76
+    },
+    {
+      "commit_oid": "dcb5d1ce0afedf252d1f400f9a3dad8a6d5713bd",
+      "author": "accounts@rbren.io",
+      "date": "2024-05-14 11:09:45 -0400",
+      "subject": "Add permanent storage option for EventStream (#1697)",
+      "file_count": 73
+    },
+    {
+      "commit_oid": "1523555eea6f13794c89e09ff23f00f7d118752f",
+      "author": "69354317+hieptl@users.noreply.github.com",
+      "date": "2025-09-15 20:35:56 +0700",
+      "subject": "refactor(frontend): remove dead code (#10839)",
+      "file_count": 71
+    },
+    {
+      "commit_oid": "aab818716ea35081b26eec7db935971c6263baa8",
+      "author": "neubig@gmail.com",
+      "date": "2025-03-28 14:14:45 +0000",
+      "subject": "Add Japanese documentation (#7386)",
+      "file_count": 69
+    },
+    {
+      "commit_oid": "ab3851593d84bd22703c35bea334481e5c8eaec5",
+      "author": "accounts@rbren.io",
+      "date": "2024-09-08 21:45:51 +0200",
+      "subject": "Support interactive commands (#3653)",
+      "file_count": 69
+    },
+    {
+      "commit_oid": "1a3360698779ec993cb8ae76b7e56fdbf56f4939",
+      "author": "rohitvinodmalhotra@gmail.com",
+      "date": "2025-11-18 19:59:12 +0000",
+      "subject": "Chore: move CLI code its own repo (#11724)",
+      "file_count": 66
+    }
+  ],
+  "commit_size_distribution": {
+    "1": 2309,
+    "2-5": 2406,
+    "6-10": 578,
+    "11-20": 394,
+    "100+": 33,
+    "21-50": 204,
+    "51-100": 42
+  }
+}

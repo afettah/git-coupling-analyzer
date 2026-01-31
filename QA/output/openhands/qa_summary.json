@@ -1,0 +1,81 @@
+{
+  "analysis_date": "2026-01-31T22:03:11.936851",
+  "repository": "/home/afettah/workspace/git-coupling-analyzer/tmp/OpenHands",
+  "output_directory": "/home/afettah/workspace/git-coupling-analyzer/QA/output/openhands",
+  "generated_files": [
+    {
+      "filename": "basic_stats.json",
+      "exists": true
+    },
+    {
+      "filename": "file_commits.json",
+      "exists": true
+    },
+    {
+      "filename": "cochange_pairs.json",
+      "exists": true
+    },
+    {
+      "filename": "renames.json",
+      "exists": true
+    },
+    {
+      "filename": "bulk_commits.json",
+      "exists": true
+    },
+    {
+      "filename": "deleted_files.json",
+      "exists": true
+    },
+    {
+      "filename": "author_analysis.json",
+      "exists": true
+    },
+    {
+      "filename": "module_analysis.json",
+      "exists": true
+    },
+    {
+      "filename": "test_impl_coupling.json",
+      "exists": true
+    },
+    {
+      "filename": "coupling_ground_truth.json",
+      "exists": true
+    },
+    {
+      "filename": "hotspot_analysis.json",
+      "exists": true
+    }
+  ],
+  "all_output_files": [
+    "author_analysis.json",
+    "author_stats.csv",
+    "authors_by_commits.txt",
+    "basic_stats.json",
+    "bulk_commits.csv",
+    "bulk_commits.json",
+    "cochange_pairs.csv",
+    "cochange_pairs.json",
+    "collection_log.txt",
+    "coupling_ground_truth.csv",
+    "coupling_ground_truth.json",
+    "current_files.txt",
+    "deleted_files.csv",
+    "deleted_files.json",
+    "file_churn.csv",
+    "file_commits.csv",
+    "file_commits.json",
+    "folder_stats.csv",
+    "hotspot_analysis.json",
+    "module_analysis.json",
+    "quick_stats.json",
+    "renames.csv",
+    "renames.json",
+    "repo_stats.json",
+    "repo_stats_report.txt",
+    "test_impl_coupling.json",
+    "test_impl_pairs.csv",
+    "top_level_folders.txt"
+  ]
+}

@@ -1,0 +1,2320 @@
+{
+  "analysis_date": "2026-01-31T22:01:27.906981",
+  "total_renames": 1541,
+  "renames": [
+    {
+      "commit_oid": "9171986dde4442b5e65ae8ca7ea747344de53a42",
+      "old_path": ".openhands/microagents/repo.md",
+      "new_path": "AGENTS.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "0e4f0c25d73ffb67cda1a6882450f71d6c9f6aca",
+      "old_path": "enterprise/migrations/versions/086_bump_condenser_defaults.py",
+      "new_path": "enterprise/migrations/versions/087_bump_condenser_defaults.py",
+      "similarity": 94
+    },
+    {
+      "commit_oid": "0e4f0c25d73ffb67cda1a6882450f71d6c9f6aca",
+      "old_path": "enterprise/migrations/versions/087_create_blocked_email_domains_table.py",
+      "new_path": "enterprise/migrations/versions/088_create_blocked_email_domains_table.py",
+      "similarity": 93
+    },
+    {
+      "commit_oid": "5c20724845d0bdee17a113b0bbadae958f297b43",
+      "old_path": "enterprise/migrations/versions/086_create_blocked_email_domains_table.py",
+      "new_path": "enterprise/migrations/versions/087_create_blocked_email_domains_table.py",
+      "similarity": 93
+    },
+    {
+      "commit_oid": "9686ee02f3e8525e8da062ee326f2ef139e53ca5",
+      "old_path": "openhands/app_server/event_callback/github_v1_callback_processor.py",
+      "new_path": "enterprise/integrations/github/github_v1_callback_processor.py",
+      "similarity": 91
+    },
+    {
+      "commit_oid": "58340b3ef9e6e5b04239a659c16de4a78f085a3a",
+      "old_path": "frontend/src/state/command-store.ts",
+      "new_path": "frontend/src/stores/command-store.ts",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "58340b3ef9e6e5b04239a659c16de4a78f085a3a",
+      "old_path": "frontend/src/state/conversation-store.ts",
+      "new_path": "frontend/src/stores/conversation-store.ts",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "58340b3ef9e6e5b04239a659c16de4a78f085a3a",
+      "old_path": "frontend/src/state/microagent-management-store.ts",
+      "new_path": "frontend/src/stores/microagent-management-store.ts",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "58340b3ef9e6e5b04239a659c16de4a78f085a3a",
+      "old_path": "frontend/src/state/status-store.ts",
+      "new_path": "frontend/src/stores/status-store.ts",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "afce58a27d5f2bbad94611cfe78a658d19edcdcc",
+      "old_path": "frontend/src/ui/microagent-management-service/microagent-management-service.api.ts",
+      "new_path": "frontend/src/api/microagent-management-service/microagent-management-service.api.ts",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "f52d9899e2b0419f1d0c1af157f36e4b9c789e6f",
+      "old_path": "frontend/src/components/features/settings/mcp-settings/__tests__/mcp-server-form.validation.test.tsx",
+      "new_path": "frontend/__tests__/components/features/settings/mcp-settings/mcp-server-form.validation.test.tsx",
+      "similarity": 96
+    },
+    {
+      "commit_oid": "f52d9899e2b0419f1d0c1af157f36e4b9c789e6f",
+      "old_path": "frontend/src/components/features/settings/mcp-settings/__tests__/mcp-server-list.test.tsx",
+      "new_path": "frontend/__tests__/components/features/settings/mcp-settings/mcp-server-list.test.tsx",
+      "similarity": 98
+    },
+    {
+      "commit_oid": "f52d9899e2b0419f1d0c1af157f36e4b9c789e6f",
+      "old_path": "frontend/src/components/v1/chat/event-content-helpers/__tests__/get-observation-content.test.ts",
+      "new_path": "frontend/__tests__/components/v1/chat/event-content-helpers/get-observation-content.test.ts",
+      "similarity": 96
+    },
+    {
+      "commit_oid": "f52d9899e2b0419f1d0c1af157f36e4b9c789e6f",
+      "old_path": "frontend/src/services/__tests__/actions.test.ts",
+      "new_path": "frontend/__tests__/services/actions.test.ts",
+      "similarity": 98
+    },
+    {
+      "commit_oid": "f52d9899e2b0419f1d0c1af157f36e4b9c789e6f",
+      "old_path": "frontend/src/utils/__tests__/custom-toast-handlers.test.ts",
+      "new_path": "frontend/__tests__/utils/custom-toast-handlers.test.ts",
+      "similarity": 98
+    },
+    {
+      "commit_oid": "f52d9899e2b0419f1d0c1af157f36e4b9c789e6f",
+      "old_path": "frontend/src/utils/__tests__/settings-utils.test.ts",
+      "new_path": "frontend/__tests__/utils/settings-utils.test.ts",
+      "similarity": 97
+    },
+    {
+      "commit_oid": "f52d9899e2b0419f1d0c1af157f36e4b9c789e6f",
+      "old_path": "frontend/src/utils/__tests__/toast-duration.test.ts",
+      "new_path": "frontend/__tests__/utils/toast-duration.test.ts",
+      "similarity": 97
+    },
+    {
+      "commit_oid": "f52d9899e2b0419f1d0c1af157f36e4b9c789e6f",
+      "old_path": "frontend/src/utils/__tests__/vscode-url-helper.test.ts",
+      "new_path": "frontend/__tests__/utils/vscode-url-helper.test.ts",
+      "similarity": 96
+    },
+    {
+      "commit_oid": "16125f2ae9e0298293aab59de2dec8210417b04f",
+      "old_path": "frontend/src/settings-service/settings-service.api.ts",
+      "new_path": "frontend/src/api/settings-service/settings-service.api.ts",
+      "similarity": 93
+    },
+    {
+      "commit_oid": "16125f2ae9e0298293aab59de2dec8210417b04f",
+      "old_path": "frontend/src/settings-service/settings.types.ts",
+      "new_path": "frontend/src/api/settings-service/settings.types.ts",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/add_agent.md",
+      "new_path": "skills/add_agent.md",
+      "similarity": 93
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/add_repo_inst.md",
+      "new_path": "skills/add_repo_inst.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/address_pr_comments.md",
+      "new_path": "skills/address_pr_comments.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/agent-builder.md",
+      "new_path": "skills/agent-builder.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/agent_memory.md",
+      "new_path": "skills/agent_memory.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/bitbucket.md",
+      "new_path": "skills/bitbucket.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/code-review.md",
+      "new_path": "skills/code-review.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/codereview-roasted.md",
+      "new_path": "skills/codereview-roasted.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/default-tools.md",
+      "new_path": "skills/default-tools.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/docker.md",
+      "new_path": "skills/docker.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/fix-py-line-too-long.md",
+      "new_path": "skills/fix-py-line-too-long.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/fix_test.md",
+      "new_path": "skills/fix_test.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/flarglebargle.md",
+      "new_path": "skills/flarglebargle.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/github.md",
+      "new_path": "skills/github.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/gitlab.md",
+      "new_path": "skills/gitlab.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/kubernetes.md",
+      "new_path": "skills/kubernetes.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/npm.md",
+      "new_path": "skills/npm.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/onboarding.md",
+      "new_path": "skills/onboarding.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/pdflatex.md",
+      "new_path": "skills/pdflatex.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/security.md",
+      "new_path": "skills/security.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/ssh.md",
+      "new_path": "skills/ssh.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/swift-linux.md",
+      "new_path": "skills/swift-linux.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/update_pr_description.md",
+      "new_path": "skills/update_pr_description.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "old_path": "microagents/update_test.md",
+      "new_path": "skills/update_test.md",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "9abd1714b9d55530af509eff4e24a1da549db402",
+      "old_path": "tests/unit/runtime/utils/test_windows_bash.py",
+      "new_path": "tests/runtime/test_windows_bash.py",
+      "similarity": 96
+    },
+    {
+      "commit_oid": "eb616dfae4254a46ec4e195842f03efeee268b5e",
+      "old_path": "openhands/storage/data_models/user_secrets.py",
+      "new_path": "openhands/storage/data_models/secrets.py",
+      "similarity": 98
+    },
+    {
+      "commit_oid": "d82972e126ad8f570b8d235b9017d18d577afe8c",
+      "old_path": "frontend/src/assets/branding/all-hands-logo.svg",
+      "new_path": "frontend/src/assets/branding/openhands-logo.svg",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "9fe4e9715a965142acf2c16ce746f9eb57c099b5",
+      "old_path": "openhands-cli/tests/test_status_command.py",
+      "new_path": "openhands-cli/tests/commands/test_status_command.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "7de32b25794fda743fa2a19e622155fe78f4c387",
+      "old_path": "openhands-cli/tests/test_settings_input.py",
+      "new_path": "openhands-cli/tests/settings/test_settings_input.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "7de32b25794fda743fa2a19e622155fe78f4c387",
+      "old_path": "openhands-cli/tests/test_settings_workflow.py",
+      "new_path": "openhands-cli/tests/settings/test_settings_workflow.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "3f984d878b8d4cfd98e91d500ab4955e97258d88",
+      "old_path": "frontend/src/api/open-hands.ts",
+      "new_path": "frontend/src/api/conversation-service/conversation-service.api.ts",
+      "similarity": 90
+    },
+    {
+      "commit_oid": "5aba498e7721394ded04614cbc3925badb99608d",
+      "old_path": "frontend/src/types/billing.tsx",
+      "new_path": "frontend/src/api/billing-service/billing.types.ts",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "3baeecb27c9a9e7dee27460549a5e019179415c7",
+      "old_path": "frontend/src/components/features/home/tasks/task.types.ts",
+      "new_path": "frontend/src/utils/types.ts",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_browsing_agent_parser.py",
+      "new_path": "tests/unit/agenthub/browsing_agent/test_browsing_agent_parser.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_agents.py",
+      "new_path": "tests/unit/agenthub/test_agents.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_function_calling.py",
+      "new_path": "tests/unit/agenthub/test_function_calling.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_prompt_caching.py",
+      "new_path": "tests/unit/agenthub/test_prompt_caching.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_windows_prompt_refinement.py",
+      "new_path": "tests/unit/agenthub/test_windows_prompt_refinement.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli.py",
+      "new_path": "tests/unit/cli/test_cli.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_alias_setup.py",
+      "new_path": "tests/unit/cli/test_cli_alias_setup.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_commands.py",
+      "new_path": "tests/unit/cli/test_cli_commands.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_config_management.py",
+      "new_path": "tests/unit/cli/test_cli_config_management.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_default_model.py",
+      "new_path": "tests/unit/cli/test_cli_default_model.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_openhands_provider_auth_error.py",
+      "new_path": "tests/unit/cli/test_cli_openhands_provider_auth_error.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_pause_resume.py",
+      "new_path": "tests/unit/cli/test_cli_pause_resume.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_runtime_mcp.py",
+      "new_path": "tests/unit/cli/test_cli_runtime_mcp.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_settings.py",
+      "new_path": "tests/unit/cli/test_cli_settings.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_setup_flow.py",
+      "new_path": "tests/unit/cli/test_cli_setup_flow.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_suppress_warnings.py",
+      "new_path": "tests/unit/cli/test_cli_suppress_warnings.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_thought_order.py",
+      "new_path": "tests/unit/cli/test_cli_thought_order.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_tui.py",
+      "new_path": "tests/unit/cli/test_cli_tui.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_utils.py",
+      "new_path": "tests/unit/cli/test_cli_utils.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_vi_mode.py",
+      "new_path": "tests/unit/cli/test_cli_vi_mode.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_cli_workspace.py",
+      "new_path": "tests/unit/cli/test_cli_workspace.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_control_flags.py",
+      "new_path": "tests/unit/controller/state/test_control_flags.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_state.py",
+      "new_path": "tests/unit/controller/state/test_state.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_agent_controller.py",
+      "new_path": "tests/unit/controller/test_agent_controller.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_agent_delegation.py",
+      "new_path": "tests/unit/controller/test_agent_delegation.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_is_stuck.py",
+      "new_path": "tests/unit/controller/test_is_stuck.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_arg_parser.py",
+      "new_path": "tests/unit/core/config/test_arg_parser.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_config.py",
+      "new_path": "tests/unit/core/config/test_config.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_config_dict_casting.py",
+      "new_path": "tests/unit/core/config/test_config_dict_casting.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_config_extended.py",
+      "new_path": "tests/unit/core/config/test_config_extended.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_config_precedence.py",
+      "new_path": "tests/unit/core/config/test_config_precedence.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_git_config.py",
+      "new_path": "tests/unit/core/config/test_git_config.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_kubernetes_config.py",
+      "new_path": "tests/unit/core/config/test_kubernetes_config.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_mcp_config.py",
+      "new_path": "tests/unit/core/config/test_mcp_config.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_mcp_settings_merge.py",
+      "new_path": "tests/unit/core/config/test_mcp_settings_merge.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_logger.py",
+      "new_path": "tests/unit/core/logger/test_logger.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_logger_litellm.py",
+      "new_path": "tests/unit/core/logger/test_logger_litellm.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_logging.py",
+      "new_path": "tests/unit/core/logger/test_logging.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_image_content_validation.py",
+      "new_path": "tests/unit/core/message/test_image_content_validation.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_message_serialization.py",
+      "new_path": "tests/unit/core/message/test_message_serialization.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_message_utils.py",
+      "new_path": "tests/unit/core/message/test_message_utils.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_exit_reason.py",
+      "new_path": "tests/unit/core/schema/test_exit_reason.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_action_serialization.py",
+      "new_path": "tests/unit/events/test_action_serialization.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_command_success.py",
+      "new_path": "tests/unit/events/test_command_success.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_contextual_events.py",
+      "new_path": "tests/unit/events/test_contextual_events.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_event_serialization.py",
+      "new_path": "tests/unit/events/test_event_serialization.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_event_stream.py",
+      "new_path": "tests/unit/events/test_event_stream.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_file_edit_observation.py",
+      "new_path": "tests/unit/events/test_file_edit_observation.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_mcp_action_observation.py",
+      "new_path": "tests/unit/events/test_mcp_action_observation.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_nested_event_store.py",
+      "new_path": "tests/unit/events/test_nested_event_store.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_observation_serialization.py",
+      "new_path": "tests/unit/events/test_observation_serialization.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_bitbucket.py",
+      "new_path": "tests/unit/integrations/bitbucket/test_bitbucket.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_github_service.py",
+      "new_path": "tests/unit/integrations/github/test_github_service.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_suggested_tasks.py",
+      "new_path": "tests/unit/integrations/github/test_suggested_tasks.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_gitlab.py",
+      "new_path": "tests/unit/integrations/gitlab/test_gitlab.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_provider_immutability.py",
+      "new_path": "tests/unit/integrations/test_provider_immutability.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_io.py",
+      "new_path": "tests/unit/io/test_io.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_json.py",
+      "new_path": "tests/unit/io/test_json.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_json_encoder.py",
+      "new_path": "tests/unit/io/test_json_encoder.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_api_connection_error_retry.py",
+      "new_path": "tests/unit/llm/test_api_connection_error_retry.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_mcp_create_clients_timeout.py",
+      "new_path": "tests/unit/mcp/test_mcp_create_clients_timeout.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_mcp_error_collector.py",
+      "new_path": "tests/unit/mcp/test_mcp_error_collector.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_mcp_integration.py",
+      "new_path": "tests/unit/mcp/test_mcp_integration.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_mcp_timeout.py",
+      "new_path": "tests/unit/mcp/test_mcp_timeout.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_mcp_tool_timeout_stall.py",
+      "new_path": "tests/unit/mcp/test_mcp_tool_timeout_stall.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_mcp_utils.py",
+      "new_path": "tests/unit/mcp/test_mcp_utils.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_condenser.py",
+      "new_path": "tests/unit/memory/condenser/test_condenser.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_conversation_window_condenser.py",
+      "new_path": "tests/unit/memory/condenser/test_conversation_window_condenser.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_conversation_memory.py",
+      "new_path": "tests/unit/memory/test_conversation_memory.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_empty_image_url_fix_v2.py",
+      "new_path": "tests/unit/memory/test_empty_image_url_fix_v2.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_memory.py",
+      "new_path": "tests/unit/memory/test_memory.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_view.py",
+      "new_path": "tests/unit/memory/test_view.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_microagent_no_header.py",
+      "new_path": "tests/unit/microagent/test_microagent_no_header.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_microagent_utils.py",
+      "new_path": "tests/unit/microagent/test_microagent_utils.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_user_microagents.py",
+      "new_path": "tests/unit/microagent/test_user_microagents.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_patch_whitespace.py",
+      "new_path": "tests/unit/resolver/test_patch_whitespace.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_runtime_build.py",
+      "new_path": "tests/unit/runtime/builder/test_runtime_build.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_docker_runtime.py",
+      "new_path": "tests/unit/runtime/impl/test_docker_runtime.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_local_runtime.py",
+      "new_path": "tests/unit/runtime/impl/test_local_runtime.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_agent_skill.py",
+      "new_path": "tests/unit/runtime/plugins/test_agent_skill.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_git_hooks.py",
+      "new_path": "tests/unit/runtime/test_git_hooks.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_runtime_git_tokens.py",
+      "new_path": "tests/unit/runtime/test_runtime_git_tokens.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_runtime_gitlab_microagents.py",
+      "new_path": "tests/unit/runtime/test_runtime_gitlab_microagents.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_runtime_import_robustness.py",
+      "new_path": "tests/unit/runtime/test_runtime_import_robustness.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_runtime_reboot.py",
+      "new_path": "tests/unit/runtime/test_runtime_reboot.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_setup.py",
+      "new_path": "tests/unit/runtime/test_setup.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_bash_parsing.py",
+      "new_path": "tests/unit/runtime/utils/test_bash_parsing.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_bash_ps1_metadata.py",
+      "new_path": "tests/unit/runtime/utils/test_bash_ps1_metadata.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_bash_session.py",
+      "new_path": "tests/unit/runtime/utils/test_bash_session.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_git_handler.py",
+      "new_path": "tests/unit/runtime/utils/test_git_handler.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_log_streamer.py",
+      "new_path": "tests/unit/runtime/utils/test_log_streamer.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_windows_bash.py",
+      "new_path": "tests/unit/runtime/utils/test_windows_bash.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_security.py",
+      "new_path": "tests/unit/security/test_security.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_standalone_conversation_manager.py",
+      "new_path": "tests/unit/server/conversation_manager/test_standalone_conversation_manager.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_conversation.py",
+      "new_path": "tests/unit/server/data_models/test_conversation.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_conversation_routes.py",
+      "new_path": "tests/unit/server/routes/test_conversation_routes.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_get_repository_microagents.py",
+      "new_path": "tests/unit/server/routes/test_get_repository_microagents.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_mcp_routes.py",
+      "new_path": "tests/unit/server/routes/test_mcp_routes.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_secrets_api.py",
+      "new_path": "tests/unit/server/routes/test_secrets_api.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_settings_api.py",
+      "new_path": "tests/unit/server/routes/test_settings_api.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_settings_store_functions.py",
+      "new_path": "tests/unit/server/routes/test_settings_store_functions.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_agent_session.py",
+      "new_path": "tests/unit/server/session/test_agent_session.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_session.py",
+      "new_path": "tests/unit/server/session/test_session.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_listen.py",
+      "new_path": "tests/unit/server/test_listen.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_middleware.py",
+      "new_path": "tests/unit/server/test_middleware.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_openapi_schema_generation.py",
+      "new_path": "tests/unit/server/test_openapi_schema_generation.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_socket_events.py",
+      "new_path": "tests/unit/server/test_socket_events.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_file_conversation_store.py",
+      "new_path": "tests/unit/storage/conversation/test_file_conversation_store.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_secret_store.py",
+      "new_path": "tests/unit/storage/data_models/test_secret_store.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_settings.py",
+      "new_path": "tests/unit/storage/data_models/test_settings.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_file_settings_store.py",
+      "new_path": "tests/unit/storage/settings/test_file_settings_store.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_batched_web_hook.py",
+      "new_path": "tests/unit/storage/test_batched_web_hook.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_storage.py",
+      "new_path": "tests/unit/storage/test_storage.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_async_utils.py",
+      "new_path": "tests/unit/utils/test_async_utils.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_auto_generate_title.py",
+      "new_path": "tests/unit/utils/test_auto_generate_title.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_chunk_localizer.py",
+      "new_path": "tests/unit/utils/test_chunk_localizer.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_circular_imports.py",
+      "new_path": "tests/unit/utils/test_circular_imports.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_import_utils.py",
+      "new_path": "tests/unit/utils/test_import_utils.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_prompt_manager.py",
+      "new_path": "tests/unit/utils/test_prompt_manager.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_search_utils.py",
+      "new_path": "tests/unit/utils/test_search_utils.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "634a7691a286c26bdfb18d8d12af196edbc2435e",
+      "old_path": "tests/unit/test_shutdown_listener.py",
+      "new_path": "tests/unit/utils/test_shutdown_listener.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "8401641f7eaaa64895ad3d6bcf2c24e9f571ca37",
+      "old_path": "docs/static/img/slack-create-convo.png",
+      "new_path": "docs/static/img/slack-create-conversation.png",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/events/test_action_serialization.py",
+      "new_path": "tests/unit/test_action_serialization.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/controller/test_agent_controller.py",
+      "new_path": "tests/unit/test_agent_controller.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/controller/test_agent_delegation.py",
+      "new_path": "tests/unit/test_agent_delegation.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/server/session/test_agent_session.py",
+      "new_path": "tests/unit/test_agent_session.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/runtime/plugins/test_agent_skill.py",
+      "new_path": "tests/unit/test_agent_skill.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/agenthub/test_agents.py",
+      "new_path": "tests/unit/test_agents.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/llm/test_api_connection_error_retry.py",
+      "new_path": "tests/unit/test_api_connection_error_retry.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/core/config/test_arg_parser.py",
+      "new_path": "tests/unit/test_arg_parser.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/utils/test_async_utils.py",
+      "new_path": "tests/unit/test_async_utils.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/utils/test_auto_generate_title.py",
+      "new_path": "tests/unit/test_auto_generate_title.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/runtime/utils/test_bash_parsing.py",
+      "new_path": "tests/unit/test_bash_parsing.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/runtime/utils/test_bash_ps1_metadata.py",
+      "new_path": "tests/unit/test_bash_ps1_metadata.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/runtime/utils/test_bash_session.py",
+      "new_path": "tests/unit/test_bash_session.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/storage/test_batched_web_hook.py",
+      "new_path": "tests/unit/test_batched_web_hook.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/integrations/bitbucket/test_bitbucket.py",
+      "new_path": "tests/unit/test_bitbucket.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/agenthub/browsing_agent/test_browsing_agent_parser.py",
+      "new_path": "tests/unit/test_browsing_agent_parser.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/utils/test_chunk_localizer.py",
+      "new_path": "tests/unit/test_chunk_localizer.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/utils/test_circular_imports.py",
+      "new_path": "tests/unit/test_circular_imports.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/cli/test_cli.py",
+      "new_path": "tests/unit/test_cli.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/cli/test_cli_alias_setup.py",
+      "new_path": "tests/unit/test_cli_alias_setup.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/cli/test_cli_commands.py",
+      "new_path": "tests/unit/test_cli_commands.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/cli/test_cli_config_management.py",
+      "new_path": "tests/unit/test_cli_config_management.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/cli/test_cli_default_model.py",
+      "new_path": "tests/unit/test_cli_default_model.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/cli/test_cli_openhands_provider_auth_error.py",
+      "new_path": "tests/unit/test_cli_openhands_provider_auth_error.py",
+      "similarity": 100
+    },
+    {
+      "commit_oid": "315d391414e163f96ffd4e7ad902b796abe7a93d",
+      "old_path": "tests/unit/cli/test_cli_pause_resume.py",
+      "new_path": "tests/unit/test_cli_pause_resume.py",
+      "similarity": 100
+    }
+  ],
+  "rename_chains": [
+    {
+      "chain": [
+        "tests/unit/test_browsing_agent_parser.py",
+        "tests/unit/agenthub/browsing_agent/test_browsing_agent_parser.py",
+        "tests/unit/test_browsing_agent_parser.py",
+        "tests/unit/agenthub/browsing_agent/test_browsing_agent_parser.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_agents.py",
+        "tests/unit/agenthub/test_agents.py",
+        "tests/unit/test_agents.py",
+        "tests/unit/agenthub/test_agents.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_function_calling.py",
+        "tests/unit/agenthub/test_function_calling.py",
+        "tests/unit/test_function_calling.py",
+        "tests/unit/agenthub/test_function_calling.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_prompt_caching.py",
+        "tests/unit/agenthub/test_prompt_caching.py",
+        "tests/unit/test_prompt_caching.py",
+        "tests/unit/agenthub/test_prompt_caching.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_windows_prompt_refinement.py",
+        "tests/unit/agenthub/test_windows_prompt_refinement.py",
+        "tests/unit/test_windows_prompt_refinement.py",
+        "tests/unit/agenthub/test_windows_prompt_refinement.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli.py",
+        "tests/unit/cli/test_cli.py",
+        "tests/unit/test_cli.py",
+        "tests/unit/cli/test_cli.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_alias_setup.py",
+        "tests/unit/cli/test_cli_alias_setup.py",
+        "tests/unit/test_cli_alias_setup.py",
+        "tests/unit/cli/test_cli_alias_setup.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_commands.py",
+        "tests/unit/cli/test_cli_commands.py",
+        "tests/unit/test_cli_commands.py",
+        "tests/unit/cli/test_cli_commands.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_config_management.py",
+        "tests/unit/cli/test_cli_config_management.py",
+        "tests/unit/test_cli_config_management.py",
+        "tests/unit/cli/test_cli_config_management.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_default_model.py",
+        "tests/unit/cli/test_cli_default_model.py",
+        "tests/unit/test_cli_default_model.py",
+        "tests/unit/cli/test_cli_default_model.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_openhands_provider_auth_error.py",
+        "tests/unit/cli/test_cli_openhands_provider_auth_error.py",
+        "tests/unit/test_cli_openhands_provider_auth_error.py",
+        "tests/unit/cli/test_cli_openhands_provider_auth_error.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_pause_resume.py",
+        "tests/unit/cli/test_cli_pause_resume.py",
+        "tests/unit/test_cli_pause_resume.py",
+        "tests/unit/cli/test_cli_pause_resume.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_runtime_mcp.py",
+        "tests/unit/cli/test_cli_runtime_mcp.py",
+        "tests/unit/test_cli_runtime_mcp.py",
+        "tests/unit/cli/test_cli_runtime_mcp.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_settings.py",
+        "tests/unit/cli/test_cli_settings.py",
+        "tests/unit/test_cli_settings.py",
+        "tests/unit/cli/test_cli_settings.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_setup_flow.py",
+        "tests/unit/cli/test_cli_setup_flow.py",
+        "tests/unit/test_cli_setup_flow.py",
+        "tests/unit/cli/test_cli_setup_flow.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_suppress_warnings.py",
+        "tests/unit/cli/test_cli_suppress_warnings.py",
+        "tests/unit/test_cli_suppress_warnings.py",
+        "tests/unit/cli/test_cli_suppress_warnings.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_thought_order.py",
+        "tests/unit/cli/test_cli_thought_order.py",
+        "tests/unit/test_cli_thought_order.py",
+        "tests/unit/cli/test_cli_thought_order.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_tui.py",
+        "tests/unit/cli/test_cli_tui.py",
+        "tests/unit/test_cli_tui.py",
+        "tests/unit/cli/test_cli_tui.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_utils.py",
+        "tests/unit/cli/test_cli_utils.py",
+        "tests/unit/test_cli_utils.py",
+        "tests/unit/cli/test_cli_utils.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_vi_mode.py",
+        "tests/unit/cli/test_cli_vi_mode.py",
+        "tests/unit/test_cli_vi_mode.py",
+        "tests/unit/cli/test_cli_vi_mode.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_cli_workspace.py",
+        "tests/unit/cli/test_cli_workspace.py",
+        "tests/unit/test_cli_workspace.py",
+        "tests/unit/cli/test_cli_workspace.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_control_flags.py",
+        "tests/unit/controller/state/test_control_flags.py",
+        "tests/unit/test_control_flags.py",
+        "tests/unit/controller/state/test_control_flags.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_state.py",
+        "tests/unit/controller/state/test_state.py",
+        "tests/unit/test_state.py",
+        "tests/unit/controller/state/test_state.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_agent_controller.py",
+        "tests/unit/controller/test_agent_controller.py",
+        "tests/unit/test_agent_controller.py",
+        "tests/unit/controller/test_agent_controller.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_agent_delegation.py",
+        "tests/unit/controller/test_agent_delegation.py",
+        "tests/unit/test_agent_delegation.py",
+        "tests/unit/controller/test_agent_delegation.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_is_stuck.py",
+        "tests/unit/controller/test_is_stuck.py",
+        "tests/unit/test_is_stuck.py",
+        "tests/unit/controller/test_is_stuck.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_arg_parser.py",
+        "tests/unit/core/config/test_arg_parser.py",
+        "tests/unit/test_arg_parser.py",
+        "tests/unit/core/config/test_arg_parser.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_config.py",
+        "tests/unit/core/config/test_config.py",
+        "tests/unit/test_config.py",
+        "tests/unit/core/config/test_config.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_config_dict_casting.py",
+        "tests/unit/core/config/test_config_dict_casting.py",
+        "tests/unit/test_config_dict_casting.py",
+        "tests/unit/core/config/test_config_dict_casting.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_config_extended.py",
+        "tests/unit/core/config/test_config_extended.py",
+        "tests/unit/test_config_extended.py",
+        "tests/unit/core/config/test_config_extended.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_config_precedence.py",
+        "tests/unit/core/config/test_config_precedence.py",
+        "tests/unit/test_config_precedence.py",
+        "tests/unit/core/config/test_config_precedence.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_git_config.py",
+        "tests/unit/core/config/test_git_config.py",
+        "tests/unit/test_git_config.py",
+        "tests/unit/core/config/test_git_config.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_kubernetes_config.py",
+        "tests/unit/core/config/test_kubernetes_config.py",
+        "tests/unit/test_kubernetes_config.py",
+        "tests/unit/core/config/test_kubernetes_config.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_mcp_config.py",
+        "tests/unit/core/config/test_mcp_config.py",
+        "tests/unit/test_mcp_config.py",
+        "tests/unit/core/config/test_mcp_config.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_mcp_settings_merge.py",
+        "tests/unit/core/config/test_mcp_settings_merge.py",
+        "tests/unit/test_mcp_settings_merge.py",
+        "tests/unit/core/config/test_mcp_settings_merge.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_logger.py",
+        "tests/unit/core/logger/test_logger.py",
+        "tests/unit/test_logger.py",
+        "tests/unit/core/logger/test_logger.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_logger_litellm.py",
+        "tests/unit/core/logger/test_logger_litellm.py",
+        "tests/unit/test_logger_litellm.py",
+        "tests/unit/core/logger/test_logger_litellm.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_logging.py",
+        "tests/unit/core/logger/test_logging.py",
+        "tests/unit/test_logging.py",
+        "tests/unit/core/logger/test_logging.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_image_content_validation.py",
+        "tests/unit/core/message/test_image_content_validation.py",
+        "tests/unit/test_image_content_validation.py",
+        "tests/unit/core/message/test_image_content_validation.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_message_serialization.py",
+        "tests/unit/core/message/test_message_serialization.py",
+        "tests/unit/test_message_serialization.py",
+        "tests/unit/core/message/test_message_serialization.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_message_utils.py",
+        "tests/unit/core/message/test_message_utils.py",
+        "tests/unit/test_message_utils.py",
+        "tests/unit/core/message/test_message_utils.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_exit_reason.py",
+        "tests/unit/core/schema/test_exit_reason.py",
+        "tests/unit/test_exit_reason.py",
+        "tests/unit/core/schema/test_exit_reason.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_action_serialization.py",
+        "tests/unit/events/test_action_serialization.py",
+        "tests/unit/test_action_serialization.py",
+        "tests/unit/events/test_action_serialization.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_command_success.py",
+        "tests/unit/events/test_command_success.py",
+        "tests/unit/test_command_success.py",
+        "tests/unit/events/test_command_success.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_contextual_events.py",
+        "tests/unit/events/test_contextual_events.py",
+        "tests/unit/test_contextual_events.py",
+        "tests/unit/events/test_contextual_events.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_event_serialization.py",
+        "tests/unit/events/test_event_serialization.py",
+        "tests/unit/test_event_serialization.py",
+        "tests/unit/events/test_event_serialization.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_event_stream.py",
+        "tests/unit/events/test_event_stream.py",
+        "tests/unit/test_event_stream.py",
+        "tests/unit/events/test_event_stream.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_file_edit_observation.py",
+        "tests/unit/events/test_file_edit_observation.py",
+        "tests/unit/test_file_edit_observation.py",
+        "tests/unit/events/test_file_edit_observation.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_mcp_action_observation.py",
+        "tests/unit/events/test_mcp_action_observation.py",
+        "tests/unit/test_mcp_action_observation.py",
+        "tests/unit/events/test_mcp_action_observation.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_nested_event_store.py",
+        "tests/unit/events/test_nested_event_store.py",
+        "tests/unit/test_nested_event_store.py",
+        "tests/unit/events/test_nested_event_store.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_observation_serialization.py",
+        "tests/unit/events/test_observation_serialization.py",
+        "tests/unit/test_observation_serialization.py",
+        "tests/unit/events/test_observation_serialization.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_bitbucket.py",
+        "tests/unit/integrations/bitbucket/test_bitbucket.py",
+        "tests/unit/test_bitbucket.py",
+        "tests/unit/integrations/bitbucket/test_bitbucket.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_github_service.py",
+        "tests/unit/integrations/github/test_github_service.py",
+        "tests/unit/test_github_service.py",
+        "tests/unit/integrations/github/test_github_service.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_suggested_tasks.py",
+        "tests/unit/integrations/github/test_suggested_tasks.py",
+        "tests/unit/test_suggested_tasks.py",
+        "tests/unit/integrations/github/test_suggested_tasks.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_gitlab.py",
+        "tests/unit/integrations/gitlab/test_gitlab.py",
+        "tests/unit/test_gitlab.py",
+        "tests/unit/integrations/gitlab/test_gitlab.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_provider_immutability.py",
+        "tests/unit/integrations/test_provider_immutability.py",
+        "tests/unit/test_provider_immutability.py",
+        "tests/unit/integrations/test_provider_immutability.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_io.py",
+        "tests/unit/io/test_io.py",
+        "tests/unit/test_io.py",
+        "tests/unit/io/test_io.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_json.py",
+        "tests/unit/io/test_json.py",
+        "tests/unit/test_json.py",
+        "tests/unit/io/test_json.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_json_encoder.py",
+        "tests/unit/io/test_json_encoder.py",
+        "tests/unit/test_json_encoder.py",
+        "tests/unit/io/test_json_encoder.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_api_connection_error_retry.py",
+        "tests/unit/llm/test_api_connection_error_retry.py",
+        "tests/unit/test_api_connection_error_retry.py",
+        "tests/unit/llm/test_api_connection_error_retry.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_mcp_create_clients_timeout.py",
+        "tests/unit/mcp/test_mcp_create_clients_timeout.py",
+        "tests/unit/test_mcp_create_clients_timeout.py",
+        "tests/unit/mcp/test_mcp_create_clients_timeout.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_mcp_error_collector.py",
+        "tests/unit/mcp/test_mcp_error_collector.py",
+        "tests/unit/test_mcp_error_collector.py",
+        "tests/unit/mcp/test_mcp_error_collector.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_mcp_integration.py",
+        "tests/unit/mcp/test_mcp_integration.py",
+        "tests/unit/test_mcp_integration.py",
+        "tests/unit/mcp/test_mcp_integration.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_mcp_timeout.py",
+        "tests/unit/mcp/test_mcp_timeout.py",
+        "tests/unit/test_mcp_timeout.py",
+        "tests/unit/mcp/test_mcp_timeout.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_mcp_tool_timeout_stall.py",
+        "tests/unit/mcp/test_mcp_tool_timeout_stall.py",
+        "tests/unit/test_mcp_tool_timeout_stall.py",
+        "tests/unit/mcp/test_mcp_tool_timeout_stall.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_mcp_utils.py",
+        "tests/unit/mcp/test_mcp_utils.py",
+        "tests/unit/test_mcp_utils.py",
+        "tests/unit/mcp/test_mcp_utils.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_condenser.py",
+        "tests/unit/memory/condenser/test_condenser.py",
+        "tests/unit/test_condenser.py",
+        "tests/unit/memory/condenser/test_condenser.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_conversation_window_condenser.py",
+        "tests/unit/memory/condenser/test_conversation_window_condenser.py",
+        "tests/unit/test_conversation_window_condenser.py",
+        "tests/unit/memory/condenser/test_conversation_window_condenser.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_conversation_memory.py",
+        "tests/unit/memory/test_conversation_memory.py",
+        "tests/unit/test_conversation_memory.py",
+        "tests/unit/memory/test_conversation_memory.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_empty_image_url_fix_v2.py",
+        "tests/unit/memory/test_empty_image_url_fix_v2.py",
+        "tests/unit/test_empty_image_url_fix_v2.py",
+        "tests/unit/memory/test_empty_image_url_fix_v2.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_view.py",
+        "tests/unit/memory/test_view.py",
+        "tests/unit/test_view.py",
+        "tests/unit/memory/test_view.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_microagent_no_header.py",
+        "tests/unit/microagent/test_microagent_no_header.py",
+        "tests/unit/test_microagent_no_header.py",
+        "tests/unit/microagent/test_microagent_no_header.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_microagent_utils.py",
+        "tests/unit/microagent/test_microagent_utils.py",
+        "tests/unit/test_microagent_utils.py",
+        "tests/unit/microagent/test_microagent_utils.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_user_microagents.py",
+        "tests/unit/microagent/test_user_microagents.py",
+        "tests/unit/test_user_microagents.py",
+        "tests/unit/microagent/test_user_microagents.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_patch_whitespace.py",
+        "tests/unit/resolver/test_patch_whitespace.py",
+        "tests/unit/test_patch_whitespace.py",
+        "tests/unit/resolver/test_patch_whitespace.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_runtime_build.py",
+        "tests/unit/runtime/builder/test_runtime_build.py",
+        "tests/unit/test_runtime_build.py",
+        "tests/unit/runtime/builder/test_runtime_build.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_docker_runtime.py",
+        "tests/unit/runtime/impl/test_docker_runtime.py",
+        "tests/unit/test_docker_runtime.py",
+        "tests/unit/runtime/impl/test_docker_runtime.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_local_runtime.py",
+        "tests/unit/runtime/impl/test_local_runtime.py",
+        "tests/unit/test_local_runtime.py",
+        "tests/unit/runtime/impl/test_local_runtime.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_agent_skill.py",
+        "tests/unit/runtime/plugins/test_agent_skill.py",
+        "tests/unit/test_agent_skill.py",
+        "tests/unit/runtime/plugins/test_agent_skill.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_git_hooks.py",
+        "tests/unit/runtime/test_git_hooks.py",
+        "tests/unit/test_git_hooks.py",
+        "tests/unit/runtime/test_git_hooks.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_runtime_git_tokens.py",
+        "tests/unit/runtime/test_runtime_git_tokens.py",
+        "tests/unit/test_runtime_git_tokens.py",
+        "tests/unit/runtime/test_runtime_git_tokens.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_runtime_gitlab_microagents.py",
+        "tests/unit/runtime/test_runtime_gitlab_microagents.py",
+        "tests/unit/test_runtime_gitlab_microagents.py",
+        "tests/unit/runtime/test_runtime_gitlab_microagents.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_runtime_import_robustness.py",
+        "tests/unit/runtime/test_runtime_import_robustness.py",
+        "tests/unit/test_runtime_import_robustness.py",
+        "tests/unit/runtime/test_runtime_import_robustness.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_runtime_reboot.py",
+        "tests/unit/runtime/test_runtime_reboot.py",
+        "tests/unit/test_runtime_reboot.py",
+        "tests/unit/runtime/test_runtime_reboot.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_setup.py",
+        "tests/unit/runtime/test_setup.py",
+        "tests/unit/test_setup.py",
+        "tests/unit/runtime/test_setup.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_bash_parsing.py",
+        "tests/unit/runtime/utils/test_bash_parsing.py",
+        "tests/unit/test_bash_parsing.py",
+        "tests/unit/runtime/utils/test_bash_parsing.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_bash_ps1_metadata.py",
+        "tests/unit/runtime/utils/test_bash_ps1_metadata.py",
+        "tests/unit/test_bash_ps1_metadata.py",
+        "tests/unit/runtime/utils/test_bash_ps1_metadata.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_bash_session.py",
+        "tests/unit/runtime/utils/test_bash_session.py",
+        "tests/unit/test_bash_session.py",
+        "tests/unit/runtime/utils/test_bash_session.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_git_handler.py",
+        "tests/unit/runtime/utils/test_git_handler.py",
+        "tests/unit/test_git_handler.py",
+        "tests/unit/runtime/utils/test_git_handler.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_log_streamer.py",
+        "tests/unit/runtime/utils/test_log_streamer.py",
+        "tests/unit/test_log_streamer.py",
+        "tests/unit/runtime/utils/test_log_streamer.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_windows_bash.py",
+        "tests/unit/runtime/utils/test_windows_bash.py",
+        "tests/unit/test_windows_bash.py",
+        "tests/unit/runtime/utils/test_windows_bash.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_security.py",
+        "tests/unit/security/test_security.py",
+        "tests/unit/test_security.py",
+        "tests/unit/security/test_security.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_standalone_conversation_manager.py",
+        "tests/unit/server/conversation_manager/test_standalone_conversation_manager.py",
+        "tests/unit/test_standalone_conversation_manager.py",
+        "tests/unit/server/conversation_manager/test_standalone_conversation_manager.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_conversation.py",
+        "tests/unit/server/data_models/test_conversation.py",
+        "tests/unit/test_conversation.py",
+        "tests/unit/server/data_models/test_conversation.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_conversation_routes.py",
+        "tests/unit/server/routes/test_conversation_routes.py",
+        "tests/unit/test_conversation_routes.py",
+        "tests/unit/server/routes/test_conversation_routes.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_get_repository_microagents.py",
+        "tests/unit/server/routes/test_get_repository_microagents.py",
+        "tests/unit/test_get_repository_microagents.py",
+        "tests/unit/server/routes/test_get_repository_microagents.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_mcp_routes.py",
+        "tests/unit/server/routes/test_mcp_routes.py",
+        "tests/unit/test_mcp_routes.py",
+        "tests/unit/server/routes/test_mcp_routes.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_secrets_api.py",
+        "tests/unit/server/routes/test_secrets_api.py",
+        "tests/unit/test_secrets_api.py",
+        "tests/unit/server/routes/test_secrets_api.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_settings_api.py",
+        "tests/unit/server/routes/test_settings_api.py",
+        "tests/unit/test_settings_api.py",
+        "tests/unit/server/routes/test_settings_api.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_settings_store_functions.py",
+        "tests/unit/server/routes/test_settings_store_functions.py",
+        "tests/unit/test_settings_store_functions.py",
+        "tests/unit/server/routes/test_settings_store_functions.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_agent_session.py",
+        "tests/unit/server/session/test_agent_session.py",
+        "tests/unit/test_agent_session.py",
+        "tests/unit/server/session/test_agent_session.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_session.py",
+        "tests/unit/server/session/test_session.py",
+        "tests/unit/test_session.py",
+        "tests/unit/server/session/test_session.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_listen.py",
+        "tests/unit/server/test_listen.py",
+        "tests/unit/test_listen.py",
+        "tests/unit/server/test_listen.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_middleware.py",
+        "tests/unit/server/test_middleware.py",
+        "tests/unit/test_middleware.py",
+        "tests/unit/server/test_middleware.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_openapi_schema_generation.py",
+        "tests/unit/server/test_openapi_schema_generation.py",
+        "tests/unit/test_openapi_schema_generation.py",
+        "tests/unit/server/test_openapi_schema_generation.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_socket_events.py",
+        "tests/unit/server/test_socket_events.py",
+        "tests/unit/test_socket_events.py",
+        "tests/unit/server/test_socket_events.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_file_conversation_store.py",
+        "tests/unit/storage/conversation/test_file_conversation_store.py",
+        "tests/unit/test_file_conversation_store.py",
+        "tests/unit/storage/conversation/test_file_conversation_store.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_secret_store.py",
+        "tests/unit/storage/data_models/test_secret_store.py",
+        "tests/unit/test_secret_store.py",
+        "tests/unit/storage/data_models/test_secret_store.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_settings.py",
+        "tests/unit/storage/data_models/test_settings.py",
+        "tests/unit/test_settings.py",
+        "tests/unit/storage/data_models/test_settings.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_file_settings_store.py",
+        "tests/unit/storage/settings/test_file_settings_store.py",
+        "tests/unit/test_file_settings_store.py",
+        "tests/unit/storage/settings/test_file_settings_store.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_batched_web_hook.py",
+        "tests/unit/storage/test_batched_web_hook.py",
+        "tests/unit/test_batched_web_hook.py",
+        "tests/unit/storage/test_batched_web_hook.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_storage.py",
+        "tests/unit/storage/test_storage.py",
+        "tests/unit/test_storage.py",
+        "tests/unit/storage/test_storage.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_async_utils.py",
+        "tests/unit/utils/test_async_utils.py",
+        "tests/unit/test_async_utils.py",
+        "tests/unit/utils/test_async_utils.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_auto_generate_title.py",
+        "tests/unit/utils/test_auto_generate_title.py",
+        "tests/unit/test_auto_generate_title.py",
+        "tests/unit/utils/test_auto_generate_title.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_chunk_localizer.py",
+        "tests/unit/utils/test_chunk_localizer.py",
+        "tests/unit/test_chunk_localizer.py",
+        "tests/unit/utils/test_chunk_localizer.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_circular_imports.py",
+        "tests/unit/utils/test_circular_imports.py",
+        "tests/unit/test_circular_imports.py",
+        "tests/unit/utils/test_circular_imports.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_import_utils.py",
+        "tests/unit/utils/test_import_utils.py",
+        "tests/unit/test_import_utils.py",
+        "tests/unit/utils/test_import_utils.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_prompt_manager.py",
+        "tests/unit/utils/test_prompt_manager.py",
+        "tests/unit/test_prompt_manager.py",
+        "tests/unit/utils/test_prompt_manager.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_search_utils.py",
+        "tests/unit/utils/test_search_utils.py",
+        "tests/unit/test_search_utils.py",
+        "tests/unit/utils/test_search_utils.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/test_shutdown_listener.py",
+        "tests/unit/utils/test_shutdown_listener.py",
+        "tests/unit/test_shutdown_listener.py",
+        "tests/unit/utils/test_shutdown_listener.py"
+      ],
+      "length": 4
+    },
+    {
+      "chain": [
+        "tests/unit/utils/test_conversation_summary.py",
+        "tests/unit/test_conversation_summary.py",
+        "tests/unit/utils/test_conversation_summary.py"
+      ],
+      "length": 3
+    },
+    {
+      "chain": [
+        "frontend/src/socket/types/ActionType.tsx",
+        "frontend/src/types/ActionType.tsx",
+        "frontend/src/socket/types/ActionType.tsx"
+      ],
+      "length": 3
+    },
+    {
+      "chain": [
+        "frontend/src/socket/types/Message.tsx",
+        "frontend/src/types/Message.tsx",
+        "frontend/src/socket/types/Message.tsx"
+      ],
+      "length": 3
+    },
+    {
+      "chain": [
+        "frontend/src/socket/types/ObservationType.tsx",
+        "frontend/src/types/ObservationType.tsx",
+        "frontend/src/socket/types/ObservationType.tsx"
+      ],
+      "length": 3
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "analysis_date": "2026-01-31T22:03:56.552806",
+  "total_authors": 459,
+  "total_commits": 5971,
+  "bus_factor": 7,
+  "top_20_contributors": [
+    {
+      "author": "49699333+dependabot[bot]@users.noreply.github.com",
+      "commits": 934,
+      "pct": 15.64
+    },
+    {
+      "author": "accounts@rbren.io",
+      "commits": 474,
+      "pct": 7.94
+    },
+    {
+      "author": "xingyao@all-hands.dev",
+      "commits": 414,
+      "pct": 6.93
+    },
+    {
+      "author": "tofarr@gmail.com",
+      "commits": 388,
+      "pct": 6.5
+    },
+    {
+      "author": "83104063+amanape@users.noreply.github.com",
+      "commits": 367,
+      "pct": 6.15
+    },
+    {
+      "author": "enyst@users.noreply.github.com",
+      "commits": 299,
+      "pct": 5.01
+    },
+    {
+      "author": "neubig@gmail.com",
+      "commits": 291,
+      "pct": 4.87
+    },
+    {
+      "author": "69354317+hieptl@users.noreply.github.com",
+      "commits": 286,
+      "pct": 4.79
+    },
+    {
+      "author": "mamoodiha@gmail.com",
+      "commits": 283,
+      "pct": 4.74
+    },
+    {
+      "author": "rohitvinodmalhotra@gmail.com",
+      "commits": 280,
+      "pct": 4.69
+    },
+    {
+      "author": "xingyao6@illinois.edu",
+      "commits": 186,
+      "pct": 3.12
+    },
+    {
+      "author": "liboxuan@connect.hku.hk",
+      "commits": 142,
+      "pct": 2.38
+    },
+    {
+      "author": "smartmanoj42857@gmail.com",
+      "commits": 104,
+      "pct": 1.74
+    },
+    {
+      "author": "opendevin@all-hands.dev",
+      "commits": 68,
+      "pct": 1.14
+    },
+    {
+      "author": "10787084+tobitege@users.noreply.github.com",
+      "commits": 66,
+      "pct": 1.11
+    },
+    {
+      "author": "ray.myers@gmail.com",
+      "commits": 65,
+      "pct": 1.09
+    },
+    {
+      "author": "descience.thh10@gmail.com",
+      "commits": 65,
+      "pct": 1.09
+    },
+    {
+      "author": "tobitege@gmx.de",
+      "commits": 61,
+      "pct": 1.02
+    },
+    {
+      "author": "33971064+yufansong@users.noreply.github.com",
+      "commits": 52,
+      "pct": 0.87
+    },
+    {
+      "author": "ifuryst@gmail.com",
+      "commits": 45,
+      "pct": 0.75
+    }
+  ]
+}

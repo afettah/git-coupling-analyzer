@@ -1,0 +1,100 @@
+============================================================
+  LFCA QA - Ground Truth Data Collection
+============================================================
+
+Repository: /home/afettah/workspace/git-coupling-analyzer/tmp/OpenHands
+Output: /home/afettah/workspace/git-coupling-analyzer/QA/output/openhands
+
+=== Gathering Basic Statistics ===
+  Saved: basic_stats.json
+
+=== Gathering File Commit Counts ===
+  Saved: file_commits.csv
+  Saved: file_commits.json
+
+=== Gathering Co-change Pairs (min=3) ===
+  Saved: cochange_pairs.csv
+  Saved: cochange_pairs.json
+
+=== Detecting File Renames ===
+  Saved: renames.csv
+  Saved: renames.json
+
+=== Finding Bulk Commits (>50 files) ===
+  Saved: bulk_commits.csv
+  Saved: bulk_commits.json
+
+=== Finding Deleted Files ===
+  Saved: deleted_files.csv
+  Saved: deleted_files.json
+
+=== Analyzing Author Contributions ===
+  Saved: author_stats.csv
+  Saved: author_analysis.json
+
+=== Analyzing Module Structure ===
+  Saved: folder_stats.csv
+  Saved: module_analysis.json
+
+=== Analyzing Test-Implementation Coupling ===
+  Saved: test_impl_pairs.csv
+  Saved: test_impl_coupling.json
+
+=== Analyzing Code Hotspots ===
+  Saved: file_churn.csv
+  Saved: hotspot_analysis.json
+
+=== Generating Coupling Ground Truth ===
+  Processing file 0/500
+  Processing file 50/500
+  Processing file 100/500
+  Processing file 150/500
+  Processing file 200/500
+  Processing file 250/500
+  Processing file 300/500
+  Processing file 350/500
+  Processing file 400/500
+  Processing file 450/500
+  Saved: coupling_ground_truth.csv
+  Saved: coupling_ground_truth.json
+
+=== Creating Summary Report ===
+  Saved: qa_summary.json
+
+============================================================
+  QA Data Collection Complete!
+============================================================
+
+Duration: 105.2 seconds
+Output directory: /home/afettah/workspace/git-coupling-analyzer/QA/output/openhands
+
+Generated files:
+  author_analysis.json (4,586 bytes)
+  author_stats.csv (26,799 bytes)
+  authors_by_commits.txt (17,922 bytes)
+  basic_stats.json (668 bytes)
+  bulk_commits.csv (11,641 bytes)
+  bulk_commits.json (13,700 bytes)
+  cochange_pairs.csv (1,450,958 bytes)
+  cochange_pairs.json (81,405 bytes)
+  collection_log.txt (0 bytes)
+  coupling_ground_truth.csv (28,959 bytes)
+  coupling_ground_truth.json (14,931 bytes)
+  current_files.txt (140,128 bytes)
+  deleted_files.csv (36,242 bytes)
+  deleted_files.json (6,065 bytes)
+  file_churn.csv (564,067 bytes)
+  file_commits.csv (356,887 bytes)
+  file_commits.json (9,004 bytes)
+  folder_stats.csv (314 bytes)
+  hotspot_analysis.json (7,784 bytes)
+  module_analysis.json (13,638 bytes)
+  qa_summary.json (1,832 bytes)
+  quick_stats.json (107 bytes)
+  renames.csv (229,764 bytes)
+  renames.json (76,736 bytes)
+  repo_stats.json (833 bytes)
+  repo_stats_report.txt (746 bytes)
+  test_impl_coupling.json (13,072 bytes)
+  test_impl_pairs.csv (7,501 bytes)
+  top_level_folders.txt (155 bytes)

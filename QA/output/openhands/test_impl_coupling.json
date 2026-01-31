@@ -1,0 +1,409 @@
+{
+  "analysis_date": "2026-01-31T22:02:35.902142",
+  "total_test_files": 438,
+  "matched_pairs": 66,
+  "high_coupling_pairs": 53,
+  "pairs": [
+    {
+      "test_file": "enterprise/tests/unit/integrations/github/test_github_v1_callback_processor.py",
+      "impl_file": "enterprise/integrations/github/github_v1_callback_processor.py",
+      "test_commits": 2,
+      "impl_commits": 2,
+      "cochange_count": 2,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/integrations/jira/test_jira_view.py",
+      "impl_file": "enterprise/integrations/jira/jira_view.py",
+      "test_commits": 6,
+      "impl_commits": 6,
+      "cochange_count": 6,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/integrations/jira_dc/test_jira_dc_view.py",
+      "impl_file": "enterprise/integrations/jira_dc/jira_dc_view.py",
+      "test_commits": 3,
+      "impl_commits": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/integrations/linear/test_linear_view.py",
+      "impl_file": "enterprise/integrations/linear/linear_view.py",
+      "test_commits": 3,
+      "impl_commits": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/integrations/slack/test_slack_v1_callback_processor.py",
+      "impl_file": "enterprise/integrations/slack/slack_v1_callback_processor.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/server/conversation_callback_processor/test_jira_callback_processor.py",
+      "impl_file": "enterprise/server/conversation_callback_processor/jira_callback_processor.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/server/conversation_callback_processor/test_jira_dc_callback_processor.py",
+      "impl_file": "enterprise/server/conversation_callback_processor/jira_dc_callback_processor.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/server/conversation_callback_processor/test_linear_callback_processor.py",
+      "impl_file": "enterprise/server/conversation_callback_processor/linear_callback_processor.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/server/routes/test_orgs.py",
+      "impl_file": "enterprise/server/routes/orgs.py",
+      "test_commits": 5,
+      "impl_commits": 5,
+      "cochange_count": 5,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/server/test_conversation_callback_utils.py",
+      "impl_file": "enterprise/server/utils/conversation_callback_utils.py",
+      "test_commits": 2,
+      "impl_commits": 2,
+      "cochange_count": 2,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/server/test_rate_limit.py",
+      "impl_file": "enterprise/server/rate_limit.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/server/test_rate_limit_utils.py",
+      "impl_file": "enterprise/server/utils/rate_limit_utils.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/solvability/test_classifier.py",
+      "impl_file": "enterprise/integrations/solvability/models/classifier.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/solvability/test_featurizer.py",
+      "impl_file": "enterprise/integrations/solvability/models/featurizer.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/storage/test_device_code.py",
+      "impl_file": "enterprise/storage/device_code.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/storage/test_device_code_store.py",
+      "impl_file": "enterprise/storage/device_code_store.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/storage/test_telemetry_identity.py",
+      "impl_file": "enterprise/storage/telemetry_identity.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/storage/test_telemetry_metrics.py",
+      "impl_file": "enterprise/storage/telemetry_metrics.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_api_key_store.py",
+      "impl_file": "enterprise/storage/api_key_store.py",
+      "test_commits": 5,
+      "impl_commits": 5,
+      "cochange_count": 5,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_auth_error.py",
+      "impl_file": "enterprise/server/auth/auth_error.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_domain_blocker.py",
+      "impl_file": "enterprise/server/auth/domain_blocker.py",
+      "test_commits": 3,
+      "impl_commits": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_email_validation.py",
+      "impl_file": "enterprise/server/auth/email_validation.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_gitlab_callback_processor.py",
+      "impl_file": "enterprise/server/conversation_callback_processor/gitlab_callback_processor.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_logger.py",
+      "impl_file": "enterprise/server/logger.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_org_member_store.py",
+      "impl_file": "enterprise/storage/org_member_store.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_org_service.py",
+      "impl_file": "enterprise/storage/org_service.py",
+      "test_commits": 5,
+      "impl_commits": 5,
+      "cochange_count": 5,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_org_store.py",
+      "impl_file": "enterprise/storage/org_store.py",
+      "test_commits": 4,
+      "impl_commits": 4,
+      "cochange_count": 4,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_recaptcha_service.py",
+      "impl_file": "enterprise/server/auth/recaptcha_service.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_role_store.py",
+      "impl_file": "enterprise/storage/role_store.py",
+      "test_commits": 2,
+      "impl_commits": 2,
+      "cochange_count": 2,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_run_maintenance_tasks.py",
+      "impl_file": "enterprise/run_maintenance_tasks.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_saas_secrets_store.py",
+      "impl_file": "enterprise/storage/saas_secrets_store.py",
+      "test_commits": 4,
+      "impl_commits": 4,
+      "cochange_count": 4,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_sharing/test_shared_conversation_models.py",
+      "impl_file": "enterprise/server/sharing/shared_conversation_models.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_slack_callback_processor.py",
+      "impl_file": "enterprise/server/conversation_callback_processor/slack_callback_processor.py",
+      "test_commits": 1,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "evaluation/benchmarks/versicode/inference_utils/test_migration.py",
+      "impl_file": "evaluation/benchmarks/versicode/inference_utils/api_code_migration.py",
+      "test_commits": 3,
+      "impl_commits": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0
+    },
+    {
+      "test_file": "enterprise/tests/unit/integrations/jira/test_jira_manager.py",
+      "impl_file": "enterprise/integrations/jira/jira_manager.py",
+      "test_commits": 6,
+      "impl_commits": 7,
+      "cochange_count": 6,
+      "jaccard": 0.8571
+    },
+    {
+      "test_file": "enterprise/tests/unit/server/test_event_webhook.py",
+      "impl_file": "enterprise/server/routes/event_webhook.py",
+      "test_commits": 3,
+      "impl_commits": 4,
+      "cochange_count": 3,
+      "jaccard": 0.75
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_lite_llm_manager.py",
+      "impl_file": "enterprise/storage/lite_llm_manager.py",
+      "test_commits": 9,
+      "impl_commits": 12,
+      "cochange_count": 9,
+      "jaccard": 0.75
+    },
+    {
+      "test_file": "enterprise/tests/unit/integrations/jira_dc/test_jira_dc_manager.py",
+      "impl_file": "enterprise/integrations/jira_dc/jira_dc_manager.py",
+      "test_commits": 2,
+      "impl_commits": 3,
+      "cochange_count": 2,
+      "jaccard": 0.6667
+    },
+    {
+      "test_file": "enterprise/tests/unit/integrations/linear/test_linear_manager.py",
+      "impl_file": "enterprise/integrations/linear/linear_manager.py",
+      "test_commits": 2,
+      "impl_commits": 3,
+      "cochange_count": 2,
+      "jaccard": 0.6667
+    },
+    {
+      "test_file": "enterprise/tests/unit/server/routes/test_oauth_device.py",
+      "impl_file": "enterprise/server/routes/oauth_device.py",
+      "test_commits": 2,
+      "impl_commits": 3,
+      "cochange_count": 2,
+      "jaccard": 0.6667
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_billing.py",
+      "impl_file": "enterprise/server/routes/billing.py",
+      "test_commits": 8,
+      "impl_commits": 13,
+      "cochange_count": 8,
+      "jaccard": 0.6154
+    },
+    {
+      "test_file": "enterprise/tests/unit/integrations/test_resolver_context.py",
+      "impl_file": "enterprise/integrations/resolver_context.py",
+      "test_commits": 3,
+      "impl_commits": 5,
+      "cochange_count": 3,
+      "jaccard": 0.6
+    },
+    {
+      "test_file": "enterprise/sync/test_common_room_sync.py",
+      "impl_file": "enterprise/sync/common_room_sync.py",
+      "test_commits": 1,
+      "impl_commits": 2,
+      "cochange_count": 1,
+      "jaccard": 0.5
+    },
+    {
+      "test_file": "enterprise/tests/unit/storage/test_gitlab_webhook_store.py",
+      "impl_file": "enterprise/storage/gitlab_webhook_store.py",
+      "test_commits": 1,
+      "impl_commits": 2,
+      "cochange_count": 1,
+      "jaccard": 0.5
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_feedback.py",
+      "impl_file": "enterprise/server/routes/feedback.py",
+      "test_commits": 1,
+      "impl_commits": 2,
+      "cochange_count": 1,
+      "jaccard": 0.5
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_offline_token_store.py",
+      "impl_file": "enterprise/storage/offline_token_store.py",
+      "test_commits": 2,
+      "impl_commits": 1,
+      "cochange_count": 1,
+      "jaccard": 0.5
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_saas_monitoring_listener.py",
+      "impl_file": "enterprise/server/saas_monitoring_listener.py",
+      "test_commits": 1,
+      "impl_commits": 2,
+      "cochange_count": 1,
+      "jaccard": 0.5
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_saas_conversation_store.py",
+      "impl_file": "enterprise/storage/saas_conversation_store.py",
+      "test_commits": 3,
+      "impl_commits": 7,
+      "cochange_count": 3,
+      "jaccard": 0.4286
+    },
+    {
+      "test_file": "enterprise/tests/unit/test_saas_user_auth.py",
+      "impl_file": "enterprise/server/auth/saas_user_auth.py",
+      "test_commits": 5,
+      "impl_commits": 12,
+      "cochange_count": 5,
+      "jaccard": 0.4167
+    },
+    {
+      "test_file": "enterprise/tests/unit/server/routes/test_api_keys.py",
+      "impl_file": "enterprise/server/routes/api_keys.py",
+      "test_commits": 3,
+      "impl_commits": 8,
+      "cochange_count": 3,
+      "jaccard": 0.375
+    }
+  ],
+  "average_jaccard": 0.6923
+}

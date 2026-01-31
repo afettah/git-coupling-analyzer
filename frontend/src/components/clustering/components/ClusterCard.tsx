@@ -7,7 +7,8 @@
 import { useMemo, useState, useCallback } from 'react';
 import { Flame, FolderTree, FileText, ExternalLink } from 'lucide-react';
 import type { ClusterData, RepoUrlConfig } from '../types';
-import { aggregateFolders, formatNumber, formatPercent, getFileName, getFolderPath, buildFileUrl } from '../utils';
+import { aggregateFolders, formatNumber, formatPercent, getFileName, getFolderPath, buildFileUrl, countUniqueFolders } from '../utils';
+import { ProgressBar } from '@/components/shared';
 
 export interface ClusterCardProps {
     cluster: ClusterData;
@@ -47,6 +48,19 @@ export function ClusterCard({
         setPathMode(prev => prev === 'name' ? 'path' : 'name');
     }, []);
 
+    // Get coupling color based on strength
+    const getCouplingColor = (coupling: number): 'success' | 'warning' | 'danger' => {
+        if (coupling >= 0.8) return 'danger';
+        if (coupling >= 0.6) return 'warning';
+        return 'success';
+    };
+
+    // Compute unique folder count
+    const uniqueFolderCount = useMemo(
+        () => countUniqueFolders(files, folderDepth),
+        [files, folderDepth]
+    );
+
     return (
         <div className="border border-slate-800 bg-slate-900/80 rounded-2xl p-5 space-y-4 hover:border-slate-700 transition-colors">
             {/* Header */}
@@ -56,16 +70,30 @@ export function ClusterCard({
                         <FolderTree className="w-4 h-4 text-sky-400 flex-shrink-0" />
                         <span className="truncate">{cluster.name}</span>
                     </div>
-                    <div className="text-xs text-slate-500">{fileCount} files</div>
                 </div>
             </div>
 
+            {/* Coupling Bar - Primary Metric */}
+            <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500">Coupling</span>
+                    <span className="font-semibold text-slate-200">
+                        {formatPercent(cluster.avg_coupling)}
+                    </span>
+                </div>
+                <ProgressBar 
+                    value={(cluster.avg_coupling || 0) * 100}
+                    max={100}
+                    color={getCouplingColor(cluster.avg_coupling || 0)}
+                    size="md"
+                />
+            </div>
+
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                <StatItem label="Coupling" value={formatPercent(cluster.avg_coupling)} />
-                <StatItem label="Folders" value={formatNumber(topFolders.length)} />
-                <StatItem label="Churn" value={formatNumber(cluster.total_churn)} />
+            <div className="grid grid-cols-3 gap-3 text-xs">
                 <StatItem label="Files" value={formatNumber(fileCount)} />
+                <StatItem label="Folders" value={formatNumber(uniqueFolderCount)} />
+                <StatItem label="Churn" value={formatNumber(cluster.total_churn)} />
             </div>
 
             {/* Top Folders */}
@@ -172,14 +200,23 @@ function FilePreviewItem({
     repoUrlConfig
 }: FilePreviewItemProps) {
     return (
-        <div className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-lg px-3 py-2">
+        <div className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+            isHot 
+                ? 'bg-rose-500/10 border border-rose-500/30' 
+                : 'bg-slate-950 border border-slate-800'
+        }`}>
             <div className="flex items-center gap-2 min-w-0">
                 {isHot ? (
-                    <Flame className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                    <div className="flex items-center gap-1.5">
+                        <Flame className="w-4 h-4 text-rose-400 flex-shrink-0 animate-pulse" />
+                        <span className="text-[10px] uppercase font-bold text-rose-400 bg-rose-500/20 px-1.5 py-0.5 rounded">
+                            Hot
+                        </span>
+                    </div>
                 ) : (
                     <FileText className="w-4 h-4 text-slate-500 flex-shrink-0" />
                 )}
-                <span className="text-slate-200 truncate">
+                <span className={`truncate ${isHot ? 'text-rose-200' : 'text-slate-200'}`}>
                     {pathMode === 'name' ? getFileName(file) : file}
                 </span>
                 {repoUrlConfig && (

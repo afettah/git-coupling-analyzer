@@ -1,0 +1,673 @@
+{
+  "analysis_date": "2026-01-31T22:02:27.648432",
+  "folder_count": 17,
+  "folder_stats": [
+    {
+      "folder": ".",
+      "file_count": 26,
+      "commit_count": 5967
+    },
+    {
+      "folder": "openhands",
+      "file_count": 570,
+      "commit_count": 1843
+    },
+    {
+      "folder": "frontend",
+      "file_count": 1024,
+      "commit_count": 1812
+    },
+    {
+      "folder": "tests",
+      "file_count": 218,
+      "commit_count": 979
+    },
+    {
+      "folder": ".github",
+      "file_count": 22,
+      "commit_count": 438
+    },
+    {
+      "folder": "evaluation",
+      "file_count": 328,
+      "commit_count": 408
+    },
+    {
+      "folder": "enterprise",
+      "file_count": 421,
+      "commit_count": 183
+    },
+    {
+      "folder": "containers",
+      "file_count": 11,
+      "commit_count": 171
+    },
+    {
+      "folder": ".openhands",
+      "file_count": 4,
+      "commit_count": 36
+    },
+    {
+      "folder": "dev_config",
+      "file_count": 3,
+      "commit_count": 34
+    },
+    {
+      "folder": "openhands-ui",
+      "file_count": 81,
+      "commit_count": 16
+    },
+    {
+      "folder": ".devcontainer",
+      "file_count": 3,
+      "commit_count": 12
+    },
+    {
+      "folder": "third_party",
+      "file_count": 19,
+      "commit_count": 9
+    },
+    {
+      "folder": "skills",
+      "file_count": 26,
+      "commit_count": 3
+    },
+    {
+      "folder": ".vscode",
+      "file_count": 1,
+      "commit_count": 2
+    },
+    {
+      "folder": "scripts",
+      "file_count": 2,
+      "commit_count": 2
+    },
+    {
+      "folder": "kind",
+      "file_count": 6,
+      "commit_count": 1
+    }
+  ],
+  "cross_module_commits_count": 1498,
+  "cross_module_commits_sample": [
+    {
+      "commit_oid": "b5e00f577c408867c23a92e61c5b323018828ba0",
+      "folder_count": 10,
+      "folders": [
+        "evaluation",
+        "openhands",
+        "openhands-ui",
+        "tests",
+        ".github",
+        "frontend",
+        "openhands-cli",
+        "third_party",
+        "enterprise",
+        "microagents"
+      ]
+    },
+    {
+      "commit_oid": "01ae22ef57d497f7cfdfba96a99b96af06be5a05",
+      "folder_count": 10,
+      "folders": [
+        "evaluation",
+        "dev_config",
+        "openhands",
+        "tests",
+        ".github",
+        "agenthub",
+        ".devcontainer",
+        "frontend",
+        "containers",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "689d3c90466eb112f321c50b648063af905bda26",
+      "folder_count": 8,
+      "folders": [
+        ".openhands",
+        "evaluation",
+        "dev_config",
+        "openhands",
+        "tests",
+        ".github",
+        "frontend",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "152f99c64fd13cbc6c7fa32c26d4b025542a0043",
+      "folder_count": 8,
+      "folders": [
+        "evaluation",
+        "openhands",
+        "tests",
+        ".github",
+        ".devcontainer",
+        "frontend",
+        "containers",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "e6847e9e61bf77422f413ce2cb04f6a29ce4211e",
+      "folder_count": 7,
+      "folders": [
+        "evaluation",
+        "dev_config",
+        "openhands",
+        "tests",
+        ".github",
+        "containers",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "3a2119842493d9b550ca5c54b3f716bd82902159",
+      "folder_count": 7,
+      "folders": [
+        "evaluation",
+        "dev_config",
+        "opendevin",
+        "tests",
+        "frontend",
+        "agenthub",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "08df955ba73d41554e2e090c0bac558a1587355f",
+      "folder_count": 6,
+      "folders": [
+        ".openhands",
+        "openhands",
+        "dev_config",
+        "tests",
+        "frontend",
+        "enterprise"
+      ]
+    },
+    {
+      "commit_oid": "4b303ec9b476bf83eca4d01955f08afe38721e43",
+      "folder_count": 6,
+      "folders": [
+        "evaluation",
+        "openhands",
+        "tests",
+        ".github",
+        "containers",
+        "enterprise"
+      ]
+    },
+    {
+      "commit_oid": "f292f3a84d7bd30006d1d1e5402c8272b7f4e2a0",
+      "folder_count": 6,
+      "folders": [
+        "openhands",
+        "tests",
+        ".github",
+        "containers",
+        "enterprise",
+        "scripts"
+      ]
+    },
+    {
+      "commit_oid": "0c307ea12e9979a2958f674645b2e3c3b95dd295",
+      "folder_count": 6,
+      "folders": [
+        "evaluation",
+        "openhands",
+        "tests",
+        ".github",
+        "frontend",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "ec70af9412ce30c9122ce94aa68f2cba31af2487",
+      "folder_count": 6,
+      "folders": [
+        "evaluation",
+        "openhands",
+        "tests",
+        ".github",
+        "frontend",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "a5195b0e6501580a7365f3f3668af7fd04c3f902",
+      "folder_count": 6,
+      "folders": [
+        "opendevin",
+        "tests",
+        ".github",
+        "agenthub",
+        "containers",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "c68478f4700d321f6331e2b769696f10d11a0148",
+      "folder_count": 6,
+      "folders": [
+        "evaluation",
+        "opendevin",
+        "tests",
+        ".github",
+        "agenthub",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "a47713ecb00676a26acbe405109602e96b87a8ee",
+      "folder_count": 6,
+      "folders": [
+        "evaluation",
+        "opendevin",
+        "tests",
+        "frontend",
+        "agenthub",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "1c7cdbefddcdb122a2e76f27ff3c0fb1face2053",
+      "folder_count": 6,
+      "folders": [
+        "opendevin",
+        "tests",
+        "frontend",
+        "agenthub",
+        "containers",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "cd58194d2a8aad4815a3251f90212d8a551dea44",
+      "folder_count": 6,
+      "folders": [
+        "evaluation",
+        "dev_config",
+        "opendevin",
+        ".github",
+        "frontend",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "e32d95cb1a3caaa647cfb06fffbe09765930b645",
+      "folder_count": 6,
+      "folders": [
+        "evaluation",
+        "dev_config",
+        ".github",
+        "agenthub",
+        "frontend",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "516c9bf1e0ed6648fbf56b2c3384dd4526516f21",
+      "folder_count": 6,
+      "folders": [
+        "evaluation",
+        "opendevin",
+        ".github",
+        "containers",
+        "container",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "adfabe7659ae4714627a0bece96e550f60259885",
+      "folder_count": 5,
+      "folders": [
+        "evaluation",
+        "skills",
+        "openhands",
+        ".github",
+        "enterprise"
+      ]
+    },
+    {
+      "commit_oid": "36cf4e161abc21f6aead27f4934f737e08b2894f",
+      "folder_count": 5,
+      "folders": [
+        "skills",
+        "openhands",
+        "tests",
+        "frontend",
+        "containers"
+      ]
+    },
+    {
+      "commit_oid": "d99c7827d85fcc925c8cb19f4ac9c1c32a73a313",
+      "folder_count": 5,
+      "folders": [
+        "openhands",
+        "tests",
+        "frontend",
+        "openhands-cli",
+        "enterprise"
+      ]
+    },
+    {
+      "commit_oid": "38f2728cfa6114e72002ebe8075cb6ea64e4edf5",
+      "folder_count": 5,
+      "folders": [
+        "openhands",
+        ".github",
+        "frontend",
+        "third_party",
+        "containers"
+      ]
+    },
+    {
+      "commit_oid": "3bf038ed7cd8053f04899569c3fa04f202ae7c51",
+      "folder_count": 5,
+      "folders": [
+        "openhands",
+        "dev_config",
+        "tests",
+        ".github",
+        "openhands-cli"
+      ]
+    },
+    {
+      "commit_oid": "04ff4a025be79f643280aa8dddece5a345aa42b0",
+      "folder_count": 5,
+      "folders": [
+        "evaluation",
+        "openhands",
+        "tests",
+        ".github",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "c7dff3e4d28682ceadbf96b0985fb35c06e09607",
+      "folder_count": 5,
+      "folders": [
+        "openhands",
+        "dev_config",
+        "tests",
+        "third_party",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "880c05ed94dd69a97b749d3f7ece43e9c5648487",
+      "folder_count": 5,
+      "folders": [
+        "evaluation",
+        "openhands",
+        "frontend",
+        "microagents",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "31ad7fc1758bca83b8145ff88471662356997036",
+      "folder_count": 5,
+      "folders": [
+        "openhands",
+        "tests",
+        ".github",
+        "frontend",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "985e20d529f4afded3bcc76cbd407084592eba24",
+      "folder_count": 5,
+      "folders": [
+        "evaluation",
+        "openhands",
+        "tests",
+        "frontend",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "a2c55cfdef5e14fa7592de5a0e52e7a98aa552cc",
+      "folder_count": 5,
+      "folders": [
+        "evaluation",
+        "openhands",
+        "tests",
+        "frontend",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "d924e7cea5493d4685491901fdb975f9eae4f051",
+      "folder_count": 5,
+      "folders": [
+        "openhands",
+        "tests",
+        "frontend",
+        "microagents",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "5128377baa54c481ec2134a83bab16501e66653f",
+      "folder_count": 5,
+      "folders": [
+        "openhands",
+        "tests",
+        ".github",
+        "containers",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "c1b514e9d39308698042a726deacb4c281fb628c",
+      "folder_count": 5,
+      "folders": [
+        ".openhands",
+        "openhands",
+        "tests",
+        "containers",
+        "microagents"
+      ]
+    },
+    {
+      "commit_oid": "17f4c6e1a941cb6ea1374daa7f39398212d2eae9",
+      "folder_count": 5,
+      "folders": [
+        "evaluation",
+        "openhands",
+        "tests",
+        ".github",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "2e50a5bef55796ad03b72cfc096956d02caa7f20",
+      "folder_count": 5,
+      "folders": [
+        "openhands",
+        "tests",
+        ".github",
+        "containers",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "bc31fb15fecb5841040180e067b64363106cff34",
+      "folder_count": 5,
+      "folders": [
+        "openhands",
+        "tests",
+        ".github",
+        "agenthub",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "f9088766e826e208195345a7fcde4920a87df3dd",
+      "folder_count": 5,
+      "folders": [
+        "evaluation",
+        "openhands",
+        "tests",
+        ".github",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "8f0f764a85351da1f32cace9b851c08110d171d9",
+      "folder_count": 5,
+      "folders": [
+        "evaluation",
+        "openhands",
+        ".github",
+        "containers",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "83f36c1d66cebcaf3d5d06ea7f777c0cda8109ba",
+      "folder_count": 5,
+      "folders": [
+        "evaluation",
+        "opendevin",
+        "tests",
+        ".github",
+        "containers"
+      ]
+    },
+    {
+      "commit_oid": "90d0a624697d1a11d9e8720a8037d016d82a3776",
+      "folder_count": 5,
+      "folders": [
+        "opendevin",
+        "tests",
+        ".github",
+        "frontend",
+        "agenthub"
+      ]
+    },
+    {
+      "commit_oid": "e45ddeb2a2d95c5edf9cea9248b86605cec9c295",
+      "folder_count": 5,
+      "folders": [
+        "opendevin",
+        "tests",
+        "frontend",
+        "agenthub",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "143f38d25a02068c287191a0a70f311baa531823",
+      "folder_count": 5,
+      "folders": [
+        "evaluation",
+        "opendevin",
+        "tests",
+        ".github",
+        "agenthub"
+      ]
+    },
+    {
+      "commit_oid": "0d3b3ffbf8a29b01110448f7a40855a3d0a70ff6",
+      "folder_count": 5,
+      "folders": [
+        "opendevin",
+        "tests",
+        ".github",
+        "agenthub",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "602ffcdffbc3f711229330071d39bb445c1623cb",
+      "folder_count": 5,
+      "folders": [
+        "evaluation",
+        "opendevin",
+        "tests",
+        ".github",
+        "agenthub"
+      ]
+    },
+    {
+      "commit_oid": "b028bd46bbd8694898699d8d373871be792610bd",
+      "folder_count": 5,
+      "folders": [
+        "opendevin",
+        "tests",
+        ".github",
+        "frontend",
+        "agenthub"
+      ]
+    },
+    {
+      "commit_oid": "fadcdc117ea30b2f9bcf8805447418a202114b2f",
+      "folder_count": 5,
+      "folders": [
+        "opendevin",
+        "tests",
+        ".github",
+        "agenthub",
+        "docs"
+      ]
+    },
+    {
+      "commit_oid": "0c2ebfd6e11c6f833390b1314f1cf878a766b3b8",
+      "folder_count": 5,
+      "folders": [
+        "evaluation",
+        "opendevin",
+        "dev_config",
+        "tests",
+        "agenthub"
+      ]
+    },
+    {
+      "commit_oid": "fb1822123a598e01d73bdfa26b5f35de1ae744f3",
+      "folder_count": 5,
+      "folders": [
+        "opendevin",
+        "dev_config",
+        "server",
+        ".github",
+        "agenthub"
+      ]
+    },
+    {
+      "commit_oid": "af5c22700c5f60370ea5c48e2c11620ab98a9d4d",
+      "folder_count": 4,
+      "folders": [
+        "tests",
+        "frontend",
+        "enterprise",
+        "openhands"
+      ]
+    },
+    {
+      "commit_oid": "9ef11bf9302c4b3edb257e6ecfb0f41f70ad5bec",
+      "folder_count": 4,
+      "folders": [
+        "tests",
+        ".openhands",
+        "frontend",
+        "openhands"
+      ]
+    },
+    {
+      "commit_oid": "9906a1d49a30d56ec50f25c5656af67b457f693e",
+      "folder_count": 4,
+      "folders": [
+        "tests",
+        "frontend",
+        "enterprise",
+        "openhands"
+      ]
+    }
+  ]
+}

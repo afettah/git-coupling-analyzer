@@ -1,0 +1,30 @@
+=== REPOSITORY STATISTICS REPORT ===
+Generated: Sat Jan 31 09:32:45 PM CET 2026
+Repository: /home/afettah/workspace/git-coupling-analyzer/tmp/OpenHands
+
+## Basic Counts
+- Total commits: 5971
+- Merge commits: 1
+- Non-merge commits: 5970
+- Current files at HEAD: 2765
+- Total branches: 1090
+
+## Commit Range
+- First commit: 7b63deba2df78a5980766ca3d5d79816f7ceee76
+  Date: 2024-03-13 11:36:30 +0800
+- Last commit: e688fba761d896a80dfa6b05b7c2221620e7b8be
+  Date: 2026-01-30 19:31:46 -0500
+
+## File Types at HEAD
+- Python files (.py): 1254
+- JS/TS files: 958
+- Config files (json/yaml/toml/ini): 66
+- Test files: 478
+- Markdown files: 138
+
+## Repository Structure
+- Max folder depth: 7
+- Top-level folders: 16
+
+## Contributors
+- Unique authors: 459

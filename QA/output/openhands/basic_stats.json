@@ -1,0 +1,25 @@
+{
+  "analysis_date": "2026-01-31T22:01:26.713645",
+  "repository": "/home/afettah/workspace/git-coupling-analyzer/tmp/OpenHands",
+  "total_commits": 5971,
+  "merge_commits": 1,
+  "non_merge_commits": 5970,
+  "first_commit": {
+    "oid": "e688fba761d896a80dfa6b05b7c2221620e7b8be",
+    "date": "2026-01-30 19:31:46 -0500"
+  },
+  "last_commit": {
+    "oid": "e688fba761d896a80dfa6b05b7c2221620e7b8be",
+    "date": "2026-01-30 19:31:46 -0500"
+  },
+  "current_files_count": 2765,
+  "file_types": {
+    "python": 1254,
+    "typescript_javascript": 958,
+    "tests": 526,
+    "markdown": 138
+  },
+  "unique_authors": 459,
+  "max_folder_depth": 7,
+  "top_level_folders": 16
+}

@@ -1,0 +1,516 @@
+{
+  "analysis_date": "2026-01-31T22:03:11.936224",
+  "total_pairs_analyzed": 273,
+  "high_coupling_pairs": 125,
+  "very_high_coupling_pairs": 47,
+  "top_50_coupled_pairs": [
+    {
+      "file_a": "enterprise/integrations/jira/jira_view.py",
+      "file_b": "enterprise/tests/unit/integrations/jira/test_jira_view.py",
+      "commits_a": 6,
+      "commits_b": 6,
+      "cochange_count": 6,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/integrations/jira_dc/jira_dc_manager.py",
+      "file_b": "enterprise/integrations/linear/linear_manager.py",
+      "commits_a": 3,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/integrations/jira_dc/jira_dc_view.py",
+      "file_b": "enterprise/integrations/linear/linear_view.py",
+      "commits_a": 3,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/integrations/jira_dc/jira_dc_view.py",
+      "file_b": "enterprise/tests/unit/integrations/jira_dc/test_jira_dc_view.py",
+      "commits_a": 3,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/integrations/jira_dc/jira_dc_view.py",
+      "file_b": "enterprise/tests/unit/integrations/linear/test_linear_view.py",
+      "commits_a": 3,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/integrations/linear/linear_view.py",
+      "file_b": "enterprise/tests/unit/integrations/jira_dc/test_jira_dc_view.py",
+      "commits_a": 3,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/integrations/linear/linear_view.py",
+      "file_b": "enterprise/tests/unit/integrations/linear/test_linear_view.py",
+      "commits_a": 3,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/auth/domain_blocker.py",
+      "file_b": "enterprise/tests/unit/test_domain_blocker.py",
+      "commits_a": 3,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/mcp/mcp_config.py",
+      "file_b": "enterprise/tests/unit/test_saas_conversation_store.py",
+      "commits_a": 3,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/routes/orgs.py",
+      "file_b": "enterprise/storage/org_service.py",
+      "commits_a": 5,
+      "commits_b": 5,
+      "cochange_count": 5,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/routes/orgs.py",
+      "file_b": "enterprise/tests/unit/server/routes/test_orgs.py",
+      "commits_a": 5,
+      "commits_b": 5,
+      "cochange_count": 5,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/routes/orgs.py",
+      "file_b": "enterprise/tests/unit/test_org_service.py",
+      "commits_a": 5,
+      "commits_b": 5,
+      "cochange_count": 5,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/sharing/sql_shared_conversation_info_service.py",
+      "file_b": "enterprise/tests/unit/test_sharing/test_sharing_shared_conversation_info_service.py",
+      "commits_a": 3,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/storage/api_key_store.py",
+      "file_b": "enterprise/tests/unit/test_api_key_store.py",
+      "commits_a": 5,
+      "commits_b": 5,
+      "cochange_count": 5,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/storage/org_service.py",
+      "file_b": "enterprise/tests/unit/server/routes/test_orgs.py",
+      "commits_a": 5,
+      "commits_b": 5,
+      "cochange_count": 5,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/storage/org_service.py",
+      "file_b": "enterprise/tests/unit/test_org_service.py",
+      "commits_a": 5,
+      "commits_b": 5,
+      "cochange_count": 5,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/storage/org_store.py",
+      "file_b": "enterprise/tests/unit/test_org_store.py",
+      "commits_a": 4,
+      "commits_b": 4,
+      "cochange_count": 4,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/storage/saas_secrets_store.py",
+      "file_b": "enterprise/tests/unit/test_saas_secrets_store.py",
+      "commits_a": 4,
+      "commits_b": 4,
+      "cochange_count": 4,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/tests/unit/integrations/jira_dc/test_jira_dc_view.py",
+      "file_b": "enterprise/tests/unit/integrations/linear/test_linear_view.py",
+      "commits_a": 3,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/tests/unit/server/routes/test_orgs.py",
+      "file_b": "enterprise/tests/unit/test_org_service.py",
+      "commits_a": 5,
+      "commits_b": 5,
+      "cochange_count": 5,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "evaluation/benchmarks/EDA/scripts/run_infer.sh",
+      "file_b": "evaluation/benchmarks/agent_bench/scripts/run_infer.sh",
+      "commits_a": 3,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 1.0,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/integrations/jira/jira_manager.py",
+      "file_b": "enterprise/tests/unit/integrations/jira/test_jira_manager.py",
+      "commits_a": 7,
+      "commits_b": 6,
+      "cochange_count": 6,
+      "jaccard": 0.8571,
+      "prob_b_given_a": 0.8571,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/routes/org_models.py",
+      "file_b": "enterprise/server/routes/orgs.py",
+      "commits_a": 6,
+      "commits_b": 5,
+      "cochange_count": 5,
+      "jaccard": 0.8333,
+      "prob_b_given_a": 0.8333,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/routes/org_models.py",
+      "file_b": "enterprise/storage/org_service.py",
+      "commits_a": 6,
+      "commits_b": 5,
+      "cochange_count": 5,
+      "jaccard": 0.8333,
+      "prob_b_given_a": 0.8333,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/routes/org_models.py",
+      "file_b": "enterprise/tests/unit/server/routes/test_orgs.py",
+      "commits_a": 6,
+      "commits_b": 5,
+      "cochange_count": 5,
+      "jaccard": 0.8333,
+      "prob_b_given_a": 0.8333,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/routes/org_models.py",
+      "file_b": "enterprise/tests/unit/test_org_service.py",
+      "commits_a": 6,
+      "commits_b": 5,
+      "cochange_count": 5,
+      "jaccard": 0.8333,
+      "prob_b_given_a": 0.8333,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "evaluation/benchmarks/EDA/run_infer.py",
+      "file_b": "evaluation/benchmarks/agent_bench/run_infer.py",
+      "commits_a": 15,
+      "commits_b": 17,
+      "cochange_count": 14,
+      "jaccard": 0.7778,
+      "prob_b_given_a": 0.9333,
+      "prob_a_given_b": 0.8235
+    },
+    {
+      "file_a": "enterprise/server/clustered_conversation_manager.py",
+      "file_b": "enterprise/storage/slack_conversation.py",
+      "commits_a": 4,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 0.75,
+      "prob_b_given_a": 0.75,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/routes/email.py",
+      "file_b": "enterprise/tests/unit/server/routes/test_email_routes.py",
+      "commits_a": 4,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 0.75,
+      "prob_b_given_a": 0.75,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/routes/event_webhook.py",
+      "file_b": "enterprise/tests/unit/server/test_event_webhook.py",
+      "commits_a": 4,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 0.75,
+      "prob_b_given_a": 0.75,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/routes/integration/slack.py",
+      "file_b": "enterprise/storage/slack_conversation.py",
+      "commits_a": 4,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 0.75,
+      "prob_b_given_a": 0.75,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/storage/lite_llm_manager.py",
+      "file_b": "enterprise/tests/unit/test_lite_llm_manager.py",
+      "commits_a": 12,
+      "commits_b": 9,
+      "cochange_count": 9,
+      "jaccard": 0.75,
+      "prob_b_given_a": 0.75,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/tests/unit/conftest.py",
+      "file_b": "enterprise/tests/unit/test_stripe_service_db.py",
+      "commits_a": 4,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 0.75,
+      "prob_b_given_a": 0.75,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "containers/dev/compose.yml",
+      "file_b": "docker-compose.yml",
+      "commits_a": 59,
+      "commits_b": 53,
+      "cochange_count": 47,
+      "jaccard": 0.7231,
+      "prob_b_given_a": 0.7966,
+      "prob_a_given_b": 0.8868
+    },
+    {
+      "file_a": "enterprise/server/routes/billing.py",
+      "file_b": "enterprise/tests/unit/test_billing.py",
+      "commits_a": 13,
+      "commits_b": 8,
+      "cochange_count": 8,
+      "jaccard": 0.6154,
+      "prob_b_given_a": 0.6154,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/integrations/resolver_context.py",
+      "file_b": "enterprise/tests/unit/integrations/test_resolver_context.py",
+      "commits_a": 5,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 0.6,
+      "prob_b_given_a": 0.6,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/clustered_conversation_manager.py",
+      "file_b": "enterprise/server/routes/integration/slack.py",
+      "commits_a": 4,
+      "commits_b": 4,
+      "cochange_count": 3,
+      "jaccard": 0.6,
+      "prob_b_given_a": 0.75,
+      "prob_a_given_b": 0.75
+    },
+    {
+      "file_a": "enterprise/server/mcp/mcp_config.py",
+      "file_b": "enterprise/storage/api_key_store.py",
+      "commits_a": 3,
+      "commits_b": 5,
+      "cochange_count": 3,
+      "jaccard": 0.6,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 0.6
+    },
+    {
+      "file_a": "enterprise/server/mcp/mcp_config.py",
+      "file_b": "enterprise/tests/unit/test_api_key_store.py",
+      "commits_a": 3,
+      "commits_b": 5,
+      "cochange_count": 3,
+      "jaccard": 0.6,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 0.6
+    },
+    {
+      "file_a": "enterprise/server/routes/debugging.py",
+      "file_b": "enterprise/storage/database.py",
+      "commits_a": 3,
+      "commits_b": 5,
+      "cochange_count": 3,
+      "jaccard": 0.6,
+      "prob_b_given_a": 1.0,
+      "prob_a_given_b": 0.6
+    },
+    {
+      "file_a": "enterprise/server/routes/integration/slack.py",
+      "file_b": "enterprise/storage/saas_secrets_store.py",
+      "commits_a": 4,
+      "commits_b": 4,
+      "cochange_count": 3,
+      "jaccard": 0.6,
+      "prob_b_given_a": 0.75,
+      "prob_a_given_b": 0.75
+    },
+    {
+      "file_a": "enterprise/server/routes/integration/slack.py",
+      "file_b": "enterprise/tests/unit/test_saas_secrets_store.py",
+      "commits_a": 4,
+      "commits_b": 4,
+      "cochange_count": 3,
+      "jaccard": 0.6,
+      "prob_b_given_a": 0.75,
+      "prob_a_given_b": 0.75
+    },
+    {
+      "file_a": "enterprise/storage/api_key_store.py",
+      "file_b": "enterprise/tests/unit/test_saas_conversation_store.py",
+      "commits_a": 5,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 0.6,
+      "prob_b_given_a": 0.6,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/storage/database.py",
+      "file_b": "enterprise/storage/stored_conversation_metadata.py",
+      "commits_a": 5,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 0.6,
+      "prob_b_given_a": 0.6,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/tests/unit/test_api_key_store.py",
+      "file_b": "enterprise/tests/unit/test_saas_conversation_store.py",
+      "commits_a": 5,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 0.6,
+      "prob_b_given_a": 0.6,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/server/routes/auth.py",
+      "file_b": "enterprise/tests/unit/test_auth_routes.py",
+      "commits_a": 17,
+      "commits_b": 10,
+      "cochange_count": 10,
+      "jaccard": 0.5882,
+      "prob_b_given_a": 0.5882,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "Development.md",
+      "file_b": "containers/dev/compose.yml",
+      "commits_a": 94,
+      "commits_b": 59,
+      "cochange_count": 56,
+      "jaccard": 0.5773,
+      "prob_b_given_a": 0.5957,
+      "prob_a_given_b": 0.9492
+    },
+    {
+      "file_a": "enterprise/experiments/experiment_manager.py",
+      "file_b": "enterprise/experiments/experiment_versions/_004_condenser_max_step_experiment.py",
+      "commits_a": 6,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 0.5,
+      "prob_b_given_a": 0.5,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/integrations/jira/jira_view.py",
+      "file_b": "enterprise/integrations/jira_dc/jira_dc_view.py",
+      "commits_a": 6,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 0.5,
+      "prob_b_given_a": 0.5,
+      "prob_a_given_b": 1.0
+    },
+    {
+      "file_a": "enterprise/integrations/jira/jira_view.py",
+      "file_b": "enterprise/integrations/linear/linear_view.py",
+      "commits_a": 6,
+      "commits_b": 3,
+      "cochange_count": 3,
+      "jaccard": 0.5,
+      "prob_b_given_a": 0.5,
+      "prob_a_given_b": 1.0
+    }
+  ],
+  "coupling_distribution": {
+    "0.5+": 77,
+    "0.4-0.5": 22,
+    "0.3-0.4": 29,
+    "0.2-0.3": 70,
+    "0.1-0.2": 51,
+    "0.0-0.1": 24
+  }
+}

@@ -1,0 +1,329 @@
+{
+  "analysis_date": "2026-01-31T22:02:40.828486",
+  "total_files_with_changes": 7546,
+  "total_churn": 1939110,
+  "top_20_by_churn": [
+    {
+      "path": "frontend/package-lock.json",
+      "commits": 525,
+      "insertions": 140189,
+      "deletions": 122948,
+      "churn": 263137,
+      "exists_at_head": true
+    },
+    {
+      "path": "poetry.lock",
+      "commits": 748,
+      "insertions": 72601,
+      "deletions": 55231,
+      "churn": 127832,
+      "exists_at_head": true
+    },
+    {
+      "path": "docs/package-lock.json",
+      "commits": 39,
+      "insertions": 29342,
+      "deletions": 29342,
+      "churn": 58684,
+      "exists_at_head": false
+    },
+    {
+      "path": "docs/yarn.lock",
+      "commits": 13,
+      "insertions": 28123,
+      "deletions": 28123,
+      "churn": 56246,
+      "exists_at_head": false
+    },
+    {
+      "path": "frontend/src/i18n/translation.json",
+      "commits": 244,
+      "insertions": 33582,
+      "deletions": 17628,
+      "churn": 51210,
+      "exists_at_head": true
+    },
+    {
+      "path": "frontend/pnpm-lock.yaml",
+      "commits": 7,
+      "insertions": 17503,
+      "deletions": 17503,
+      "churn": 35006,
+      "exists_at_head": false
+    },
+    {
+      "path": "enterprise/poetry.lock",
+      "commits": 37,
+      "insertions": 21402,
+      "deletions": 6482,
+      "churn": 27884,
+      "exists_at_head": true
+    },
+    {
+      "path": "evaluation/regression/cases/client-server/outputs/langchains_agent/workspace/client/package-lock.json",
+      "commits": 1,
+      "insertions": 0,
+      "deletions": 18455,
+      "churn": 18455,
+      "exists_at_head": false
+    },
+    {
+      "path": "evaluation/regression/cases/react-todo/outputs/langchains_agent/workspace/todo-app/package-lock.json",
+      "commits": 1,
+      "insertions": 0,
+      "deletions": 18455,
+      "churn": 18455,
+      "exists_at_head": false
+    },
+    {
+      "path": "agent/regression/cases/client-server/workspace/client/package-lock.json",
+      "commits": 1,
+      "insertions": 18455,
+      "deletions": 0,
+      "churn": 18455,
+      "exists_at_head": false
+    },
+    {
+      "path": "agent/regression/cases/react-todo/workspace/todo-app/package-lock.json",
+      "commits": 1,
+      "insertions": 18455,
+      "deletions": 0,
+      "churn": 18455,
+      "exists_at_head": false
+    },
+    {
+      "path": "openhands/integrations/vscode/package-lock.json",
+      "commits": 3,
+      "insertions": 9141,
+      "deletions": 9141,
+      "churn": 18282,
+      "exists_at_head": false
+    },
+    {
+      "path": "openhands-cli/uv.lock",
+      "commits": 15,
+      "insertions": 7360,
+      "deletions": 7360,
+      "churn": 14720,
+      "exists_at_head": false
+    },
+    {
+      "path": "uv.lock",
+      "commits": 2,
+      "insertions": 10587,
+      "deletions": 41,
+      "churn": 10628,
+      "exists_at_head": true
+    },
+    {
+      "path": "Pipfile.lock",
+      "commits": 6,
+      "insertions": 4440,
+      "deletions": 4440,
+      "churn": 8880,
+      "exists_at_head": false
+    },
+    {
+      "path": "docs/openapi.json",
+      "commits": 3,
+      "insertions": 3300,
+      "deletions": 5391,
+      "churn": 8691,
+      "exists_at_head": false
+    },
+    {
+      "path": "evaluation/swe_bench/scripts/docker/all-swebench-full-instance-images.txt",
+      "commits": 2,
+      "insertions": 4652,
+      "deletions": 2294,
+      "churn": 6946,
+      "exists_at_head": false
+    },
+    {
+      "path": "tests/unit/test_agent_skill.py",
+      "commits": 24,
+      "insertions": 2729,
+      "deletions": 2012,
+      "churn": 4741,
+      "exists_at_head": false
+    },
+    {
+      "path": "frontend/__tests__/components/features/microagent-management/microagent-management.test.tsx",
+      "commits": 21,
+      "insertions": 3618,
+      "deletions": 1108,
+      "churn": 4726,
+      "exists_at_head": true
+    },
+    {
+      "path": "evaluation/benchmarks/swe_bench/scripts/docker/all-swebench-full-instance-images.txt",
+      "commits": 1,
+      "insertions": 2294,
+      "deletions": 2358,
+      "churn": 4652,
+      "exists_at_head": true
+    }
+  ],
+  "top_20_by_commits": [
+    {
+      "path": "poetry.lock",
+      "commits": 748,
+      "insertions": 72601,
+      "deletions": 55231,
+      "churn": 127832,
+      "exists_at_head": true
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "commits": 525,
+      "insertions": 140189,
+      "deletions": 122948,
+      "churn": 263137,
+      "exists_at_head": true
+    },
+    {
+      "path": "frontend/package.json",
+      "commits": 522,
+      "insertions": 1401,
+      "deletions": 1270,
+      "churn": 2671,
+      "exists_at_head": true
+    },
+    {
+      "path": "pyproject.toml",
+      "commits": 446,
+      "insertions": 1183,
+      "deletions": 788,
+      "churn": 1971,
+      "exists_at_head": true
+    },
+    {
+      "path": "README.md",
+      "commits": 251,
+      "insertions": 1334,
+      "deletions": 1248,
+      "churn": 2582,
+      "exists_at_head": true
+    },
+    {
+      "path": "frontend/src/i18n/translation.json",
+      "commits": 244,
+      "insertions": 33582,
+      "deletions": 17628,
+      "churn": 51210,
+      "exists_at_head": true
+    },
+    {
+      "path": "openhands/llm/llm.py",
+      "commits": 158,
+      "insertions": 1790,
+      "deletions": 1433,
+      "churn": 3223,
+      "exists_at_head": true
+    },
+    {
+      "path": "frontend/src/i18n/declaration.ts",
+      "commits": 150,
+      "insertions": 1099,
+      "deletions": 99,
+      "churn": 1198,
+      "exists_at_head": true
+    },
+    {
+      "path": "openhands/controller/agent_controller.py",
+      "commits": 137,
+      "insertions": 2380,
+      "deletions": 1539,
+      "churn": 3919,
+      "exists_at_head": true
+    },
+    {
+      "path": "openhands/server/routes/manage_conversations.py",
+      "commits": 119,
+      "insertions": 2477,
+      "deletions": 934,
+      "churn": 3411,
+      "exists_at_head": true
+    },
+    {
+      "path": "openhands/runtime/base.py",
+      "commits": 119,
+      "insertions": 1747,
+      "deletions": 687,
+      "churn": 2434,
+      "exists_at_head": true
+    },
+    {
+      "path": "openhands/server/session/session.py",
+      "commits": 110,
+      "insertions": 731,
+      "deletions": 446,
+      "churn": 1177,
+      "exists_at_head": true
+    },
+    {
+      "path": "opendevin/controller/agent_controller.py",
+      "commits": 107,
+      "insertions": 1723,
+      "deletions": 1178,
+      "churn": 2901,
+      "exists_at_head": false
+    },
+    {
+      "path": "openhands/server/session/agent_session.py",
+      "commits": 107,
+      "insertions": 925,
+      "deletions": 604,
+      "churn": 1529,
+      "exists_at_head": true
+    },
+    {
+      "path": "Makefile",
+      "commits": 97,
+      "insertions": 681,
+      "deletions": 310,
+      "churn": 991,
+      "exists_at_head": true
+    },
+    {
+      "path": "Development.md",
+      "commits": 94,
+      "insertions": 410,
+      "deletions": 204,
+      "churn": 614,
+      "exists_at_head": true
+    },
+    {
+      "path": "frontend/src/api/open-hands.ts",
+      "commits": 88,
+      "insertions": 1456,
+      "deletions": 988,
+      "churn": 2444,
+      "exists_at_head": false
+    },
+    {
+      "path": "openhands/runtime/impl/remote/remote_runtime.py",
+      "commits": 86,
+      "insertions": 996,
+      "deletions": 924,
+      "churn": 1920,
+      "exists_at_head": true
+    },
+    {
+      "path": "openhands/agenthub/codeact_agent/codeact_agent.py",
+      "commits": 79,
+      "insertions": 1000,
+      "deletions": 963,
+      "churn": 1963,
+      "exists_at_head": true
+    },
+    {
+      "path": "agenthub/codeact_agent/codeact_agent.py",
+      "commits": 79,
+      "insertions": 1010,
+      "deletions": 730,
+      "churn": 1740,
+      "exists_at_head": false
+    }
+  ]
+}

@@ -6,11 +6,19 @@
 
 import type { ClusterData } from '../types';
 import { formatNumber, formatPercent } from '../utils';
+import { ProgressBar } from '@/components/shared';
 
 export interface ClustersTableProps {
     clusters: ClusterData[];
     onExplore: (cluster: ClusterData) => void;
 }
+
+// Get coupling color based on strength
+const getCouplingColor = (coupling: number): 'success' | 'warning' | 'danger' => {
+    if (coupling >= 0.8) return 'danger';
+    if (coupling >= 0.6) return 'warning';
+    return 'success';
+};
 
 export function ClustersTable({ clusters, onExplore }: ClustersTableProps) {
     return (
@@ -19,7 +27,7 @@ export function ClustersTable({ clusters, onExplore }: ClustersTableProps) {
                 <thead className="bg-slate-900 text-xs uppercase text-slate-500">
                     <tr>
                         <th className="px-4 py-3 text-left">Cluster</th>
-                        <th className="px-4 py-3 text-left">Coupling</th>
+                        <th className="px-4 py-3 text-left w-48">Coupling</th>
                         <th className="px-4 py-3 text-left">Files</th>
                         <th className="px-4 py-3 text-left">Churn</th>
                         <th className="px-4 py-3 text-left">Actions</th>
@@ -35,8 +43,19 @@ export function ClustersTable({ clusters, onExplore }: ClustersTableProps) {
                             <td className="px-4 py-3 text-slate-200 font-medium">
                                 {cluster.name}
                             </td>
-                            <td className="px-4 py-3 text-slate-400">
-                                {formatPercent(cluster.avg_coupling)}
+                            <td className="px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                    <ProgressBar
+                                        value={(cluster.avg_coupling || 0) * 100}
+                                        max={100}
+                                        color={getCouplingColor(cluster.avg_coupling || 0)}
+                                        size="sm"
+                                        className="flex-1"
+                                    />
+                                    <span className="text-slate-400 text-xs w-10 text-right">
+                                        {formatPercent(cluster.avg_coupling)}
+                                    </span>
+                                </div>
                             </td>
                             <td className="px-4 py-3 text-slate-400">
                                 {formatNumber(cluster.files?.length || cluster.size || 0)}

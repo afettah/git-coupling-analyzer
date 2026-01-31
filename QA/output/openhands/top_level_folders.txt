@@ -1,0 +1,16 @@
+.devcontainer
+.github
+.openhands
+.vscode
+containers
+dev_config
+enterprise
+evaluation
+frontend
+kind
+openhands-ui
+openhands
+scripts
+skills
+tests
+third_party

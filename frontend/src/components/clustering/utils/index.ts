@@ -36,7 +36,8 @@ export {
     countFilesPerFolder,
     getAllFilesFromTree,
     findNodeByPath,
-    getTreeDepth
+    getTreeDepth,
+    countUniqueFolders
 } from './tree';
 
 // URL utilities

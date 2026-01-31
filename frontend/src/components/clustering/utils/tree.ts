@@ -137,3 +137,20 @@ export function getTreeDepth(node: TreeNode): number {
     if (node.children.length === 0) return 1;
     return 1 + Math.max(...node.children.map(getTreeDepth));
 }
+
+/** Count unique folders from files up to a certain depth */
+export function countUniqueFolders(files: string[], depth: number): number {
+    const folders = new Set<string>();
+
+    files.forEach(file => {
+        const parts = file.split('/').filter(Boolean);
+        if (parts.length > 1) {
+            const folder = parts.slice(0, Math.min(depth, parts.length - 1)).join('/');
+            if (folder) {
+                folders.add(folder);
+            }
+        }
+    });
+
+    return folders.size;
+}

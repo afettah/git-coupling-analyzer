@@ -1,0 +1,406 @@
+{
+  "analysis_date": "2026-01-31T22:01:27.223519",
+  "total_unique_files": 6276,
+  "top_100_hotspots": [
+    {
+      "path": "poetry.lock",
+      "commit_count": 748
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "commit_count": 525
+    },
+    {
+      "path": "frontend/package.json",
+      "commit_count": 522
+    },
+    {
+      "path": "pyproject.toml",
+      "commit_count": 446
+    },
+    {
+      "path": "README.md",
+      "commit_count": 251
+    },
+    {
+      "path": "frontend/src/i18n/translation.json",
+      "commit_count": 244
+    },
+    {
+      "path": "openhands/llm/llm.py",
+      "commit_count": 159
+    },
+    {
+      "path": "frontend/src/i18n/declaration.ts",
+      "commit_count": 150
+    },
+    {
+      "path": "openhands/controller/agent_controller.py",
+      "commit_count": 138
+    },
+    {
+      "path": "openhands/runtime/base.py",
+      "commit_count": 120
+    },
+    {
+      "path": "openhands/server/routes/manage_conversations.py",
+      "commit_count": 119
+    },
+    {
+      "path": "openhands/server/session/session.py",
+      "commit_count": 111
+    },
+    {
+      "path": "openhands/server/session/agent_session.py",
+      "commit_count": 108
+    },
+    {
+      "path": "opendevin/controller/agent_controller.py",
+      "commit_count": 107
+    },
+    {
+      "path": "Makefile",
+      "commit_count": 97
+    },
+    {
+      "path": "Development.md",
+      "commit_count": 94
+    },
+    {
+      "path": "frontend/src/api/open-hands.ts",
+      "commit_count": 88
+    },
+    {
+      "path": "openhands/runtime/impl/remote/remote_runtime.py",
+      "commit_count": 87
+    },
+    {
+      "path": "openhands/agenthub/codeact_agent/codeact_agent.py",
+      "commit_count": 80
+    },
+    {
+      "path": "agenthub/codeact_agent/codeact_agent.py",
+      "commit_count": 79
+    },
+    {
+      "path": "evaluation/swe_bench/run_infer.py",
+      "commit_count": 74
+    },
+    {
+      "path": "opendevin/core/config.py",
+      "commit_count": 71
+    },
+    {
+      "path": ".github/workflows/ghcr-build.yml",
+      "commit_count": 69
+    },
+    {
+      "path": "openhands/core/main.py",
+      "commit_count": 67
+    },
+    {
+      "path": "config.template.toml",
+      "commit_count": 66
+    },
+    {
+      "path": "openhands/server/listen.py",
+      "commit_count": 65
+    },
+    {
+      "path": "openhands/server/routes/settings.py",
+      "commit_count": 65
+    },
+    {
+      "path": "openhands/runtime/action_execution_server.py",
+      "commit_count": 65
+    },
+    {
+      "path": "openhands/core/config/utils.py",
+      "commit_count": 63
+    },
+    {
+      "path": "evaluation/benchmarks/swe_bench/run_infer.py",
+      "commit_count": 61
+    },
+    {
+      "path": "frontend/src/services/actions.ts",
+      "commit_count": 60
+    },
+    {
+      "path": "frontend/src/mocks/handlers.ts",
+      "commit_count": 60
+    },
+    {
+      "path": "containers/dev/compose.yml",
+      "commit_count": 59
+    },
+    {
+      "path": "opendevin/server/listen.py",
+      "commit_count": 59
+    },
+    {
+      "path": "opendevin/runtime/docker/ssh_box.py",
+      "commit_count": 59
+    },
+    {
+      "path": ".github/workflows/openhands-resolver.yml",
+      "commit_count": 58
+    },
+    {
+      "path": "evaluation/utils/shared.py",
+      "commit_count": 58
+    },
+    {
+      "path": "openhands/integrations/github/github_service.py",
+      "commit_count": 57
+    },
+    {
+      "path": "tests/unit/test_agent_controller.py",
+      "commit_count": 57
+    },
+    {
+      "path": "frontend/src/services/settings.ts",
+      "commit_count": 56
+    },
+    {
+      "path": "frontend/src/context/ws-client-provider.tsx",
+      "commit_count": 55
+    },
+    {
+      "path": "tests/unit/test_config.py",
+      "commit_count": 55
+    },
+    {
+      "path": "openhands/core/config/sandbox_config.py",
+      "commit_count": 54
+    },
+    {
+      "path": "openhands/server/listen_socket.py",
+      "commit_count": 54
+    },
+    {
+      "path": "containers/app/Dockerfile",
+      "commit_count": 54
+    },
+    {
+      "path": "openhands/runtime/impl/docker/docker_runtime.py",
+      "commit_count": 54
+    },
+    {
+      "path": "docker-compose.yml",
+      "commit_count": 53
+    },
+    {
+      "path": "opendevin/llm/llm.py",
+      "commit_count": 52
+    },
+    {
+      "path": "openhands/integrations/gitlab/gitlab_service.py",
+      "commit_count": 51
+    },
+    {
+      "path": "openhands/core/config/llm_config.py",
+      "commit_count": 51
+    },
+    {
+      "path": "docs/modules/usage/installation.mdx",
+      "commit_count": 51
+    },
+    {
+      "path": "openhands/server/conversation_manager/standalone_conversation_manager.py",
+      "commit_count": 50
+    },
+    {
+      "path": "openhands/runtime/utils/runtime_templates/Dockerfile.j2",
+      "commit_count": 50
+    },
+    {
+      "path": "docs/modules/usage/how-to/headless-mode.md",
+      "commit_count": 50
+    },
+    {
+      "path": "opendevin/core/main.py",
+      "commit_count": 50
+    },
+    {
+      "path": "frontend/src/components/features/chat/chat-interface.tsx",
+      "commit_count": 49
+    },
+    {
+      "path": "openhands/runtime/impl/action_execution/action_execution_client.py",
+      "commit_count": 49
+    },
+    {
+      "path": "docs/modules/usage/how-to/cli-mode.md",
+      "commit_count": 49
+    },
+    {
+      "path": "openhands/cli/main.py",
+      "commit_count": 48
+    },
+    {
+      "path": "openhands/integrations/provider.py",
+      "commit_count": 46
+    },
+    {
+      "path": "openhands/runtime/utils/runtime_build.py",
+      "commit_count": 46
+    },
+    {
+      "path": "openhands/agenthub/codeact_agent/function_calling.py",
+      "commit_count": 45
+    },
+    {
+      "path": "tests/integration/test_agent.py",
+      "commit_count": 45
+    },
+    {
+      "path": "agenthub/monologue_agent/agent.py",
+      "commit_count": 45
+    },
+    {
+      "path": "openhands/app_server/app_conversation/live_status_app_conversation_service.py",
+      "commit_count": 44
+    },
+    {
+      "path": "docs/sidebars.ts",
+      "commit_count": 44
+    },
+    {
+      "path": "openhands/server/session/manager.py",
+      "commit_count": 44
+    },
+    {
+      "path": "openhands/core/logger.py",
+      "commit_count": 43
+    },
+    {
+      "path": "frontend/src/api/open-hands.types.ts",
+      "commit_count": 43
+    },
+    {
+      "path": "frontend/src/components/features/sidebar/sidebar.tsx",
+      "commit_count": 43
+    },
+    {
+      "path": "openhands/events/stream.py",
+      "commit_count": 43
+    },
+    {
+      "path": "tests/integration/regenerate.sh",
+      "commit_count": 43
+    },
+    {
+      "path": "frontend/src/components/ChatInterface.tsx",
+      "commit_count": 43
+    },
+    {
+      "path": "opendevin/config.py",
+      "commit_count": 43
+    },
+    {
+      "path": "frontend/src/hooks/query/use-settings.ts",
+      "commit_count": 42
+    },
+    {
+      "path": ".gitignore",
+      "commit_count": 41
+    },
+    {
+      "path": "docs/package.json",
+      "commit_count": 41
+    },
+    {
+      "path": "tests/unit/test_action_serialization.py",
+      "commit_count": 40
+    },
+    {
+      "path": "openhands/core/setup.py",
+      "commit_count": 39
+    },
+    {
+      "path": "openhands/runtime/impl/local/local_runtime.py",
+      "commit_count": 39
+    },
+    {
+      "path": "docs/package-lock.json",
+      "commit_count": 39
+    },
+    {
+      "path": "frontend/src/App.tsx",
+      "commit_count": 39
+    },
+    {
+      "path": ".github/workflows/ghcr.yml",
+      "commit_count": 39
+    },
+    {
+      "path": ".github/workflows/run-unit-tests.yml",
+      "commit_count": 39
+    },
+    {
+      "path": "opendevin/sandbox/sandbox.py",
+      "commit_count": 39
+    },
+    {
+      "path": "openhands/core/config/agent_config.py",
+      "commit_count": 38
+    },
+    {
+      "path": "docs/usage/how-to/cli-mode.mdx",
+      "commit_count": 38
+    },
+    {
+      "path": "agenthub/planner_agent/prompt.py",
+      "commit_count": 38
+    },
+    {
+      "path": "enterprise/poetry.lock",
+      "commit_count": 37
+    },
+    {
+      "path": "frontend/src/routes/conversation.tsx",
+      "commit_count": 37
+    },
+    {
+      "path": "openhands/resolver/resolve_issue.py",
+      "commit_count": 37
+    },
+    {
+      "path": ".github/workflows/lint.yml",
+      "commit_count": 37
+    },
+    {
+      "path": "frontend/src/store.ts",
+      "commit_count": 37
+    },
+    {
+      "path": "docs/modules/usage/llms/llms.md",
+      "commit_count": 37
+    },
+    {
+      "path": "openhands/runtime/client/runtime.py",
+      "commit_count": 37
+    },
+    {
+      "path": "evaluation/swe_bench/README.md",
+      "commit_count": 37
+    },
+    {
+      "path": "frontend/src/routes/_oh._index/route.tsx",
+      "commit_count": 36
+    },
+    {
+      "path": "openhands/server/middleware.py",
+      "commit_count": 35
+    },
+    {
+      "path": "frontend/src/services/observations.ts",
+      "commit_count": 35
+    },
+    {
+      "path": "tests/runtime/test_bash.py",
+      "commit_count": 35
+    }
+  ]
+}
