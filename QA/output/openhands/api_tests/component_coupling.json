@@ -1,0 +1,73 @@
+{
+  "openhands": {
+    "status": 200,
+    "data": {
+      "component": "openhands",
+      "depth": 2,
+      "coupled_components": []
+    }
+  },
+  "frontend": {
+    "status": 200,
+    "data": {
+      "component": "frontend",
+      "depth": 2,
+      "coupled_components": []
+    }
+  },
+  "tests": {
+    "status": 200,
+    "data": {
+      "component": "tests",
+      "depth": 2,
+      "coupled_components": []
+    }
+  },
+  "evaluation": {
+    "status": 200,
+    "data": {
+      "component": "evaluation",
+      "depth": 2,
+      "coupled_components": []
+    }
+  },
+  "enterprise": {
+    "status": 200,
+    "data": {
+      "component": "enterprise",
+      "depth": 2,
+      "coupled_components": []
+    }
+  },
+  "openhands/server": {
+    "status": 200,
+    "data": {
+      "component": "openhands/server",
+      "depth": 2,
+      "coupled_components": []
+    }
+  },
+  "openhands/runtime": {
+    "status": 200,
+    "data": {
+      "component": "openhands/runtime",
+      "depth": 2,
+      "coupled_components": [
+        {
+          "component": "pyproject.toml",
+          "pair_count": 18.0,
+          "jaccard": 0.2571428571428571,
+          "file_pair_count": 1
+        }
+      ]
+    }
+  },
+  "frontend/src": {
+    "status": 200,
+    "data": {
+      "component": "frontend/src",
+      "depth": 2,
+      "coupled_components": []
+    }
+  }
+}

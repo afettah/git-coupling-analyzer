@@ -4,17 +4,37 @@ import { ArrowLeft, Play, BarChart3, Network, Box, Settings2, Loader2, GitCommit
 import ImpactGraph from './ImpactGraph';
 import ClusteringView from './ClusteringView';
 import FolderTree from './FolderTree';
+import FileDetailsPanel from './FileDetailsPanel';
+import FolderDetailsPanel from './FolderDetailsPanel';
+
+interface DetailsSelection {
+    path: string;
+    type: 'file' | 'folder';
+}
+
+type TabType = 'graph' | 'tree' | 'clustering' | 'settings' | 'file-details' | 'folder-details';
 
 interface AnalysisDashboardProps {
     repo: RepoInfo;
     onBack: () => void;
-    activeTab: 'graph' | 'tree' | 'clustering' | 'settings';
-    onTabChange: (tab: 'graph' | 'tree' | 'clustering' | 'settings') => void;
+    activeTab: TabType;
+    onTabChange: (tab: TabType) => void;
 }
 
 export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange }: AnalysisDashboardProps) {
     const [status, setStatus] = useState<AnalysisStatus | null>(null);
     const [loading, setLoading] = useState(false);
+    const [detailsSelection, setDetailsSelection] = useState<DetailsSelection | null>(null);
+
+    const handleOpenDetails = (path: string, type: 'file' | 'folder') => {
+        setDetailsSelection({ path, type });
+        onTabChange(type === 'file' ? 'file-details' : 'folder-details');
+    };
+
+    const handleCloseDetails = () => {
+        setDetailsSelection(null);
+        onTabChange('tree');
+    };
 
     const fetchStatus = async () => {
         try {
@@ -164,7 +184,33 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                 ) : (
                     <div className="flex-1 flex flex-col">
                         {activeTab === 'graph' && <ImpactGraph repoId={repo.id} />}
-                        {activeTab === 'tree' && <FolderTree repoId={repo.id} />}
+                        {activeTab === 'tree' && (
+                            <FolderTree
+                                repoId={repo.id}
+                                onOpenDetails={handleOpenDetails}
+                            />
+                        )}
+                        {activeTab === 'file-details' && detailsSelection?.type === 'file' && (
+                            <FileDetailsPanel
+                                repoId={repo.id}
+                                filePath={detailsSelection.path}
+                                onClose={handleCloseDetails}
+                                onFileSelect={(path) => {
+                                    setDetailsSelection({ path, type: 'file' });
+                                }}
+                            />
+                        )}
+                        {activeTab === 'folder-details' && detailsSelection?.type === 'folder' && (
+                            <FolderDetailsPanel
+                                repoId={repo.id}
+                                folderPath={detailsSelection.path}
+                                onClose={handleCloseDetails}
+                                onFileSelect={(path) => {
+                                    setDetailsSelection({ path, type: 'file' });
+                                    onTabChange('file-details');
+                                }}
+                            />
+                        )}
                         {activeTab === 'clustering' && <ClusteringView repoId={repo.id} />}
                         {activeTab === 'settings' && <div className="p-8">Settings View (TODO)</div>}
                     </div>

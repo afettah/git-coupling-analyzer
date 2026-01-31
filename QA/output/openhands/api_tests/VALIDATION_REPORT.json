@@ -1,0 +1,240 @@
+{
+  "repo_id": "openhands",
+  "total_checks": 33,
+  "passed": 11,
+  "failed": 22,
+  "pass_rate": 33.33333333333333,
+  "results": [
+    {
+      "name": "Current Files Count",
+      "passed": false,
+      "expected": "2765",
+      "actual": "454",
+      "details": "Files should match within tolerance"
+    },
+    {
+      "name": "Top 5 Hotspots Overlap",
+      "passed": false,
+      "expected": "\u226580% overlap",
+      "actual": "60% (3/5)",
+      "details": "Common files: {'frontend/package.json', 'frontend/package-lock.json', 'pyproject.toml'}"
+    },
+    {
+      "name": "Top 10 Hotspots Overlap",
+      "passed": false,
+      "expected": "\u226570% overlap",
+      "actual": "60% (6/10)",
+      "details": "Missing from API: {'openhands/controller/agent_controller.py', 'openhands/runtime/base.py', 'openhands/llm/llm.py', 'frontend/src/i18n/declaration.ts'}"
+    },
+    {
+      "name": "Commit Count: pyproject.toml",
+      "passed": false,
+      "expected": "446",
+      "actual": "71",
+      "details": "Tolerance: \u00b145"
+    },
+    {
+      "name": "Commit Count: frontend/package-lock.json",
+      "passed": false,
+      "expected": "525",
+      "actual": "61",
+      "details": "Tolerance: \u00b152"
+    },
+    {
+      "name": "Commit Count: frontend/package.json",
+      "passed": false,
+      "expected": "522",
+      "actual": "61",
+      "details": "Tolerance: \u00b152"
+    },
+    {
+      "name": "Commit Count: README.md",
+      "passed": false,
+      "expected": "251",
+      "actual": "20",
+      "details": "Tolerance: \u00b125"
+    },
+    {
+      "name": "Commit Count: poetry.lock",
+      "passed": false,
+      "expected": "748",
+      "actual": "16",
+      "details": "Tolerance: \u00b175"
+    },
+    {
+      "name": "Commit Count: frontend/src/i18n/translation.json",
+      "passed": false,
+      "expected": "244",
+      "actual": "9",
+      "details": "Tolerance: \u00b124"
+    },
+    {
+      "name": "Commit Count: openhands/server/routes/manage_conversat",
+      "passed": false,
+      "expected": "119",
+      "actual": "8",
+      "details": "Tolerance: \u00b112"
+    },
+    {
+      "name": "Coupling: frontend/package.json \u2194 frontend/package-lock.json",
+      "passed": true,
+      "expected": "Jaccard \u2265 0.90",
+      "actual": "0.9365",
+      "details": "High coupling pair should be detected"
+    },
+    {
+      "name": "Coupling: poetry.lock \u2194 pyproject.toml",
+      "passed": false,
+      "expected": "Jaccard \u2265 0.50",
+      "actual": "0.1622",
+      "details": "High coupling pair should be detected"
+    },
+    {
+      "name": "Coupling: frontend/src/i18n/translation. \u2194 frontend/src/i18n/declaration.",
+      "passed": true,
+      "expected": "Jaccard \u2265 0.80",
+      "actual": "0.6667",
+      "details": "High coupling pair should be detected"
+    },
+    {
+      "name": "Clustering louvain: Cluster Count",
+      "passed": true,
+      "expected": "5-500 clusters",
+      "actual": "280",
+      "details": "Should produce meaningful clusters"
+    },
+    {
+      "name": "Clustering louvain: Avg Cluster Size",
+      "passed": false,
+      "expected": "\u22652 files/cluster",
+      "actual": "1.0",
+      "details": "Range: 1-2"
+    },
+    {
+      "name": "Clustering louvain: Has Insights",
+      "passed": true,
+      "expected": "avg_coupling > 0",
+      "actual": "True",
+      "details": "Clusters should have coupling metrics"
+    },
+    {
+      "name": "Clustering: spectral",
+      "passed": false,
+      "expected": "clusters",
+      "actual": "500 Server Error: Internal Server Error for url: http://localhost:8000/repos/openhands/clustering/run",
+      "details": "Algorithm failed"
+    },
+    {
+      "name": "Clustering hierarchical: Cluster Count",
+      "passed": false,
+      "expected": "5-500 clusters",
+      "actual": "1",
+      "details": "Should produce meaningful clusters"
+    },
+    {
+      "name": "Clustering hierarchical: Avg Cluster Size",
+      "passed": true,
+      "expected": "\u22652 files/cluster",
+      "actual": "281.0",
+      "details": "Range: 281-281"
+    },
+    {
+      "name": "Clustering hierarchical: Has Insights",
+      "passed": true,
+      "expected": "avg_coupling > 0",
+      "actual": "True",
+      "details": "Clusters should have coupling metrics"
+    },
+    {
+      "name": "Component Coupling: openhands \u2192 tests",
+      "passed": false,
+      "expected": "tests in coupled list",
+      "actual": "[]",
+      "details": "Components should show cross-module coupling"
+    },
+    {
+      "name": "Component Coupling: openhands \u2192 frontend",
+      "passed": false,
+      "expected": "frontend in coupled list",
+      "actual": "[]",
+      "details": "Components should show cross-module coupling"
+    },
+    {
+      "name": "Component Coupling: frontend \u2192 openhands",
+      "passed": false,
+      "expected": "openhands in coupled list",
+      "actual": "[]",
+      "details": "Components should show cross-module coupling"
+    },
+    {
+      "name": "Evidence: File IDs for frontend/package.json\u2194frontend/package-lock.json",
+      "passed": 134,
+      "expected": "both file IDs found",
+      "actual": "src=135, dst=134",
+      "details": "Files should be resolved to IDs"
+    },
+    {
+      "name": "Evidence: Commits for frontend/package.json\u2194frontend/package-lock.json",
+      "passed": false,
+      "expected": ">0 common commits",
+      "actual": "0",
+      "details": "High-coupling pairs should have evidence"
+    },
+    {
+      "name": "Evidence: File IDs for poetry.lock\u2194pyproject.toml",
+      "passed": 130,
+      "expected": "both file IDs found",
+      "actual": "src=129, dst=130",
+      "details": "Files should be resolved to IDs"
+    },
+    {
+      "name": "Evidence: Commits for poetry.lock\u2194pyproject.toml",
+      "passed": false,
+      "expected": ">0 common commits",
+      "actual": "0",
+      "details": "High-coupling pairs should have evidence"
+    },
+    {
+      "name": "Evidence: File IDs for frontend/src/i18n/translation.\u2194frontend/src/i18n/declaration.",
+      "passed": 64,
+      "expected": "both file IDs found",
+      "actual": "src=65, dst=64",
+      "details": "Files should be resolved to IDs"
+    },
+    {
+      "name": "Evidence: Commits for frontend/src/i18n/translation.\u2194frontend/src/i18n/declaration.",
+      "passed": false,
+      "expected": ">0 common commits",
+      "actual": "0",
+      "details": "High-coupling pairs should have evidence"
+    },
+    {
+      "name": "Evidence: File IDs for containers/dev/compose.yml\u2194docker-compose.yml",
+      "passed": 133,
+      "expected": "both file IDs found",
+      "actual": "src=132, dst=133",
+      "details": "Files should be resolved to IDs"
+    },
+    {
+      "name": "Evidence: Commits for containers/dev/compose.yml\u2194docker-compose.yml",
+      "passed": false,
+      "expected": ">0 common commits",
+      "actual": "0",
+      "details": "High-coupling pairs should have evidence"
+    },
+    {
+      "name": "Evidence: File IDs for Development.md\u2194containers/dev/compose.yml",
+      "passed": 132,
+      "expected": "both file IDs found",
+      "actual": "src=9, dst=132",
+      "details": "Files should be resolved to IDs"
+    },
+    {
+      "name": "Evidence: Commits for Development.md\u2194containers/dev/compose.yml",
+      "passed": false,
+      "expected": ">0 common commits",
+      "actual": "0",
+      "details": "High-coupling pairs should have evidence"
+    }
+  ]
+}

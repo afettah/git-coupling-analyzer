@@ -1,0 +1,1093 @@
+{
+  "collected_at": "2026-01-31T22:18:01.093310",
+  "folder_count": 51,
+  "folders": [
+    {
+      "folder": "frontend",
+      "depth": 1,
+      "file_count": 172,
+      "total_commits": 357,
+      "avg_commits_per_file": 2.0755813953488373,
+      "hottest_files": [
+        {
+          "path": "frontend/package-lock.json",
+          "commits": 61
+        },
+        {
+          "path": "frontend/package.json",
+          "commits": 61
+        },
+        {
+          "path": "frontend/src/i18n/translation.json",
+          "commits": 9
+        },
+        {
+          "path": "frontend/src/i18n/declaration.ts",
+          "commits": 7
+        },
+        {
+          "path": "frontend/src/mocks/handlers.ts",
+          "commits": 7
+        }
+      ]
+    },
+    {
+      "folder": "openhands",
+      "depth": 1,
+      "file_count": 137,
+      "total_commits": 246,
+      "avg_commits_per_file": 1.7956204379562044,
+      "hottest_files": [
+        {
+          "path": "openhands/runtime/impl/kubernetes/README.md",
+          "commits": 18
+        },
+        {
+          "path": "openhands/server/routes/manage_conversations.py",
+          "commits": 8
+        },
+        {
+          "path": "openhands/server/session/agent_session.py",
+          "commits": 8
+        },
+        {
+          "path": "openhands/runtime/base.py",
+          "commits": 7
+        },
+        {
+          "path": "openhands/resolver/README.md",
+          "commits": 6
+        }
+      ]
+    },
+    {
+      "folder": "frontend/src",
+      "depth": 2,
+      "file_count": 144,
+      "total_commits": 204,
+      "avg_commits_per_file": 1.4166666666666667,
+      "hottest_files": [
+        {
+          "path": "frontend/src/i18n/translation.json",
+          "commits": 9
+        },
+        {
+          "path": "frontend/src/i18n/declaration.ts",
+          "commits": 7
+        },
+        {
+          "path": "frontend/src/mocks/handlers.ts",
+          "commits": 7
+        },
+        {
+          "path": "frontend/src/routes/conversation.tsx",
+          "commits": 4
+        },
+        {
+          "path": "frontend/src/components/shared/modals/settings/settings-form.tsx",
+          "commits": 4
+        }
+      ]
+    },
+    {
+      "folder": "containers",
+      "depth": 1,
+      "file_count": 5,
+      "total_commits": 61,
+      "avg_commits_per_file": 12.2,
+      "hottest_files": [
+        {
+          "path": "containers/dev/compose.yml",
+          "commits": 50
+        },
+        {
+          "path": "containers/app/Dockerfile",
+          "commits": 6
+        },
+        {
+          "path": "containers/app/entrypoint.sh",
+          "commits": 2
+        },
+        {
+          "path": "containers/build.sh",
+          "commits": 2
+        },
+        {
+          "path": "containers/app/config.sh",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "tests",
+      "depth": 1,
+      "file_count": 49,
+      "total_commits": 56,
+      "avg_commits_per_file": 1.1428571428571428,
+      "hottest_files": [
+        {
+          "path": "tests/runtime/test_ipython.py",
+          "commits": 3
+        },
+        {
+          "path": "tests/unit/server/data_models/test_conversation.py",
+          "commits": 2
+        },
+        {
+          "path": "tests/runtime/test_browsing.py",
+          "commits": 2
+        },
+        {
+          "path": "tests/runtime/test_env_vars.py",
+          "commits": 2
+        },
+        {
+          "path": "tests/runtime/test_microagent.py",
+          "commits": 2
+        }
+      ]
+    },
+    {
+      "folder": "frontend/src/hooks",
+      "depth": 3,
+      "file_count": 42,
+      "total_commits": 54,
+      "avg_commits_per_file": 1.2857142857142858,
+      "hottest_files": [
+        {
+          "path": "frontend/src/hooks/mutation/use-submit-feedback.ts",
+          "commits": 3
+        },
+        {
+          "path": "frontend/src/hooks/query/use-conversation-config.ts",
+          "commits": 3
+        },
+        {
+          "path": "frontend/src/hooks/query/use-user-conversation.ts",
+          "commits": 3
+        },
+        {
+          "path": "frontend/src/hooks/use-conversation-name-context-menu.ts",
+          "commits": 2
+        },
+        {
+          "path": "frontend/src/hooks/mutation/use-upload-files.ts",
+          "commits": 2
+        }
+      ]
+    },
+    {
+      "folder": "containers/dev",
+      "depth": 2,
+      "file_count": 1,
+      "total_commits": 50,
+      "avg_commits_per_file": 50.0,
+      "hottest_files": [
+        {
+          "path": "containers/dev/compose.yml",
+          "commits": 50
+        }
+      ]
+    },
+    {
+      "folder": "frontend/src/components",
+      "depth": 3,
+      "file_count": 40,
+      "total_commits": 48,
+      "avg_commits_per_file": 1.2,
+      "hottest_files": [
+        {
+          "path": "frontend/src/components/shared/modals/settings/settings-form.tsx",
+          "commits": 4
+        },
+        {
+          "path": "frontend/src/components/features/chat/chat-message.tsx",
+          "commits": 2
+        },
+        {
+          "path": "frontend/src/components/features/payment/setup-payment-modal.tsx",
+          "commits": 2
+        },
+        {
+          "path": "frontend/src/components/shared/buttons/openhands-logo-button.tsx",
+          "commits": 2
+        },
+        {
+          "path": "frontend/src/components/features/feedback/feedback-form.tsx",
+          "commits": 2
+        }
+      ]
+    },
+    {
+      "folder": "openhands/app_server",
+      "depth": 2,
+      "file_count": 22,
+      "total_commits": 27,
+      "avg_commits_per_file": 1.2272727272727273,
+      "hottest_files": [
+        {
+          "path": "openhands/app_server/sandbox/remote_sandbox_service.py",
+          "commits": 2
+        },
+        {
+          "path": "openhands/app_server/app_conversation/app_conversation_models.py",
+          "commits": 2
+        },
+        {
+          "path": "openhands/app_server/app_conversation/sql_app_conversation_start_task_service.py",
+          "commits": 2
+        },
+        {
+          "path": "openhands/app_server/sandbox/sandbox_spec_service.py",
+          "commits": 2
+        },
+        {
+          "path": "openhands/app_server/app_conversation/sql_app_conversation_info_service.py",
+          "commits": 2
+        }
+      ]
+    },
+    {
+      "folder": "skills",
+      "depth": 1,
+      "file_count": 24,
+      "total_commits": 25,
+      "avg_commits_per_file": 1.0416666666666667,
+      "hottest_files": [
+        {
+          "path": "skills/add_agent.md",
+          "commits": 2
+        },
+        {
+          "path": "skills/add_repo_inst.md",
+          "commits": 1
+        },
+        {
+          "path": "skills/address_pr_comments.md",
+          "commits": 1
+        },
+        {
+          "path": "skills/agent-builder.md",
+          "commits": 1
+        },
+        {
+          "path": "skills/agent_memory.md",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "enterprise",
+      "depth": 1,
+      "file_count": 19,
+      "total_commits": 21,
+      "avg_commits_per_file": 1.105263157894737,
+      "hottest_files": [
+        {
+          "path": "enterprise/README.md",
+          "commits": 2
+        },
+        {
+          "path": "enterprise/poetry.lock",
+          "commits": 2
+        },
+        {
+          "path": "enterprise/migrations/versions/087_bump_condenser_defaults.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/migrations/versions/088_create_blocked_email_domains_table.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/enterprise_local/README.md",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "third_party",
+      "depth": 1,
+      "file_count": 18,
+      "total_commits": 19,
+      "avg_commits_per_file": 1.0555555555555556,
+      "hottest_files": [
+        {
+          "path": "third_party/runtime/impl/daytona/README.md",
+          "commits": 2
+        },
+        {
+          "path": "third_party/containers/e2b-sandbox/Dockerfile",
+          "commits": 1
+        },
+        {
+          "path": "third_party/containers/e2b-sandbox/README.md",
+          "commits": 1
+        },
+        {
+          "path": "third_party/containers/e2b-sandbox/e2b.toml",
+          "commits": 1
+        },
+        {
+          "path": "third_party/runtime/__init__.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "frontend/__tests__",
+      "depth": 2,
+      "file_count": 18,
+      "total_commits": 18,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "frontend/__tests__/components/features/settings/mcp-settings/mcp-server-form.validation.test.tsx",
+          "commits": 1
+        },
+        {
+          "path": "frontend/__tests__/components/features/settings/mcp-settings/mcp-server-list.test.tsx",
+          "commits": 1
+        },
+        {
+          "path": "frontend/__tests__/components/v1/chat/event-content-helpers/get-observation-content.test.ts",
+          "commits": 1
+        },
+        {
+          "path": "frontend/__tests__/services/actions.test.ts",
+          "commits": 1
+        },
+        {
+          "path": "frontend/__tests__/utils/custom-toast-handlers.test.ts",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "frontend/src/i18n",
+      "depth": 3,
+      "file_count": 2,
+      "total_commits": 16,
+      "avg_commits_per_file": 8.0,
+      "hottest_files": [
+        {
+          "path": "frontend/src/i18n/translation.json",
+          "commits": 9
+        },
+        {
+          "path": "frontend/src/i18n/declaration.ts",
+          "commits": 7
+        }
+      ]
+    },
+    {
+      "folder": "evaluation",
+      "depth": 1,
+      "file_count": 9,
+      "total_commits": 15,
+      "avg_commits_per_file": 1.6666666666666667,
+      "hottest_files": [
+        {
+          "path": "evaluation/README.md",
+          "commits": 6
+        },
+        {
+          "path": "evaluation/benchmarks/commit0/run_infer.py",
+          "commits": 2
+        },
+        {
+          "path": "evaluation/benchmarks/discoverybench/run_infer.py",
+          "commits": 1
+        },
+        {
+          "path": "evaluation/benchmarks/swe_bench/run_infer.py",
+          "commits": 1
+        },
+        {
+          "path": "evaluation/benchmarks/testgeneval/run_infer.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "containers/app",
+      "depth": 2,
+      "file_count": 3,
+      "total_commits": 9,
+      "avg_commits_per_file": 3.0,
+      "hottest_files": [
+        {
+          "path": "containers/app/Dockerfile",
+          "commits": 6
+        },
+        {
+          "path": "containers/app/entrypoint.sh",
+          "commits": 2
+        },
+        {
+          "path": "containers/app/config.sh",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "frontend/src/api",
+      "depth": 3,
+      "file_count": 8,
+      "total_commits": 9,
+      "avg_commits_per_file": 1.125,
+      "hottest_files": [
+        {
+          "path": "frontend/src/api/conversation.utils.ts",
+          "commits": 2
+        },
+        {
+          "path": "frontend/src/api/microagent-management-service/microagent-management-service.api.ts",
+          "commits": 1
+        },
+        {
+          "path": "frontend/src/api/settings-service/settings-service.api.ts",
+          "commits": 1
+        },
+        {
+          "path": "frontend/src/api/conversation-service/conversation-service.api.ts",
+          "commits": 1
+        },
+        {
+          "path": "frontend/src/api/git-service/git-service.api.ts",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "openhands/agenthub",
+      "depth": 2,
+      "file_count": 7,
+      "total_commits": 8,
+      "avg_commits_per_file": 1.1428571428571428,
+      "hottest_files": [
+        {
+          "path": "openhands/agenthub/codeact_agent/codeact_agent.py",
+          "commits": 2
+        },
+        {
+          "path": "openhands/agenthub/dummy_agent/agent.py",
+          "commits": 1
+        },
+        {
+          "path": "openhands/agenthub/visualbrowsing_agent/visualbrowsing_agent.py",
+          "commits": 1
+        },
+        {
+          "path": "openhands/agenthub/codeact_agent/README.md",
+          "commits": 1
+        },
+        {
+          "path": "openhands/agenthub/codeact_agent/function_calling.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "frontend/__tests__/components",
+      "depth": 3,
+      "file_count": 8,
+      "total_commits": 8,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "frontend/__tests__/components/features/settings/mcp-settings/mcp-server-form.validation.test.tsx",
+          "commits": 1
+        },
+        {
+          "path": "frontend/__tests__/components/features/settings/mcp-settings/mcp-server-list.test.tsx",
+          "commits": 1
+        },
+        {
+          "path": "frontend/__tests__/components/v1/chat/event-content-helpers/get-observation-content.test.ts",
+          "commits": 1
+        },
+        {
+          "path": "frontend/__tests__/components/features/settings/api-keys-manager.test.tsx",
+          "commits": 1
+        },
+        {
+          "path": "frontend/__tests__/components/features/conversation-panel/conversation-card.test.tsx",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "enterprise/tests",
+      "depth": 2,
+      "file_count": 7,
+      "total_commits": 7,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "enterprise/tests/unit/test_sharing/test_sharing_shared_event_service.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/tests/unit/integrations/github/test_github_v1_callback_processor.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/tests/unit/test_github_view.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/tests/unit/integrations/jira/test_jira_view.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/tests/unit/integrations/jira_dc/test_jira_dc_view.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "evaluation/benchmarks",
+      "depth": 2,
+      "file_count": 6,
+      "total_commits": 7,
+      "avg_commits_per_file": 1.1666666666666667,
+      "hottest_files": [
+        {
+          "path": "evaluation/benchmarks/commit0/run_infer.py",
+          "commits": 2
+        },
+        {
+          "path": "evaluation/benchmarks/discoverybench/run_infer.py",
+          "commits": 1
+        },
+        {
+          "path": "evaluation/benchmarks/swe_bench/run_infer.py",
+          "commits": 1
+        },
+        {
+          "path": "evaluation/benchmarks/testgeneval/run_infer.py",
+          "commits": 1
+        },
+        {
+          "path": "evaluation/benchmarks/commit0/README.md",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "enterprise/tests/unit",
+      "depth": 3,
+      "file_count": 7,
+      "total_commits": 7,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "enterprise/tests/unit/test_sharing/test_sharing_shared_event_service.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/tests/unit/integrations/github/test_github_v1_callback_processor.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/tests/unit/test_github_view.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/tests/unit/integrations/jira/test_jira_view.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/tests/unit/integrations/jira_dc/test_jira_dc_view.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "frontend/__tests__/utils",
+      "depth": 3,
+      "file_count": 7,
+      "total_commits": 7,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "frontend/__tests__/utils/custom-toast-handlers.test.ts",
+          "commits": 1
+        },
+        {
+          "path": "frontend/__tests__/utils/settings-utils.test.ts",
+          "commits": 1
+        },
+        {
+          "path": "frontend/__tests__/utils/toast-duration.test.ts",
+          "commits": 1
+        },
+        {
+          "path": "frontend/__tests__/utils/vscode-url-helper.test.ts",
+          "commits": 1
+        },
+        {
+          "path": "frontend/__tests__/utils/status.test.ts",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": ".github",
+      "depth": 1,
+      "file_count": 4,
+      "total_commits": 6,
+      "avg_commits_per_file": 1.5,
+      "hottest_files": [
+        {
+          "path": ".github/workflows/ghcr-build.yml",
+          "commits": 2
+        },
+        {
+          "path": ".github/pull_request_template.md",
+          "commits": 2
+        },
+        {
+          "path": ".github/workflows/py-tests.yml",
+          "commits": 1
+        },
+        {
+          "path": ".github/workflows/lint-fix.yml",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "openhands/controller",
+      "depth": 2,
+      "file_count": 3,
+      "total_commits": 5,
+      "avg_commits_per_file": 1.6666666666666667,
+      "hottest_files": [
+        {
+          "path": "openhands/controller/agent_controller.py",
+          "commits": 3
+        },
+        {
+          "path": "openhands/controller/agent.py",
+          "commits": 1
+        },
+        {
+          "path": "openhands/controller/state/state.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "openhands-cli",
+      "depth": 1,
+      "file_count": 3,
+      "total_commits": 4,
+      "avg_commits_per_file": 1.3333333333333333,
+      "hottest_files": [
+        {
+          "path": "openhands-cli/uv.lock",
+          "commits": 2
+        },
+        {
+          "path": "openhands-cli/dev_config/python/.pre-commit-config.yaml",
+          "commits": 1
+        },
+        {
+          "path": "openhands-cli/pyproject.toml",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": ".github/workflows",
+      "depth": 2,
+      "file_count": 3,
+      "total_commits": 4,
+      "avg_commits_per_file": 1.3333333333333333,
+      "hottest_files": [
+        {
+          "path": ".github/workflows/ghcr-build.yml",
+          "commits": 2
+        },
+        {
+          "path": ".github/workflows/py-tests.yml",
+          "commits": 1
+        },
+        {
+          "path": ".github/workflows/lint-fix.yml",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "evaluation/benchmarks/commit0",
+      "depth": 3,
+      "file_count": 3,
+      "total_commits": 4,
+      "avg_commits_per_file": 1.3333333333333333,
+      "hottest_files": [
+        {
+          "path": "evaluation/benchmarks/commit0/run_infer.py",
+          "commits": 2
+        },
+        {
+          "path": "evaluation/benchmarks/commit0/README.md",
+          "commits": 1
+        },
+        {
+          "path": "evaluation/benchmarks/commit0/scripts/run_infer.sh",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "enterprise/integrations",
+      "depth": 2,
+      "file_count": 3,
+      "total_commits": 3,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "enterprise/integrations/github/github_v1_callback_processor.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/integrations/github/github_view.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/integrations/utils.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "enterprise/server",
+      "depth": 2,
+      "file_count": 3,
+      "total_commits": 3,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "enterprise/server/sharing/google_cloud_shared_event_service.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/server/sharing/shared_event_router.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/server/sharing/shared_event_service.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "enterprise/server/sharing",
+      "depth": 3,
+      "file_count": 3,
+      "total_commits": 3,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "enterprise/server/sharing/google_cloud_shared_event_service.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/server/sharing/shared_event_router.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/server/sharing/shared_event_service.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "frontend/src/context",
+      "depth": 3,
+      "file_count": 1,
+      "total_commits": 3,
+      "avg_commits_per_file": 3.0,
+      "hottest_files": [
+        {
+          "path": "frontend/src/context/ws-client-provider.tsx",
+          "commits": 3
+        }
+      ]
+    },
+    {
+      "folder": "enterprise/migrations",
+      "depth": 2,
+      "file_count": 2,
+      "total_commits": 2,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "enterprise/migrations/versions/087_bump_condenser_defaults.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/migrations/versions/088_create_blocked_email_domains_table.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "evaluation/utils",
+      "depth": 2,
+      "file_count": 2,
+      "total_commits": 2,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "evaluation/utils/scripts/cleanup_remote_runtime.sh",
+          "commits": 1
+        },
+        {
+          "path": "evaluation/utils/shared.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "enterprise/integrations/github",
+      "depth": 3,
+      "file_count": 2,
+      "total_commits": 2,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "enterprise/integrations/github/github_v1_callback_processor.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/integrations/github/github_view.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "enterprise/migrations/versions",
+      "depth": 3,
+      "file_count": 2,
+      "total_commits": 2,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "enterprise/migrations/versions/087_bump_condenser_defaults.py",
+          "commits": 1
+        },
+        {
+          "path": "enterprise/migrations/versions/088_create_blocked_email_domains_table.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "frontend/__tests__/routes",
+      "depth": 3,
+      "file_count": 2,
+      "total_commits": 2,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "frontend/__tests__/routes/llm-settings.test.tsx",
+          "commits": 1
+        },
+        {
+          "path": "frontend/__tests__/routes/_oh.test.tsx",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "frontend/src/assets",
+      "depth": 3,
+      "file_count": 2,
+      "total_commits": 2,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "frontend/src/assets/branding/openhands-logo.svg",
+          "commits": 1
+        },
+        {
+          "path": "frontend/src/assets/branding/github-logo.svg",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "frontend/src/contexts",
+      "depth": 3,
+      "file_count": 1,
+      "total_commits": 2,
+      "avg_commits_per_file": 2.0,
+      "hottest_files": [
+        {
+          "path": "frontend/src/contexts/conversation-websocket-context.tsx",
+          "commits": 2
+        }
+      ]
+    },
+    {
+      "folder": "dev_config",
+      "depth": 1,
+      "file_count": 1,
+      "total_commits": 1,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "dev_config/python/.pre-commit-config.yaml",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "dev_config/python",
+      "depth": 2,
+      "file_count": 1,
+      "total_commits": 1,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "dev_config/python/.pre-commit-config.yaml",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "enterprise/enterprise_local",
+      "depth": 2,
+      "file_count": 1,
+      "total_commits": 1,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "enterprise/enterprise_local/README.md",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "enterprise/storage",
+      "depth": 2,
+      "file_count": 1,
+      "total_commits": 1,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "enterprise/storage/stored_custom_secrets.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "frontend/.husky",
+      "depth": 2,
+      "file_count": 1,
+      "total_commits": 1,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "frontend/.husky/pre-commit",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "frontend/scripts",
+      "depth": 2,
+      "file_count": 1,
+      "total_commits": 1,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "frontend/scripts/detect-node-version.js",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "openhands-cli/dev_config",
+      "depth": 2,
+      "file_count": 1,
+      "total_commits": 1,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "openhands-cli/dev_config/python/.pre-commit-config.yaml",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "evaluation/benchmarks/discoverybench",
+      "depth": 3,
+      "file_count": 1,
+      "total_commits": 1,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "evaluation/benchmarks/discoverybench/run_infer.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "evaluation/benchmarks/swe_bench",
+      "depth": 3,
+      "file_count": 1,
+      "total_commits": 1,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "evaluation/benchmarks/swe_bench/run_infer.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "evaluation/benchmarks/testgeneval",
+      "depth": 3,
+      "file_count": 1,
+      "total_commits": 1,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "evaluation/benchmarks/testgeneval/run_infer.py",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "evaluation/utils/scripts",
+      "depth": 3,
+      "file_count": 1,
+      "total_commits": 1,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "evaluation/utils/scripts/cleanup_remote_runtime.sh",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "folder": "frontend/__tests__/services",
+      "depth": 3,
+      "file_count": 1,
+      "total_commits": 1,
+      "avg_commits_per_file": 1.0,
+      "hottest_files": [
+        {
+          "path": "frontend/__tests__/services/actions.test.ts",
+          "commits": 1
+        }
+      ]
+    }
+  ]
+}

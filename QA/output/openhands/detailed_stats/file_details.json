@@ -1,0 +1,1312 @@
+{
+  "collected_at": "2026-01-31T22:17:55.255100",
+  "file_count": 100,
+  "files": [
+    {
+      "file_id": 130,
+      "path": "pyproject.toml",
+      "total_commits": 71,
+      "exists_at_head": true,
+      "coupled_file_count": 6,
+      "top_coupling_score": 0.7702702702702703,
+      "top_coupled_file": "frontend/package.json",
+      "coupled_files": [
+        {
+          "file_id": 135,
+          "path": "frontend/package.json",
+          "pair_count": 57.0,
+          "jaccard": 0.7702702702702703,
+          "jaccard_weighted": 0.7702702702702703,
+          "p_dst_given_src": 0.8142857142857143,
+          "p_src_given_dst": 0.9344262295081968
+        },
+        {
+          "file_id": 134,
+          "path": "frontend/package-lock.json",
+          "pair_count": 56.0,
+          "jaccard": 0.7466666666666667,
+          "jaccard_weighted": 0.7466666666666667,
+          "p_dst_given_src": 0.8,
+          "p_src_given_dst": 0.9180327868852459
+        },
+        {
+          "file_id": 132,
+          "path": "containers/dev/compose.yml",
+          "pair_count": 50.0,
+          "jaccard": 0.7142857142857143,
+          "jaccard_weighted": 0.7142857142857143,
+          "p_dst_given_src": 0.7142857142857143,
+          "p_src_given_dst": 1.0
+        },
+        {
+          "file_id": 133,
+          "path": "docker-compose.yml",
+          "pair_count": 43.0,
+          "jaccard": 0.6056338028169014,
+          "jaccard_weighted": 0.6056338028169014,
+          "p_dst_given_src": 0.6142857142857143,
+          "p_src_given_dst": 0.9772727272727273
+        },
+        {
+          "file_id": 136,
+          "path": "openhands/runtime/impl/kubernetes/README.md",
+          "pair_count": 18.0,
+          "jaccard": 0.2571428571428571,
+          "jaccard_weighted": 0.2571428571428571,
+          "p_dst_given_src": 0.2571428571428571,
+          "p_src_given_dst": 1.0
+        }
+      ]
+    },
+    {
+      "file_id": 134,
+      "path": "frontend/package-lock.json",
+      "total_commits": 61,
+      "exists_at_head": true,
+      "coupled_file_count": 5,
+      "top_coupling_score": 0.9365079365079365,
+      "top_coupled_file": "frontend/package.json",
+      "coupled_files": [
+        {
+          "file_id": 135,
+          "path": "frontend/package.json",
+          "pair_count": 59.0,
+          "jaccard": 0.9365079365079365,
+          "jaccard_weighted": 0.9365079365079365,
+          "p_dst_given_src": 0.9672131147540983,
+          "p_src_given_dst": 0.9672131147540983
+        },
+        {
+          "file_id": 132,
+          "path": "containers/dev/compose.yml",
+          "pair_count": 50.0,
+          "jaccard": 0.819672131147541,
+          "jaccard_weighted": 0.819672131147541,
+          "p_dst_given_src": 0.819672131147541,
+          "p_src_given_dst": 1.0
+        },
+        {
+          "file_id": 130,
+          "path": "pyproject.toml",
+          "pair_count": 56.0,
+          "jaccard": 0.7466666666666667,
+          "jaccard_weighted": 0.7466666666666667,
+          "p_dst_given_src": 0.9180327868852459,
+          "p_src_given_dst": 0.8
+        },
+        {
+          "file_id": 133,
+          "path": "docker-compose.yml",
+          "pair_count": 43.0,
+          "jaccard": 0.6935483870967742,
+          "jaccard_weighted": 0.6935483870967742,
+          "p_dst_given_src": 0.7049180327868853,
+          "p_src_given_dst": 0.9772727272727273
+        },
+        {
+          "file_id": 136,
+          "path": "openhands/runtime/impl/kubernetes/README.md",
+          "pair_count": 18.0,
+          "jaccard": 0.29508196721311475,
+          "jaccard_weighted": 0.29508196721311475,
+          "p_dst_given_src": 0.29508196721311475,
+          "p_src_given_dst": 1.0
+        }
+      ]
+    },
+    {
+      "file_id": 135,
+      "path": "frontend/package.json",
+      "total_commits": 61,
+      "exists_at_head": true,
+      "coupled_file_count": 5,
+      "top_coupling_score": 0.9365079365079365,
+      "top_coupled_file": "frontend/package-lock.json",
+      "coupled_files": [
+        {
+          "file_id": 134,
+          "path": "frontend/package-lock.json",
+          "pair_count": 59.0,
+          "jaccard": 0.9365079365079365,
+          "jaccard_weighted": 0.9365079365079365,
+          "p_dst_given_src": 0.9672131147540983,
+          "p_src_given_dst": 0.9672131147540983
+        },
+        {
+          "file_id": 132,
+          "path": "containers/dev/compose.yml",
+          "pair_count": 50.0,
+          "jaccard": 0.819672131147541,
+          "jaccard_weighted": 0.819672131147541,
+          "p_dst_given_src": 0.819672131147541,
+          "p_src_given_dst": 1.0
+        },
+        {
+          "file_id": 130,
+          "path": "pyproject.toml",
+          "pair_count": 57.0,
+          "jaccard": 0.7702702702702703,
+          "jaccard_weighted": 0.7702702702702703,
+          "p_dst_given_src": 0.9344262295081968,
+          "p_src_given_dst": 0.8142857142857143
+        },
+        {
+          "file_id": 133,
+          "path": "docker-compose.yml",
+          "pair_count": 43.0,
+          "jaccard": 0.6935483870967742,
+          "jaccard_weighted": 0.6935483870967742,
+          "p_dst_given_src": 0.7049180327868853,
+          "p_src_given_dst": 0.9772727272727273
+        },
+        {
+          "file_id": 136,
+          "path": "openhands/runtime/impl/kubernetes/README.md",
+          "pair_count": 18.0,
+          "jaccard": 0.29508196721311475,
+          "jaccard_weighted": 0.29508196721311475,
+          "p_dst_given_src": 0.29508196721311475,
+          "p_src_given_dst": 1.0
+        }
+      ]
+    },
+    {
+      "file_id": 132,
+      "path": "containers/dev/compose.yml",
+      "total_commits": 50,
+      "exists_at_head": true,
+      "coupled_file_count": 5,
+      "top_coupling_score": 0.8431372549019608,
+      "top_coupled_file": "docker-compose.yml",
+      "coupled_files": [
+        {
+          "file_id": 133,
+          "path": "docker-compose.yml",
+          "pair_count": 43.0,
+          "jaccard": 0.8431372549019608,
+          "jaccard_weighted": 0.8431372549019608,
+          "p_dst_given_src": 0.86,
+          "p_src_given_dst": 0.9772727272727273
+        },
+        {
+          "file_id": 134,
+          "path": "frontend/package-lock.json",
+          "pair_count": 50.0,
+          "jaccard": 0.819672131147541,
+          "jaccard_weighted": 0.819672131147541,
+          "p_dst_given_src": 1.0,
+          "p_src_given_dst": 0.819672131147541
+        },
+        {
+          "file_id": 135,
+          "path": "frontend/package.json",
+          "pair_count": 50.0,
+          "jaccard": 0.819672131147541,
+          "jaccard_weighted": 0.819672131147541,
+          "p_dst_given_src": 1.0,
+          "p_src_given_dst": 0.819672131147541
+        },
+        {
+          "file_id": 130,
+          "path": "pyproject.toml",
+          "pair_count": 50.0,
+          "jaccard": 0.7142857142857143,
+          "jaccard_weighted": 0.7142857142857143,
+          "p_dst_given_src": 1.0,
+          "p_src_given_dst": 0.7142857142857143
+        },
+        {
+          "file_id": 136,
+          "path": "openhands/runtime/impl/kubernetes/README.md",
+          "pair_count": 18.0,
+          "jaccard": 0.36,
+          "jaccard_weighted": 0.36,
+          "p_dst_given_src": 0.36,
+          "p_src_given_dst": 1.0
+        }
+      ]
+    },
+    {
+      "file_id": 133,
+      "path": "docker-compose.yml",
+      "total_commits": 45,
+      "exists_at_head": true,
+      "coupled_file_count": 5,
+      "top_coupling_score": 0.8431372549019608,
+      "top_coupled_file": "containers/dev/compose.yml",
+      "coupled_files": [
+        {
+          "file_id": 132,
+          "path": "containers/dev/compose.yml",
+          "pair_count": 43.0,
+          "jaccard": 0.8431372549019608,
+          "jaccard_weighted": 0.8431372549019608,
+          "p_dst_given_src": 0.9772727272727273,
+          "p_src_given_dst": 0.86
+        },
+        {
+          "file_id": 134,
+          "path": "frontend/package-lock.json",
+          "pair_count": 43.0,
+          "jaccard": 0.6935483870967742,
+          "jaccard_weighted": 0.6935483870967742,
+          "p_dst_given_src": 0.9772727272727273,
+          "p_src_given_dst": 0.7049180327868853
+        },
+        {
+          "file_id": 135,
+          "path": "frontend/package.json",
+          "pair_count": 43.0,
+          "jaccard": 0.6935483870967742,
+          "jaccard_weighted": 0.6935483870967742,
+          "p_dst_given_src": 0.9772727272727273,
+          "p_src_given_dst": 0.7049180327868853
+        },
+        {
+          "file_id": 130,
+          "path": "pyproject.toml",
+          "pair_count": 43.0,
+          "jaccard": 0.6056338028169014,
+          "jaccard_weighted": 0.6056338028169014,
+          "p_dst_given_src": 0.9772727272727273,
+          "p_src_given_dst": 0.6142857142857143
+        },
+        {
+          "file_id": 136,
+          "path": "openhands/runtime/impl/kubernetes/README.md",
+          "pair_count": 18.0,
+          "jaccard": 0.4090909090909091,
+          "jaccard_weighted": 0.4090909090909091,
+          "p_dst_given_src": 0.4090909090909091,
+          "p_src_given_dst": 1.0
+        }
+      ]
+    },
+    {
+      "file_id": 11,
+      "path": "README.md",
+      "total_commits": 20,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 136,
+      "path": "openhands/runtime/impl/kubernetes/README.md",
+      "total_commits": 18,
+      "exists_at_head": true,
+      "coupled_file_count": 5,
+      "top_coupling_score": 0.4090909090909091,
+      "top_coupled_file": "docker-compose.yml",
+      "coupled_files": [
+        {
+          "file_id": 133,
+          "path": "docker-compose.yml",
+          "pair_count": 18.0,
+          "jaccard": 0.4090909090909091,
+          "jaccard_weighted": 0.4090909090909091,
+          "p_dst_given_src": 1.0,
+          "p_src_given_dst": 0.4090909090909091
+        },
+        {
+          "file_id": 132,
+          "path": "containers/dev/compose.yml",
+          "pair_count": 18.0,
+          "jaccard": 0.36,
+          "jaccard_weighted": 0.36,
+          "p_dst_given_src": 1.0,
+          "p_src_given_dst": 0.36
+        },
+        {
+          "file_id": 134,
+          "path": "frontend/package-lock.json",
+          "pair_count": 18.0,
+          "jaccard": 0.29508196721311475,
+          "jaccard_weighted": 0.29508196721311475,
+          "p_dst_given_src": 1.0,
+          "p_src_given_dst": 0.29508196721311475
+        },
+        {
+          "file_id": 135,
+          "path": "frontend/package.json",
+          "pair_count": 18.0,
+          "jaccard": 0.29508196721311475,
+          "jaccard_weighted": 0.29508196721311475,
+          "p_dst_given_src": 1.0,
+          "p_src_given_dst": 0.29508196721311475
+        },
+        {
+          "file_id": 130,
+          "path": "pyproject.toml",
+          "pair_count": 18.0,
+          "jaccard": 0.2571428571428571,
+          "jaccard_weighted": 0.2571428571428571,
+          "p_dst_given_src": 1.0,
+          "p_src_given_dst": 0.2571428571428571
+        }
+      ]
+    },
+    {
+      "file_id": 129,
+      "path": "poetry.lock",
+      "total_commits": 16,
+      "exists_at_head": true,
+      "coupled_file_count": 1,
+      "top_coupling_score": 0.16216216216216217,
+      "top_coupled_file": "pyproject.toml",
+      "coupled_files": [
+        {
+          "file_id": 130,
+          "path": "pyproject.toml",
+          "pair_count": 12.0,
+          "jaccard": 0.16216216216216217,
+          "jaccard_weighted": 0.16216216216216217,
+          "p_dst_given_src": 0.75,
+          "p_src_given_dst": 0.17142857142857143
+        }
+      ]
+    },
+    {
+      "file_id": 65,
+      "path": "frontend/src/i18n/translation.json",
+      "total_commits": 9,
+      "exists_at_head": true,
+      "coupled_file_count": 1,
+      "top_coupling_score": 0.6666666666666666,
+      "top_coupled_file": "frontend/src/i18n/declaration.ts",
+      "coupled_files": [
+        {
+          "file_id": 64,
+          "path": "frontend/src/i18n/declaration.ts",
+          "pair_count": 6.0,
+          "jaccard": 0.6666666666666666,
+          "jaccard_weighted": 0.6666666666666666,
+          "p_dst_given_src": 0.75,
+          "p_src_given_dst": 0.8571428571428571
+        }
+      ]
+    },
+    {
+      "file_id": 128,
+      "path": "openhands/server/routes/manage_conversations.py",
+      "total_commits": 8,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 181,
+      "path": "openhands/server/session/agent_session.py",
+      "total_commits": 8,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 64,
+      "path": "frontend/src/i18n/declaration.ts",
+      "total_commits": 7,
+      "exists_at_head": true,
+      "coupled_file_count": 1,
+      "top_coupling_score": 0.6666666666666666,
+      "top_coupled_file": "frontend/src/i18n/translation.json",
+      "coupled_files": [
+        {
+          "file_id": 65,
+          "path": "frontend/src/i18n/translation.json",
+          "pair_count": 6.0,
+          "jaccard": 0.6666666666666666,
+          "jaccard_weighted": 0.6666666666666666,
+          "p_dst_given_src": 0.8571428571428571,
+          "p_src_given_dst": 0.75
+        }
+      ]
+    },
+    {
+      "file_id": 89,
+      "path": "frontend/src/mocks/handlers.ts",
+      "total_commits": 7,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 337,
+      "path": "openhands/runtime/base.py",
+      "total_commits": 7,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 14,
+      "path": "evaluation/README.md",
+      "total_commits": 6,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 16,
+      "path": "openhands/resolver/README.md",
+      "total_commits": 6,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 328,
+      "path": "containers/app/Dockerfile",
+      "total_commits": 6,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 342,
+      "path": "openhands/runtime/impl/remote/remote_runtime.py",
+      "total_commits": 5,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 402,
+      "path": "openhands/runtime/utils/runtime_build.py",
+      "total_commits": 5,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 1237,
+      "path": "frontend/vite.config.ts",
+      "total_commits": 5,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 7,
+      "path": "CONTRIBUTING.md",
+      "total_commits": 4,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 9,
+      "path": "Development.md",
+      "total_commits": 4,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 226,
+      "path": "openhands/llm/llm.py",
+      "total_commits": 4,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 266,
+      "path": "frontend/src/routes/conversation.tsx",
+      "total_commits": 4,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 396,
+      "path": "frontend/src/components/shared/modals/settings/settings-form.tsx",
+      "total_commits": 4,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 568,
+      "path": "openhands/server/listen.py",
+      "total_commits": 4,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 589,
+      "path": "openhands/server/session/session.py",
+      "total_commits": 4,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 691,
+      "path": "openhands/utils/prompt.py",
+      "total_commits": 4,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 8,
+      "path": "CREDITS.md",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 15,
+      "path": "openhands/README.md",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 180,
+      "path": "openhands/server/services/conversation_service.py",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 249,
+      "path": "frontend/src/hooks/mutation/use-submit-feedback.ts",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 255,
+      "path": "frontend/src/hooks/query/use-conversation-config.ts",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 263,
+      "path": "frontend/src/hooks/query/use-user-conversation.ts",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 277,
+      "path": "openhands/server/listen_socket.py",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 334,
+      "path": "frontend/src/context/ws-client-provider.tsx",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 345,
+      "path": "openhands/server/conversation_manager/standalone_conversation_manager.py",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 414,
+      "path": "frontend/src/services/settings.ts",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 415,
+      "path": "openhands/core/config/llm_config.py",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 421,
+      "path": "tests/runtime/test_ipython.py",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 569,
+      "path": "openhands/server/middleware.py",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 689,
+      "path": "openhands/core/exceptions.py",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 743,
+      "path": "openhands/core/config/utils.py",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 788,
+      "path": "openhands/controller/agent_controller.py",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 1122,
+      "path": "frontend/src/services/actions.ts",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 1137,
+      "path": ".gitignore",
+      "total_commits": 3,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 10,
+      "path": "ISSUE_TRIAGE.md",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 12,
+      "path": "enterprise/README.md",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 17,
+      "path": "openhands/runtime/README.md",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 18,
+      "path": "skills/add_agent.md",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 33,
+      "path": "openhands/app_server/sandbox/remote_sandbox_service.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 40,
+      "path": "openhands/app_server/app_conversation/app_conversation_models.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 41,
+      "path": "openhands/app_server/app_conversation/sql_app_conversation_start_task_service.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 63,
+      "path": "frontend/src/hooks/use-conversation-name-context-menu.ts",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 93,
+      "path": "frontend/src/components/features/chat/chat-message.tsx",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 96,
+      "path": "frontend/src/contexts/conversation-websocket-context.tsx",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 125,
+      "path": "enterprise/poetry.lock",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 127,
+      "path": "openhands/app_server/sandbox/sandbox_spec_service.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 152,
+      "path": "frontend/src/utils/status.ts",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 155,
+      "path": "openhands/app_server/app_conversation/sql_app_conversation_info_service.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 162,
+      "path": "tests/unit/server/data_models/test_conversation.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 169,
+      "path": "openhands-cli/uv.lock",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 170,
+      "path": "third_party/runtime/impl/daytona/README.md",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 178,
+      "path": "openhands/core/setup.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 184,
+      "path": "openhands/server/user_auth/user_auth.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 187,
+      "path": "openhands/storage/secrets/file_secrets_store.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 188,
+      "path": "openhands/storage/secrets/secrets_store.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 202,
+      "path": "frontend/src/components/features/payment/setup-payment-modal.tsx",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 205,
+      "path": "frontend/src/components/shared/buttons/openhands-logo-button.tsx",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 224,
+      "path": "frontend/src/utils/verified-models.ts",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 239,
+      "path": "frontend/src/api/conversation.utils.ts",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 251,
+      "path": "frontend/src/hooks/mutation/use-upload-files.ts",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 253,
+      "path": "frontend/src/hooks/query/use-active-host.ts",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 262,
+      "path": "frontend/src/hooks/query/use-search-conversations.ts",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 264,
+      "path": "frontend/src/hooks/query/use-vscode-url.ts",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 295,
+      "path": "openhands/runtime/impl/local/local_runtime.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 340,
+      "path": "openhands/runtime/impl/docker/docker_runtime.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 347,
+      "path": "openhands/server/data_models/conversation_info.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 358,
+      "path": "tests/runtime/test_browsing.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 397,
+      "path": "frontend/src/routes/llm-settings.tsx",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 404,
+      "path": "frontend/src/components/features/feedback/feedback-form.tsx",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 419,
+      "path": "tests/runtime/test_env_vars.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 423,
+      "path": "tests/runtime/test_microagent.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 449,
+      "path": "frontend/src/hooks/use-handle-ws-events.ts",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 450,
+      "path": "openhands/integrations/gitlab/gitlab_service.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 470,
+      "path": "openhands/runtime/utils/runtime_templates/Dockerfile.j2",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 486,
+      "path": "openhands/microagent/__init__.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 487,
+      "path": "openhands/microagent/microagent.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 488,
+      "path": "openhands/microagent/types.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 509,
+      "path": "config.template.toml",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 515,
+      "path": "evaluation/benchmarks/commit0/run_infer.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 520,
+      "path": "openhands/agenthub/codeact_agent/codeact_agent.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 522,
+      "path": "openhands/core/config/agent_config.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 541,
+      "path": "frontend/src/routes/root-layout.tsx",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 543,
+      "path": "frontend/src/routes.ts",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 559,
+      "path": "frontend/src/components/features/sidebar/sidebar.tsx",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 567,
+      "path": "openhands/server/app.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 587,
+      "path": "openhands/runtime/impl/action_execution/action_execution_client.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 588,
+      "path": "openhands/server/session/conversation_init_data.py",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    },
+    {
+      "file_id": 624,
+      "path": "frontend/src/icons/code.svg",
+      "total_commits": 2,
+      "exists_at_head": true,
+      "coupled_file_count": 0,
+      "top_coupling_score": 0,
+      "top_coupled_file": null,
+      "coupled_files": []
+    }
+  ]
+}

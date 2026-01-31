@@ -1,0 +1,52 @@
+[
+  {
+    "src_path": "frontend/package.json",
+    "dst_path": "frontend/package-lock.json",
+    "src_id": 135,
+    "dst_id": 134,
+    "evidence": {
+      "status": 500,
+      "error": "500 Server Error: Internal Server Error for url: http://localhost:8000/repos/openhands/coupling/evidence?src_id=135&dst_id=134&limit=20"
+    }
+  },
+  {
+    "src_path": "poetry.lock",
+    "dst_path": "pyproject.toml",
+    "src_id": 129,
+    "dst_id": 130,
+    "evidence": {
+      "status": 500,
+      "error": "500 Server Error: Internal Server Error for url: http://localhost:8000/repos/openhands/coupling/evidence?src_id=129&dst_id=130&limit=20"
+    }
+  },
+  {
+    "src_path": "frontend/src/i18n/translation.json",
+    "dst_path": "frontend/src/i18n/declaration.ts",
+    "src_id": 65,
+    "dst_id": 64,
+    "evidence": {
+      "status": 500,
+      "error": "500 Server Error: Internal Server Error for url: http://localhost:8000/repos/openhands/coupling/evidence?src_id=65&dst_id=64&limit=20"
+    }
+  },
+  {
+    "src_path": "containers/dev/compose.yml",
+    "dst_path": "docker-compose.yml",
+    "src_id": 132,
+    "dst_id": 133,
+    "evidence": {
+      "status": 500,
+      "error": "500 Server Error: Internal Server Error for url: http://localhost:8000/repos/openhands/coupling/evidence?src_id=132&dst_id=133&limit=20"
+    }
+  },
+  {
+    "src_path": "Development.md",
+    "dst_path": "containers/dev/compose.yml",
+    "src_id": 9,
+    "dst_id": 132,
+    "evidence": {
+      "status": 500,
+      "error": "500 Server Error: Internal Server Error for url: http://localhost:8000/repos/openhands/coupling/evidence?src_id=9&dst_id=132&limit=20"
+    }
+  }
+]

@@ -24,3 +24,5 @@ export { CouplingLegend, type CouplingLegendProps, COUPLING_THRESHOLDS } from '.
 // Feedback components
 export { Spinner, LoadingState, EmptyState, ErrorBanner, type SpinnerProps, type LoadingStateProps, type EmptyStateProps, type ErrorBannerProps } from './Feedback';
 
+// Context menu
+export { ContextMenu, type ContextMenuProps, type ContextMenuItem } from './ContextMenu';

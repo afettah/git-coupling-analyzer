@@ -174,6 +174,100 @@ export const getFolders = (repoId: string, depth?: number) =>
 export const getFileHistory = (repoId: string, path: string) =>
     api.get(`/repos/${repoId}/files/${encodeURIComponent(path)}/history`).then(res => res.data);
 
+// File details
+export interface FileDetailsResponse {
+    file_id: number;
+    path: string;
+    exists_at_head: boolean;
+    total_commits: number;
+    first_commit_date: string | null;
+    last_commit_date: string | null;
+    total_lines_added: number;
+    total_lines_deleted: number;
+    authors_count: number;
+    top_author: string | null;
+    coupled_files_count: number;
+    max_coupling: number;
+    strong_coupling_count: number;
+    commits_last_30_days: number;
+    churn_rate: number;
+    risk_score: number;
+}
+
+export interface FileActivityResponse {
+    commits_by_period: Array<{ period: string; count: number }>;
+    lines_by_period: Array<{ period: string; added: number; deleted: number }>;
+    authors_by_period: Array<{ period: string; count: number }>;
+    heatmap_data: Array<{ date: string; count: number }>;
+    day_hour_matrix: Array<{ day: number; hours: number[] }>;
+}
+
+export interface FileAuthor {
+    name: string;
+    commits: number;
+    percentage: number;
+    lines_added: number;
+    lines_deleted: number;
+    first_commit: string | null;
+    last_commit: string | null;
+}
+
+export interface FileAuthorsResponse {
+    authors: FileAuthor[];
+    ownership_timeline: Array<{
+        month: string;
+        authors: Array<{ name: string; commits: number }>;
+    }>;
+}
+
+export interface FileCommit {
+    oid: string;
+    message: string;
+    author: string;
+    date: string | null;
+    lines_added: number;
+    lines_deleted: number;
+}
+
+export interface FileCommitsResponse {
+    commits: FileCommit[];
+    total_count: number;
+}
+
+export interface FolderDetailsResponse {
+    path: string;
+    file_count: number;
+    subfolder_count: number;
+    total_commits: number;
+    total_lines_added: number;
+    total_lines_deleted: number;
+    authors_count: number;
+    top_author: string | null;
+    health_score: number;
+    hot_files: Array<{ path: string; commits: number }>;
+}
+
+export const getFileDetails = (repoId: string, path: string) =>
+    api.get<FileDetailsResponse>(`/repos/${repoId}/files/${encodeURIComponent(path)}/details`).then(res => res.data);
+
+export const getFileActivity = (repoId: string, path: string, granularity: string = 'monthly') =>
+    api.get<FileActivityResponse>(`/repos/${repoId}/files/${encodeURIComponent(path)}/activity`, {
+        params: { granularity }
+    }).then(res => res.data);
+
+export const getFileAuthors = (repoId: string, path: string) =>
+    api.get<FileAuthorsResponse>(`/repos/${repoId}/files/${encodeURIComponent(path)}/authors`).then(res => res.data);
+
+export const getFileCommits = (repoId: string, path: string, params?: {
+    search?: string;
+    exclude_merges?: boolean;
+    limit?: number;
+    offset?: number;
+}) => api.get<FileCommitsResponse>(`/repos/${repoId}/files/${encodeURIComponent(path)}/commits`, { params }).then(res => res.data);
+
+export const getFolderDetails = (repoId: string, path: string) =>
+    api.get<FolderDetailsResponse>(`/repos/${repoId}/folders/${encodeURIComponent(path)}/details`).then(res => res.data);
+
 // Global coupling
 export const getCoupling = (repoId: string, path: string, params?: {
     metric?: string;

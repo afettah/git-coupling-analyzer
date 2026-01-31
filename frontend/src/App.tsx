@@ -88,7 +88,7 @@ function App() {
   );
 }
 
-type DashboardTab = 'graph' | 'tree' | 'clustering' | 'settings';
+type DashboardTab = 'graph' | 'tree' | 'clustering' | 'settings' | 'file-details' | 'folder-details';
 
 function AnalysisDashboardWrapper({ repos }: { repos: RepoInfo[] }) {
   const { repoId, tab } = useParams<{ repoId: string; tab: string }>();

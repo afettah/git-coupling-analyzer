@@ -393,6 +393,645 @@ def get_file_history(
         storage.close()
 
 
+# --- File Details ---
+
+class FileDetails(BaseModel):
+    file_id: int
+    path: str
+    exists_at_head: bool
+    total_commits: int
+    first_commit_date: str | None = None
+    last_commit_date: str | None = None
+    total_lines_added: int = 0
+    total_lines_deleted: int = 0
+    authors_count: int = 0
+    top_author: str | None = None
+    coupled_files_count: int = 0
+    max_coupling: float = 0.0
+    strong_coupling_count: int = 0
+    commits_last_30_days: int = 0
+    churn_rate: float = 0.0
+    risk_score: int = 0
+
+
+class FileActivityData(BaseModel):
+    commits_by_period: List[dict]
+    lines_by_period: List[dict]
+    authors_by_period: List[dict]
+    heatmap_data: List[dict]
+    day_hour_matrix: List[dict]
+
+
+class FileAuthorsData(BaseModel):
+    authors: List[dict]
+    ownership_timeline: List[dict]
+
+
+class FileCommitsData(BaseModel):
+    commits: List[dict]
+    total_count: int
+
+
+class FolderDetails(BaseModel):
+    path: str
+    file_count: int
+    subfolder_count: int
+    total_commits: int
+    total_lines_added: int
+    total_lines_deleted: int
+    authors_count: int
+    top_author: str | None = None
+    health_score: int = 0
+    hot_files: List[dict]
+
+
+@app.get("/repos/{repo_id}/files/{path:path}/details", response_model=FileDetails)
+def get_file_details(
+    repo_id: str,
+    path: str,
+    data_dir: str = "data"
+) -> FileDetails:
+    """Get comprehensive file details including stats, coupling, and activity metrics."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        file_info = storage.get_file_by_path(path)
+        if not file_info:
+            raise HTTPException(404, f"File not found: {path}")
+        
+        file_id = file_info["file_id"]
+        
+        # Get coupling stats
+        coupling_row = storage.conn.execute("""
+            SELECT 
+                COUNT(*) as coupled_count,
+                MAX(jaccard) as max_coupling,
+                SUM(CASE WHEN jaccard > 0.5 THEN 1 ELSE 0 END) as strong_coupling_count
+            FROM (
+                SELECT jaccard FROM edges WHERE src_file_id = ?
+                UNION ALL
+                SELECT jaccard FROM edges WHERE dst_file_id = ?
+            )
+        """, (file_id, file_id)).fetchone()
+        
+        coupled_count = coupling_row[0] if coupling_row else 0
+        max_coupling = coupling_row[1] if coupling_row and coupling_row[1] else 0.0
+        strong_coupling_count = coupling_row[2] if coupling_row and coupling_row[2] else 0
+        
+        # Get activity stats from parquet
+        changes_path = storage.parquet_dir / "changes.parquet"
+        commits_path = storage.parquet_dir / "commits.parquet"
+        
+        total_lines_added = 0
+        total_lines_deleted = 0
+        authors = set()
+        author_commit_counts = {}
+        first_commit_date = None
+        last_commit_date = None
+        commits_last_30_days = 0
+        
+        if changes_path.exists() and commits_path.exists():
+            try:
+                changes_ds = ds.dataset(changes_path)
+                commits_ds = ds.dataset(commits_path)
+                
+                changes_table = changes_ds.to_table(filter=ds.field("file_id") == file_id)
+                commits_table = commits_ds.to_table()
+                
+                commits_lookup = {c["commit_oid"]: c for c in commits_table.to_pylist()}
+                changes = changes_table.to_pylist()
+                
+                from datetime import datetime, timedelta
+                now = datetime.now()
+                thirty_days_ago = now - timedelta(days=30)
+                
+                commit_dates = []
+                
+                for change in changes:
+                    total_lines_added += change.get("lines_added", 0) or 0
+                    total_lines_deleted += change.get("lines_deleted", 0) or 0
+                    
+                    commit_info = commits_lookup.get(change.get("commit_oid"), {})
+                    author = commit_info.get("author_name", "Unknown")
+                    authors.add(author)
+                    author_commit_counts[author] = author_commit_counts.get(author, 0) + 1
+                    
+                    commit_ts = change.get("commit_ts") or commit_info.get("authored_ts")
+                    if commit_ts:
+                        ts = commit_ts.as_py() if hasattr(commit_ts, 'as_py') else commit_ts
+                        if isinstance(ts, datetime):
+                            commit_dates.append(ts)
+                            if ts > thirty_days_ago:
+                                commits_last_30_days += 1
+                
+                if commit_dates:
+                    first_commit_date = min(commit_dates).isoformat()
+                    last_commit_date = max(commit_dates).isoformat()
+                
+            except Exception as e:
+                logger.warning(f"Error reading parquet for file details: {e}")
+        
+        # Calculate top author
+        top_author = None
+        if author_commit_counts:
+            top_author = max(author_commit_counts, key=author_commit_counts.get)
+        
+        # Calculate churn rate (changes per week over the lifetime)
+        total_commits = file_info.get("total_commits", 0) or 0
+        churn_rate = 0.0
+        if first_commit_date and last_commit_date:
+            from datetime import datetime
+            first_dt = datetime.fromisoformat(first_commit_date)
+            last_dt = datetime.fromisoformat(last_commit_date)
+            weeks = max(1, (last_dt - first_dt).days / 7)
+            churn_rate = round(total_commits / weeks, 2)
+        
+        # Calculate risk score (0-100)
+        risk_score = 0
+        if total_commits > 50:
+            risk_score += 20
+        elif total_commits > 20:
+            risk_score += 10
+        
+        if len(authors) > 5:
+            risk_score += 20
+        elif len(authors) > 3:
+            risk_score += 10
+        
+        if max_coupling > 0.7:
+            risk_score += 20
+        elif max_coupling > 0.5:
+            risk_score += 10
+        
+        if commits_last_30_days > 10:
+            risk_score += 20
+        elif commits_last_30_days > 5:
+            risk_score += 10
+        
+        if strong_coupling_count > 3:
+            risk_score += 20
+        elif strong_coupling_count > 1:
+            risk_score += 10
+        
+        return FileDetails(
+            file_id=file_id,
+            path=path,
+            exists_at_head=file_info.get("exists_at_head", True),
+            total_commits=total_commits,
+            first_commit_date=first_commit_date,
+            last_commit_date=last_commit_date,
+            total_lines_added=total_lines_added,
+            total_lines_deleted=total_lines_deleted,
+            authors_count=len(authors),
+            top_author=top_author,
+            coupled_files_count=coupled_count,
+            max_coupling=round(max_coupling, 3),
+            strong_coupling_count=strong_coupling_count,
+            commits_last_30_days=commits_last_30_days,
+            churn_rate=churn_rate,
+            risk_score=min(100, risk_score)
+        )
+    finally:
+        storage.close()
+
+
+@app.get("/repos/{repo_id}/files/{path:path}/activity")
+def get_file_activity(
+    repo_id: str,
+    path: str,
+    granularity: str = "monthly",
+    data_dir: str = "data"
+) -> dict:
+    """Get file activity data for charts."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        file_info = storage.get_file_by_path(path)
+        if not file_info:
+            raise HTTPException(404, f"File not found: {path}")
+        
+        file_id = file_info["file_id"]
+        
+        changes_path = storage.parquet_dir / "changes.parquet"
+        commits_path = storage.parquet_dir / "commits.parquet"
+        
+        commits_by_period = []
+        lines_by_period = []
+        authors_by_period = []
+        heatmap_data = []
+        day_hour_matrix = [[0] * 24 for _ in range(7)]
+        
+        if changes_path.exists() and commits_path.exists():
+            try:
+                from datetime import datetime
+                from collections import defaultdict
+                
+                changes_ds = ds.dataset(changes_path)
+                commits_ds = ds.dataset(commits_path)
+                
+                changes_table = changes_ds.to_table(filter=ds.field("file_id") == file_id)
+                commits_table = commits_ds.to_table()
+                
+                commits_lookup = {c["commit_oid"]: c for c in commits_table.to_pylist()}
+                changes = changes_table.to_pylist()
+                
+                period_commits = defaultdict(int)
+                period_lines_added = defaultdict(int)
+                period_lines_deleted = defaultdict(int)
+                period_authors = defaultdict(set)
+                daily_commits = defaultdict(int)
+                
+                for change in changes:
+                    commit_info = commits_lookup.get(change.get("commit_oid"), {})
+                    commit_ts = change.get("commit_ts") or commit_info.get("authored_ts")
+                    author = commit_info.get("author_name", "Unknown")
+                    
+                    if commit_ts:
+                        ts = commit_ts.as_py() if hasattr(commit_ts, 'as_py') else commit_ts
+                        if isinstance(ts, datetime):
+                            # Period key based on granularity
+                            if granularity == "daily":
+                                period_key = ts.strftime("%Y-%m-%d")
+                            elif granularity == "weekly":
+                                period_key = ts.strftime("%Y-W%W")
+                            elif granularity == "quarterly":
+                                quarter = (ts.month - 1) // 3 + 1
+                                period_key = f"{ts.year}-Q{quarter}"
+                            else:  # monthly
+                                period_key = ts.strftime("%Y-%m")
+                            
+                            period_commits[period_key] += 1
+                            period_lines_added[period_key] += change.get("lines_added", 0) or 0
+                            period_lines_deleted[period_key] += change.get("lines_deleted", 0) or 0
+                            period_authors[period_key].add(author)
+                            
+                            # Daily commits for heatmap
+                            day_key = ts.strftime("%Y-%m-%d")
+                            daily_commits[day_key] += 1
+                            
+                            # Day/hour matrix
+                            day_of_week = ts.weekday()
+                            hour = ts.hour
+                            day_hour_matrix[day_of_week][hour] += 1
+                
+                # Sort periods
+                sorted_periods = sorted(period_commits.keys())
+                
+                commits_by_period = [
+                    {"period": p, "count": period_commits[p]}
+                    for p in sorted_periods
+                ]
+                
+                lines_by_period = [
+                    {"period": p, "added": period_lines_added[p], "deleted": period_lines_deleted[p]}
+                    for p in sorted_periods
+                ]
+                
+                authors_by_period = [
+                    {"period": p, "count": len(period_authors[p])}
+                    for p in sorted_periods
+                ]
+                
+                # Heatmap data
+                heatmap_data = [
+                    {"date": date, "count": count}
+                    for date, count in sorted(daily_commits.items())
+                ]
+                
+            except Exception as e:
+                logger.warning(f"Error reading parquet for file activity: {e}")
+        
+        return {
+            "commits_by_period": commits_by_period,
+            "lines_by_period": lines_by_period,
+            "authors_by_period": authors_by_period,
+            "heatmap_data": heatmap_data,
+            "day_hour_matrix": [
+                {"day": day, "hours": hours}
+                for day, hours in enumerate(day_hour_matrix)
+            ]
+        }
+    finally:
+        storage.close()
+
+
+@app.get("/repos/{repo_id}/files/{path:path}/authors")
+def get_file_authors(
+    repo_id: str,
+    path: str,
+    data_dir: str = "data"
+) -> dict:
+    """Get file author statistics."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        file_info = storage.get_file_by_path(path)
+        if not file_info:
+            raise HTTPException(404, f"File not found: {path}")
+        
+        file_id = file_info["file_id"]
+        
+        changes_path = storage.parquet_dir / "changes.parquet"
+        commits_path = storage.parquet_dir / "commits.parquet"
+        
+        authors = []
+        ownership_timeline = []
+        
+        if changes_path.exists() and commits_path.exists():
+            try:
+                from datetime import datetime
+                from collections import defaultdict
+                
+                changes_ds = ds.dataset(changes_path)
+                commits_ds = ds.dataset(commits_path)
+                
+                changes_table = changes_ds.to_table(filter=ds.field("file_id") == file_id)
+                commits_table = commits_ds.to_table()
+                
+                commits_lookup = {c["commit_oid"]: c for c in commits_table.to_pylist()}
+                changes = changes_table.to_pylist()
+                
+                author_stats = defaultdict(lambda: {
+                    "commits": 0,
+                    "lines_added": 0,
+                    "lines_deleted": 0,
+                    "first_commit": None,
+                    "last_commit": None
+                })
+                
+                author_timeline = defaultdict(lambda: defaultdict(int))
+                
+                for change in changes:
+                    commit_info = commits_lookup.get(change.get("commit_oid"), {})
+                    author = commit_info.get("author_name", "Unknown")
+                    commit_ts = change.get("commit_ts") or commit_info.get("authored_ts")
+                    
+                    stats = author_stats[author]
+                    stats["commits"] += 1
+                    stats["lines_added"] += change.get("lines_added", 0) or 0
+                    stats["lines_deleted"] += change.get("lines_deleted", 0) or 0
+                    
+                    if commit_ts:
+                        ts = commit_ts.as_py() if hasattr(commit_ts, 'as_py') else commit_ts
+                        if isinstance(ts, datetime):
+                            if stats["first_commit"] is None or ts < stats["first_commit"]:
+                                stats["first_commit"] = ts
+                            if stats["last_commit"] is None or ts > stats["last_commit"]:
+                                stats["last_commit"] = ts
+                            
+                            # Monthly timeline
+                            month_key = ts.strftime("%Y-%m")
+                            author_timeline[month_key][author] += 1
+                
+                # Calculate total commits for percentage
+                total_commits = sum(s["commits"] for s in author_stats.values())
+                
+                # Build authors list
+                authors = [
+                    {
+                        "name": name,
+                        "commits": stats["commits"],
+                        "percentage": round(stats["commits"] / total_commits * 100, 1) if total_commits else 0,
+                        "lines_added": stats["lines_added"],
+                        "lines_deleted": stats["lines_deleted"],
+                        "first_commit": stats["first_commit"].isoformat() if stats["first_commit"] else None,
+                        "last_commit": stats["last_commit"].isoformat() if stats["last_commit"] else None
+                    }
+                    for name, stats in author_stats.items()
+                ]
+                
+                # Sort by commits desc
+                authors.sort(key=lambda x: x["commits"], reverse=True)
+                
+                # Build ownership timeline
+                for month in sorted(author_timeline.keys()):
+                    month_data = {"month": month, "authors": []}
+                    for author, count in author_timeline[month].items():
+                        month_data["authors"].append({"name": author, "commits": count})
+                    ownership_timeline.append(month_data)
+                
+            except Exception as e:
+                logger.warning(f"Error reading parquet for file authors: {e}")
+        
+        return {
+            "authors": authors,
+            "ownership_timeline": ownership_timeline
+        }
+    finally:
+        storage.close()
+
+
+@app.get("/repos/{repo_id}/files/{path:path}/commits")
+def get_file_commits(
+    repo_id: str,
+    path: str,
+    search: str | None = None,
+    exclude_merges: bool = False,
+    limit: int = 50,
+    offset: int = 0,
+    data_dir: str = "data"
+) -> dict:
+    """Get file commit history with search and filtering."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        file_info = storage.get_file_by_path(path)
+        if not file_info:
+            raise HTTPException(404, f"File not found: {path}")
+        
+        file_id = file_info["file_id"]
+        
+        changes_path = storage.parquet_dir / "changes.parquet"
+        commits_path = storage.parquet_dir / "commits.parquet"
+        
+        commits = []
+        total_count = 0
+        
+        if changes_path.exists() and commits_path.exists():
+            try:
+                from datetime import datetime
+                
+                changes_ds = ds.dataset(changes_path)
+                commits_ds = ds.dataset(commits_path)
+                
+                changes_table = changes_ds.to_table(filter=ds.field("file_id") == file_id)
+                commits_table = commits_ds.to_table()
+                
+                commits_lookup = {c["commit_oid"]: c for c in commits_table.to_pylist()}
+                changes = changes_table.to_pylist()
+                
+                commit_list = []
+                seen_oids = set()
+                
+                for change in changes:
+                    oid = change.get("commit_oid")
+                    if oid in seen_oids:
+                        continue
+                    seen_oids.add(oid)
+                    
+                    commit_info = commits_lookup.get(oid, {})
+                    message = commit_info.get("message_subject", "")
+                    author = commit_info.get("author_name", "Unknown")
+                    
+                    # Filter merges
+                    if exclude_merges and message.lower().startswith("merge"):
+                        continue
+                    
+                    # Search filter
+                    if search:
+                        search_lower = search.lower()
+                        if (search_lower not in message.lower() and 
+                            search_lower not in author.lower() and
+                            search_lower not in oid.lower()):
+                            continue
+                    
+                    commit_ts = change.get("commit_ts") or commit_info.get("authored_ts")
+                    ts_str = None
+                    if commit_ts:
+                        ts = commit_ts.as_py() if hasattr(commit_ts, 'as_py') else commit_ts
+                        if isinstance(ts, datetime):
+                            ts_str = ts.isoformat()
+                    
+                    commit_list.append({
+                        "oid": oid,
+                        "message": message,
+                        "author": author,
+                        "date": ts_str,
+                        "lines_added": change.get("lines_added", 0) or 0,
+                        "lines_deleted": change.get("lines_deleted", 0) or 0
+                    })
+                
+                # Sort by date desc
+                commit_list.sort(key=lambda x: x["date"] or "", reverse=True)
+                
+                total_count = len(commit_list)
+                commits = commit_list[offset:offset + limit]
+                
+            except Exception as e:
+                logger.warning(f"Error reading parquet for file commits: {e}")
+        
+        return {
+            "commits": commits,
+            "total_count": total_count
+        }
+    finally:
+        storage.close()
+
+
+@app.get("/repos/{repo_id}/folders/{path:path}/details")
+def get_folder_details(
+    repo_id: str,
+    path: str,
+    data_dir: str = "data"
+) -> dict:
+    """Get folder-level aggregated statistics."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        # Get all files in this folder
+        folder_prefix = f"{path}/%"
+        rows = storage.conn.execute("""
+            SELECT file_id, path_current, total_commits
+            FROM files
+            WHERE exists_at_head = TRUE 
+              AND (path_current LIKE ? OR path_current = ?)
+            ORDER BY total_commits DESC
+        """, (folder_prefix, path)).fetchall()
+        
+        if not rows:
+            raise HTTPException(404, f"Folder not found or empty: {path}")
+        
+        file_ids = [r[0] for r in rows]
+        file_count = len(rows)
+        total_commits = sum(r[2] or 0 for r in rows)
+        
+        # Count subfolders
+        subfolder_set = set()
+        path_prefix_len = len(path) + 1  # +1 for the slash
+        for r in rows:
+            file_path = r[1]
+            if file_path and file_path.startswith(path + "/"):
+                relative = file_path[path_prefix_len:]
+                if "/" in relative:
+                    subfolder = relative.split("/")[0]
+                    subfolder_set.add(subfolder)
+        
+        # Get author and line stats from parquet
+        changes_path = storage.parquet_dir / "changes.parquet"
+        commits_path = storage.parquet_dir / "commits.parquet"
+        
+        total_lines_added = 0
+        total_lines_deleted = 0
+        authors = set()
+        author_commit_counts = {}
+        
+        if changes_path.exists() and commits_path.exists():
+            try:
+                changes_ds = ds.dataset(changes_path)
+                commits_ds = ds.dataset(commits_path)
+                
+                # Filter changes by file_ids
+                changes_table = changes_ds.to_table(filter=ds.field("file_id").isin(file_ids))
+                commits_table = commits_ds.to_table()
+                
+                commits_lookup = {c["commit_oid"]: c for c in commits_table.to_pylist()}
+                changes = changes_table.to_pylist()
+                
+                for change in changes:
+                    total_lines_added += change.get("lines_added", 0) or 0
+                    total_lines_deleted += change.get("lines_deleted", 0) or 0
+                    
+                    commit_info = commits_lookup.get(change.get("commit_oid"), {})
+                    author = commit_info.get("author_name", "Unknown")
+                    authors.add(author)
+                    author_commit_counts[author] = author_commit_counts.get(author, 0) + 1
+                    
+            except Exception as e:
+                logger.warning(f"Error reading parquet for folder details: {e}")
+        
+        # Top author
+        top_author = None
+        if author_commit_counts:
+            top_author = max(author_commit_counts, key=author_commit_counts.get)
+        
+        # Calculate health score based on various metrics
+        health_score = 80  # Base score
+        
+        # Penalize for too many files
+        if file_count > 50:
+            health_score -= 10
+        elif file_count > 20:
+            health_score -= 5
+        
+        # Penalize for high churn
+        if total_commits > 500:
+            health_score -= 15
+        elif total_commits > 200:
+            health_score -= 10
+        
+        # Penalize for many authors (potential ownership issues)
+        if len(authors) > 10:
+            health_score -= 10
+        
+        health_score = max(0, min(100, health_score))
+        
+        # Hot files (top 10 by commits)
+        hot_files = [
+            {"path": r[1], "commits": r[2] or 0}
+            for r in rows[:10]
+        ]
+        
+        return {
+            "path": path,
+            "file_count": file_count,
+            "subfolder_count": len(subfolder_set),
+            "total_commits": total_commits,
+            "total_lines_added": total_lines_added,
+            "total_lines_deleted": total_lines_deleted,
+            "authors_count": len(authors),
+            "top_author": top_author,
+            "health_score": health_score,
+            "hot_files": hot_files
+        }
+    finally:
+        storage.close()
+
+
 # --- Global Coupling ---
 
 @app.get("/repos/{repo_id}/coupling", response_model=List[CoupledFile])
@@ -513,17 +1152,17 @@ def get_edge_evidence(
             filter=ds.field("file_id") == src_id,
             columns=["commit_oid"]
         )
-        src_oids = set(src_table.to_pylist())
+        src_oids = {d["commit_oid"] for d in src_table.to_pylist()}
         
         # Get commits for dst
         dst_table = dataset.to_table(
             filter=ds.field("file_id") == dst_id,
             columns=["commit_oid"]
         )
-        dst_oids = set(dst_table.to_pylist())
+        dst_oids = {d["commit_oid"] for d in dst_table.to_pylist()}
         
         # Common OIDs
-        common_oids = {d["commit_oid"] for d in src_table.to_pylist()} & {d["commit_oid"] for d in dst_table.to_pylist()}
+        common_oids = src_oids & dst_oids
         
         if not common_oids:
             return {"commits": [], "src_path": path_map.get(src_id), "dst_path": path_map.get(dst_id)}

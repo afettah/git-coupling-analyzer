@@ -1,0 +1,213 @@
+{
+  "collected_at": "2026-01-31T22:18:01.251447",
+  "file_count": 30,
+  "files": [
+    "pyproject.toml",
+    "frontend/package-lock.json",
+    "frontend/package.json",
+    "containers/dev/compose.yml",
+    "docker-compose.yml",
+    "README.md",
+    "openhands/runtime/impl/kubernetes/README.md",
+    "poetry.lock",
+    "frontend/src/i18n/translation.json",
+    "openhands/server/routes/manage_conversations.py",
+    "openhands/server/session/agent_session.py",
+    "frontend/src/i18n/declaration.ts",
+    "frontend/src/mocks/handlers.ts",
+    "openhands/runtime/base.py",
+    "evaluation/README.md",
+    "openhands/resolver/README.md",
+    "containers/app/Dockerfile",
+    "openhands/runtime/impl/remote/remote_runtime.py",
+    "openhands/runtime/utils/runtime_build.py",
+    "frontend/vite.config.ts",
+    "CONTRIBUTING.md",
+    "Development.md",
+    "openhands/llm/llm.py",
+    "frontend/src/routes/conversation.tsx",
+    "frontend/src/components/shared/modals/settings/settings-form.tsx",
+    "openhands/server/listen.py",
+    "openhands/server/session/session.py",
+    "openhands/utils/prompt.py",
+    "CREDITS.md",
+    "openhands/README.md"
+  ],
+  "matrix": {
+    "pyproject.toml": {
+      "frontend/package.json": {
+        "jaccard": 0.7702702702702703,
+        "pair_count": 57.0
+      },
+      "frontend/package-lock.json": {
+        "jaccard": 0.7466666666666667,
+        "pair_count": 56.0
+      },
+      "containers/dev/compose.yml": {
+        "jaccard": 0.7142857142857143,
+        "pair_count": 50.0
+      },
+      "docker-compose.yml": {
+        "jaccard": 0.6056338028169014,
+        "pair_count": 43.0
+      },
+      "openhands/runtime/impl/kubernetes/README.md": {
+        "jaccard": 0.2571428571428571,
+        "pair_count": 18.0
+      },
+      "poetry.lock": {
+        "jaccard": 0.16216216216216217,
+        "pair_count": 12.0
+      }
+    },
+    "frontend/package-lock.json": {
+      "frontend/package.json": {
+        "jaccard": 0.9365079365079365,
+        "pair_count": 59.0
+      },
+      "containers/dev/compose.yml": {
+        "jaccard": 0.819672131147541,
+        "pair_count": 50.0
+      },
+      "pyproject.toml": {
+        "jaccard": 0.7466666666666667,
+        "pair_count": 56.0
+      },
+      "docker-compose.yml": {
+        "jaccard": 0.6935483870967742,
+        "pair_count": 43.0
+      },
+      "openhands/runtime/impl/kubernetes/README.md": {
+        "jaccard": 0.29508196721311475,
+        "pair_count": 18.0
+      }
+    },
+    "frontend/package.json": {
+      "frontend/package-lock.json": {
+        "jaccard": 0.9365079365079365,
+        "pair_count": 59.0
+      },
+      "containers/dev/compose.yml": {
+        "jaccard": 0.819672131147541,
+        "pair_count": 50.0
+      },
+      "pyproject.toml": {
+        "jaccard": 0.7702702702702703,
+        "pair_count": 57.0
+      },
+      "docker-compose.yml": {
+        "jaccard": 0.6935483870967742,
+        "pair_count": 43.0
+      },
+      "openhands/runtime/impl/kubernetes/README.md": {
+        "jaccard": 0.29508196721311475,
+        "pair_count": 18.0
+      }
+    },
+    "containers/dev/compose.yml": {
+      "docker-compose.yml": {
+        "jaccard": 0.8431372549019608,
+        "pair_count": 43.0
+      },
+      "frontend/package-lock.json": {
+        "jaccard": 0.819672131147541,
+        "pair_count": 50.0
+      },
+      "frontend/package.json": {
+        "jaccard": 0.819672131147541,
+        "pair_count": 50.0
+      },
+      "pyproject.toml": {
+        "jaccard": 0.7142857142857143,
+        "pair_count": 50.0
+      },
+      "openhands/runtime/impl/kubernetes/README.md": {
+        "jaccard": 0.36,
+        "pair_count": 18.0
+      }
+    },
+    "docker-compose.yml": {
+      "containers/dev/compose.yml": {
+        "jaccard": 0.8431372549019608,
+        "pair_count": 43.0
+      },
+      "frontend/package-lock.json": {
+        "jaccard": 0.6935483870967742,
+        "pair_count": 43.0
+      },
+      "frontend/package.json": {
+        "jaccard": 0.6935483870967742,
+        "pair_count": 43.0
+      },
+      "pyproject.toml": {
+        "jaccard": 0.6056338028169014,
+        "pair_count": 43.0
+      },
+      "openhands/runtime/impl/kubernetes/README.md": {
+        "jaccard": 0.4090909090909091,
+        "pair_count": 18.0
+      }
+    },
+    "README.md": {},
+    "openhands/runtime/impl/kubernetes/README.md": {
+      "docker-compose.yml": {
+        "jaccard": 0.4090909090909091,
+        "pair_count": 18.0
+      },
+      "containers/dev/compose.yml": {
+        "jaccard": 0.36,
+        "pair_count": 18.0
+      },
+      "frontend/package-lock.json": {
+        "jaccard": 0.29508196721311475,
+        "pair_count": 18.0
+      },
+      "frontend/package.json": {
+        "jaccard": 0.29508196721311475,
+        "pair_count": 18.0
+      },
+      "pyproject.toml": {
+        "jaccard": 0.2571428571428571,
+        "pair_count": 18.0
+      }
+    },
+    "poetry.lock": {
+      "pyproject.toml": {
+        "jaccard": 0.16216216216216217,
+        "pair_count": 12.0
+      }
+    },
+    "frontend/src/i18n/translation.json": {
+      "frontend/src/i18n/declaration.ts": {
+        "jaccard": 0.6666666666666666,
+        "pair_count": 6.0
+      }
+    },
+    "openhands/server/routes/manage_conversations.py": {},
+    "openhands/server/session/agent_session.py": {},
+    "frontend/src/i18n/declaration.ts": {
+      "frontend/src/i18n/translation.json": {
+        "jaccard": 0.6666666666666666,
+        "pair_count": 6.0
+      }
+    },
+    "frontend/src/mocks/handlers.ts": {},
+    "openhands/runtime/base.py": {},
+    "evaluation/README.md": {},
+    "openhands/resolver/README.md": {},
+    "containers/app/Dockerfile": {},
+    "openhands/runtime/impl/remote/remote_runtime.py": {},
+    "openhands/runtime/utils/runtime_build.py": {},
+    "frontend/vite.config.ts": {},
+    "CONTRIBUTING.md": {},
+    "Development.md": {},
+    "openhands/llm/llm.py": {},
+    "frontend/src/routes/conversation.tsx": {},
+    "frontend/src/components/shared/modals/settings/settings-form.tsx": {},
+    "openhands/server/listen.py": {},
+    "openhands/server/session/session.py": {},
+    "openhands/utils/prompt.py": {},
+    "CREDITS.md": {},
+    "openhands/README.md": {}
+  }
+}

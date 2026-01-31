@@ -1,9 +1,12 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { getFileTree } from '../api';
+import { ContextMenu, type ContextMenuItem } from './shared';
+import { FileCode, Link2, Flame, ClipboardCopy } from 'lucide-react';
 
 interface FolderTreeProps {
     repoId: string;
     onFileSelect?: (path: string) => void;
+    onOpenDetails?: (path: string, type: 'file' | 'folder') => void;
 }
 
 interface TreeNode {
@@ -260,8 +263,8 @@ function SettingsPanel({
                                 key={density}
                                 onClick={() => onSettingsChange({ ...settings, hintDensity: density })}
                                 className={`px-2 py-1 text-xs rounded ${settings.hintDensity === density
-                                        ? 'bg-sky-500/20 text-sky-400 border border-sky-500/50'
-                                        : 'bg-slate-700 text-slate-400 border border-slate-600 hover:border-slate-500'
+                                    ? 'bg-sky-500/20 text-sky-400 border border-sky-500/50'
+                                    : 'bg-slate-700 text-slate-400 border border-slate-600 hover:border-slate-500'
                                     }`}
                             >
                                 {density}
@@ -346,8 +349,8 @@ function QuickFiltersBar({
                         key={f.id}
                         onClick={() => onToggle(f.id)}
                         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border transition-all ${isActive
-                                ? f.color
-                                : 'text-slate-400 bg-slate-800/50 border-slate-600 hover:border-slate-500'
+                            ? f.color
+                            : 'text-slate-400 bg-slate-800/50 border-slate-600 hover:border-slate-500'
                             }`}
                     >
                         <span>{f.icon}</span>
@@ -592,7 +595,7 @@ function countFilters(tree: Record<string, TreeNode>): Record<QuickFilter, numbe
     return counts;
 }
 
-export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
+export default function FolderTree({ repoId, onFileSelect, onOpenDetails }: FolderTreeProps) {
     const [tree, setTree] = useState<Record<string, TreeNode>>({});
     const [loading, setLoading] = useState(true);
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -601,6 +604,13 @@ export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
     const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
     const [activeFilters, setActiveFilters] = useState<Set<QuickFilter>>(new Set());
     const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Context menu state
+    const [contextMenu, setContextMenu] = useState<{
+        open: boolean;
+        position: { x: number; y: number };
+        target: { path: string; type: 'file' | 'folder'; node: TreeNode } | null;
+    }>({ open: false, position: { x: 0, y: 0 }, target: null });
 
     const [settings, setSettings] = useState<FolderTreeSettings>({
         maxDepth: 100,
@@ -677,6 +687,82 @@ export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
         setHoverInfo(null);
     }, []);
 
+    // Context menu handlers
+    const handleContextMenu = useCallback((e: React.MouseEvent, path: string, type: 'file' | 'folder', node: TreeNode) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setContextMenu({
+            open: true,
+            position: { x: e.clientX, y: e.clientY },
+            target: { path, type, node }
+        });
+    }, []);
+
+    const closeContextMenu = useCallback(() => {
+        setContextMenu({ open: false, position: { x: 0, y: 0 }, target: null });
+    }, []);
+
+    const handleCopyPath = useCallback((path: string) => {
+        navigator.clipboard.writeText(path);
+    }, []);
+
+    // Build context menu items
+    const getContextMenuItems = useCallback((): ContextMenuItem[] => {
+        if (!contextMenu.target) return [];
+
+        const { path, type } = contextMenu.target;
+
+        if (type === 'file') {
+            return [
+                {
+                    id: 'open-details',
+                    label: 'Open Details Panel',
+                    icon: <FileCode size={14} />,
+                    onClick: () => onOpenDetails?.(path, 'file'),
+                },
+                { id: 'divider1', label: '', divider: true },
+                {
+                    id: 'copy-path',
+                    label: 'Copy Path',
+                    icon: <ClipboardCopy size={14} />,
+                    shortcut: '⌘C',
+                    onClick: () => handleCopyPath(path),
+                },
+                {
+                    id: 'show-coupling',
+                    label: 'Show Coupled Files',
+                    icon: <Link2 size={14} />,
+                    onClick: () => {
+                        onOpenDetails?.(path, 'file');
+                    },
+                },
+            ];
+        } else {
+            return [
+                {
+                    id: 'open-details',
+                    label: 'Open Details Panel',
+                    icon: <FileCode size={14} />,
+                    onClick: () => onOpenDetails?.(path, 'folder'),
+                },
+                { id: 'divider1', label: '', divider: true },
+                {
+                    id: 'copy-path',
+                    label: 'Copy Path',
+                    icon: <ClipboardCopy size={14} />,
+                    shortcut: '⌘C',
+                    onClick: () => handleCopyPath(path),
+                },
+                {
+                    id: 'show-hot-files',
+                    label: 'Show Hot Files',
+                    icon: <Flame size={14} />,
+                    onClick: () => onOpenDetails?.(path, 'folder'),
+                },
+            ];
+        }
+    }, [contextMenu.target, onOpenDetails, handleCopyPath]);
+
     // Check if node should be visible based on active filters
     const isNodeVisible = useCallback((node: TreeNode, isDir: boolean): boolean => {
         if (activeFilters.size === 0) return true;
@@ -740,10 +826,12 @@ export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
                 <div key={fullPath}>
                     <div
                         className={`group flex items-center gap-1 py-1.5 px-2 hover:bg-slate-800/70 rounded cursor-pointer text-sm transition-colors relative ${folderActivity === 'hot' ? 'bg-red-500/5' :
-                                folderActivity === 'active' ? 'bg-amber-500/5' : ''
+                            folderActivity === 'active' ? 'bg-amber-500/5' : ''
                             }`}
                         style={{ paddingLeft: `${depth * 16 + 8}px` }}
                         onClick={() => toggleExpand(fullPath)}
+                        onDoubleClick={() => onOpenDetails?.(fullPath, 'folder')}
+                        onContextMenu={(e) => handleContextMenu(e, fullPath, 'folder', node)}
                         onMouseEnter={(e) => handleMouseEnter(e, hoverData)}
                         onMouseMove={handleMouseMove}
                         onMouseLeave={handleMouseLeave}
@@ -815,6 +903,8 @@ export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
                     }`}
                 style={{ paddingLeft: `${depth * 16 + 24}px` }}
                 onClick={() => onFileSelect?.(fullPath)}
+                onDoubleClick={() => onOpenDetails?.(fullPath, 'file')}
+                onContextMenu={(e) => handleContextMenu(e, fullPath, 'file', node)}
                 onMouseEnter={(e) => handleMouseEnter(e, fileHoverData)}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
@@ -887,6 +977,15 @@ export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
             </div>
 
             {hoverInfo && <HoverTooltip info={hoverInfo} position={hoverPosition} />}
+
+            {contextMenu.open && (
+                <ContextMenu
+                    open={contextMenu.open}
+                    items={getContextMenuItems()}
+                    position={contextMenu.position}
+                    onClose={closeContextMenu}
+                />
+            )}
         </div>
     );
 }

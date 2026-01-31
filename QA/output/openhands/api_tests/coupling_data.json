@@ -1,0 +1,963 @@
+{
+  "frontend/package.json": {
+    "jaccard": {
+      "status": 200,
+      "data": [
+        {
+          "file_id": 134,
+          "path": "frontend/package-lock.json",
+          "pair_count": 59.0,
+          "jaccard": 0.9365079365079365,
+          "jaccard_weighted": 0.9365079365079365,
+          "p_dst_given_src": 0.9672131147540983,
+          "p_src_given_dst": 0.9672131147540983
+        },
+        {
+          "file_id": 132,
+          "path": "containers/dev/compose.yml",
+          "pair_count": 50.0,
+          "jaccard": 0.819672131147541,
+          "jaccard_weighted": 0.819672131147541,
+          "p_dst_given_src": 0.819672131147541,
+          "p_src_given_dst": 1.0
+        },
+        {
+          "file_id": 130,
+          "path": "pyproject.toml",
+          "pair_count": 57.0,
+          "jaccard": 0.7702702702702703,
+          "jaccard_weighted": 0.7702702702702703,
+          "p_dst_given_src": 0.9344262295081968,
+          "p_src_given_dst": 0.8142857142857143
+        },
+        {
+          "file_id": 133,
+          "path": "docker-compose.yml",
+          "pair_count": 43.0,
+          "jaccard": 0.6935483870967742,
+          "jaccard_weighted": 0.6935483870967742,
+          "p_dst_given_src": 0.7049180327868853,
+          "p_src_given_dst": 0.9772727272727273
+        },
+        {
+          "file_id": 136,
+          "path": "openhands/runtime/impl/kubernetes/README.md",
+          "pair_count": 18.0,
+          "jaccard": 0.29508196721311475,
+          "jaccard_weighted": 0.29508196721311475,
+          "p_dst_given_src": 0.29508196721311475,
+          "p_src_given_dst": 1.0
+        }
+      ]
+    },
+    "jaccard_weighted": {
+      "status": 200,
+      "data": [
+        {
+          "file_id": 134,
+          "path": "frontend/package-lock.json",
+          "pair_count": 59.0,
+          "jaccard": 0.9365079365079365,
+          "jaccard_weighted": 0.9365079365079365,
+          "p_dst_given_src": 0.9672131147540983,
+          "p_src_given_dst": 0.9672131147540983
+        },
+        {
+          "file_id": 132,
+          "path": "containers/dev/compose.yml",
+          "pair_count": 50.0,
+          "jaccard": 0.819672131147541,
+          "jaccard_weighted": 0.819672131147541,
+          "p_dst_given_src": 0.819672131147541,
+          "p_src_given_dst": 1.0
+        },
+        {
+          "file_id": 130,
+          "path": "pyproject.toml",
+          "pair_count": 57.0,
+          "jaccard": 0.7702702702702703,
+          "jaccard_weighted": 0.7702702702702703,
+          "p_dst_given_src": 0.9344262295081968,
+          "p_src_given_dst": 0.8142857142857143
+        },
+        {
+          "file_id": 133,
+          "path": "docker-compose.yml",
+          "pair_count": 43.0,
+          "jaccard": 0.6935483870967742,
+          "jaccard_weighted": 0.6935483870967742,
+          "p_dst_given_src": 0.7049180327868853,
+          "p_src_given_dst": 0.9772727272727273
+        },
+        {
+          "file_id": 136,
+          "path": "openhands/runtime/impl/kubernetes/README.md",
+          "pair_count": 18.0,
+          "jaccard": 0.29508196721311475,
+          "jaccard_weighted": 0.29508196721311475,
+          "p_dst_given_src": 0.29508196721311475,
+          "p_src_given_dst": 1.0
+        }
+      ]
+    },
+    "graph": {
+      "status": 200,
+      "data": {
+        "nodes": [
+          {
+            "id": 130,
+            "path": "pyproject.toml",
+            "is_focus": false
+          },
+          {
+            "id": 132,
+            "path": "containers/dev/compose.yml",
+            "is_focus": false
+          },
+          {
+            "id": 133,
+            "path": "docker-compose.yml",
+            "is_focus": false
+          },
+          {
+            "id": 134,
+            "path": "frontend/package-lock.json",
+            "is_focus": false
+          },
+          {
+            "id": 135,
+            "path": "frontend/package.json",
+            "is_focus": true
+          },
+          {
+            "id": 136,
+            "path": "openhands/runtime/impl/kubernetes/README.md",
+            "is_focus": false
+          }
+        ],
+        "edges": [
+          {
+            "source": 135,
+            "target": 134,
+            "weight": 0.9365079365079365,
+            "pair_count": 59.0,
+            "src_count": 61,
+            "dst_count": 61,
+            "jaccard": 0.9365079365079365,
+            "jaccard_weighted": 0.9365079365079365,
+            "p_dst_given_src": 0.9672131147540983,
+            "p_src_given_dst": 0.9672131147540983
+          },
+          {
+            "source": 135,
+            "target": 132,
+            "weight": 0.819672131147541,
+            "pair_count": 50.0,
+            "src_count": 61,
+            "dst_count": 50,
+            "jaccard": 0.819672131147541,
+            "jaccard_weighted": 0.819672131147541,
+            "p_dst_given_src": 0.819672131147541,
+            "p_src_given_dst": 1.0
+          },
+          {
+            "source": 135,
+            "target": 130,
+            "weight": 0.7702702702702703,
+            "pair_count": 57.0,
+            "src_count": 61,
+            "dst_count": 70,
+            "jaccard": 0.7702702702702703,
+            "jaccard_weighted": 0.7702702702702703,
+            "p_dst_given_src": 0.9344262295081968,
+            "p_src_given_dst": 0.8142857142857143
+          },
+          {
+            "source": 135,
+            "target": 133,
+            "weight": 0.6935483870967742,
+            "pair_count": 43.0,
+            "src_count": 61,
+            "dst_count": 44,
+            "jaccard": 0.6935483870967742,
+            "jaccard_weighted": 0.6935483870967742,
+            "p_dst_given_src": 0.7049180327868853,
+            "p_src_given_dst": 0.9772727272727273
+          },
+          {
+            "source": 135,
+            "target": 136,
+            "weight": 0.29508196721311475,
+            "pair_count": 18.0,
+            "src_count": 61,
+            "dst_count": 18,
+            "jaccard": 0.29508196721311475,
+            "jaccard_weighted": 0.29508196721311475,
+            "p_dst_given_src": 0.29508196721311475,
+            "p_src_given_dst": 1.0
+          }
+        ],
+        "focus_id": 135
+      }
+    }
+  },
+  "frontend/package-lock.json": {
+    "jaccard": {
+      "status": 200,
+      "data": [
+        {
+          "file_id": 135,
+          "path": "frontend/package.json",
+          "pair_count": 59.0,
+          "jaccard": 0.9365079365079365,
+          "jaccard_weighted": 0.9365079365079365,
+          "p_dst_given_src": 0.9672131147540983,
+          "p_src_given_dst": 0.9672131147540983
+        },
+        {
+          "file_id": 132,
+          "path": "containers/dev/compose.yml",
+          "pair_count": 50.0,
+          "jaccard": 0.819672131147541,
+          "jaccard_weighted": 0.819672131147541,
+          "p_dst_given_src": 0.819672131147541,
+          "p_src_given_dst": 1.0
+        },
+        {
+          "file_id": 130,
+          "path": "pyproject.toml",
+          "pair_count": 56.0,
+          "jaccard": 0.7466666666666667,
+          "jaccard_weighted": 0.7466666666666667,
+          "p_dst_given_src": 0.9180327868852459,
+          "p_src_given_dst": 0.8
+        },
+        {
+          "file_id": 133,
+          "path": "docker-compose.yml",
+          "pair_count": 43.0,
+          "jaccard": 0.6935483870967742,
+          "jaccard_weighted": 0.6935483870967742,
+          "p_dst_given_src": 0.7049180327868853,
+          "p_src_given_dst": 0.9772727272727273
+        },
+        {
+          "file_id": 136,
+          "path": "openhands/runtime/impl/kubernetes/README.md",
+          "pair_count": 18.0,
+          "jaccard": 0.29508196721311475,
+          "jaccard_weighted": 0.29508196721311475,
+          "p_dst_given_src": 0.29508196721311475,
+          "p_src_given_dst": 1.0
+        }
+      ]
+    },
+    "jaccard_weighted": {
+      "status": 200,
+      "data": [
+        {
+          "file_id": 135,
+          "path": "frontend/package.json",
+          "pair_count": 59.0,
+          "jaccard": 0.9365079365079365,
+          "jaccard_weighted": 0.9365079365079365,
+          "p_dst_given_src": 0.9672131147540983,
+          "p_src_given_dst": 0.9672131147540983
+        },
+        {
+          "file_id": 132,
+          "path": "containers/dev/compose.yml",
+          "pair_count": 50.0,
+          "jaccard": 0.819672131147541,
+          "jaccard_weighted": 0.819672131147541,
+          "p_dst_given_src": 0.819672131147541,
+          "p_src_given_dst": 1.0
+        },
+        {
+          "file_id": 130,
+          "path": "pyproject.toml",
+          "pair_count": 56.0,
+          "jaccard": 0.7466666666666667,
+          "jaccard_weighted": 0.7466666666666667,
+          "p_dst_given_src": 0.9180327868852459,
+          "p_src_given_dst": 0.8
+        },
+        {
+          "file_id": 133,
+          "path": "docker-compose.yml",
+          "pair_count": 43.0,
+          "jaccard": 0.6935483870967742,
+          "jaccard_weighted": 0.6935483870967742,
+          "p_dst_given_src": 0.7049180327868853,
+          "p_src_given_dst": 0.9772727272727273
+        },
+        {
+          "file_id": 136,
+          "path": "openhands/runtime/impl/kubernetes/README.md",
+          "pair_count": 18.0,
+          "jaccard": 0.29508196721311475,
+          "jaccard_weighted": 0.29508196721311475,
+          "p_dst_given_src": 0.29508196721311475,
+          "p_src_given_dst": 1.0
+        }
+      ]
+    },
+    "graph": {
+      "status": 200,
+      "data": {
+        "nodes": [
+          {
+            "id": 130,
+            "path": "pyproject.toml",
+            "is_focus": false
+          },
+          {
+            "id": 132,
+            "path": "containers/dev/compose.yml",
+            "is_focus": false
+          },
+          {
+            "id": 133,
+            "path": "docker-compose.yml",
+            "is_focus": false
+          },
+          {
+            "id": 134,
+            "path": "frontend/package-lock.json",
+            "is_focus": true
+          },
+          {
+            "id": 135,
+            "path": "frontend/package.json",
+            "is_focus": false
+          },
+          {
+            "id": 136,
+            "path": "openhands/runtime/impl/kubernetes/README.md",
+            "is_focus": false
+          }
+        ],
+        "edges": [
+          {
+            "source": 134,
+            "target": 135,
+            "weight": 0.9365079365079365,
+            "pair_count": 59.0,
+            "src_count": 61,
+            "dst_count": 61,
+            "jaccard": 0.9365079365079365,
+            "jaccard_weighted": 0.9365079365079365,
+            "p_dst_given_src": 0.9672131147540983,
+            "p_src_given_dst": 0.9672131147540983
+          },
+          {
+            "source": 134,
+            "target": 132,
+            "weight": 0.819672131147541,
+            "pair_count": 50.0,
+            "src_count": 61,
+            "dst_count": 50,
+            "jaccard": 0.819672131147541,
+            "jaccard_weighted": 0.819672131147541,
+            "p_dst_given_src": 0.819672131147541,
+            "p_src_given_dst": 1.0
+          },
+          {
+            "source": 134,
+            "target": 130,
+            "weight": 0.7466666666666667,
+            "pair_count": 56.0,
+            "src_count": 61,
+            "dst_count": 70,
+            "jaccard": 0.7466666666666667,
+            "jaccard_weighted": 0.7466666666666667,
+            "p_dst_given_src": 0.9180327868852459,
+            "p_src_given_dst": 0.8
+          },
+          {
+            "source": 134,
+            "target": 133,
+            "weight": 0.6935483870967742,
+            "pair_count": 43.0,
+            "src_count": 61,
+            "dst_count": 44,
+            "jaccard": 0.6935483870967742,
+            "jaccard_weighted": 0.6935483870967742,
+            "p_dst_given_src": 0.7049180327868853,
+            "p_src_given_dst": 0.9772727272727273
+          },
+          {
+            "source": 134,
+            "target": 136,
+            "weight": 0.29508196721311475,
+            "pair_count": 18.0,
+            "src_count": 61,
+            "dst_count": 18,
+            "jaccard": 0.29508196721311475,
+            "jaccard_weighted": 0.29508196721311475,
+            "p_dst_given_src": 0.29508196721311475,
+            "p_src_given_dst": 1.0
+          }
+        ],
+        "focus_id": 134
+      }
+    }
+  },
+  "poetry.lock": {
+    "jaccard": {
+      "status": 200,
+      "data": [
+        {
+          "file_id": 130,
+          "path": "pyproject.toml",
+          "pair_count": 12.0,
+          "jaccard": 0.16216216216216217,
+          "jaccard_weighted": 0.16216216216216217,
+          "p_dst_given_src": 0.75,
+          "p_src_given_dst": 0.17142857142857143
+        }
+      ]
+    },
+    "jaccard_weighted": {
+      "status": 200,
+      "data": [
+        {
+          "file_id": 130,
+          "path": "pyproject.toml",
+          "pair_count": 12.0,
+          "jaccard": 0.16216216216216217,
+          "jaccard_weighted": 0.16216216216216217,
+          "p_dst_given_src": 0.75,
+          "p_src_given_dst": 0.17142857142857143
+        }
+      ]
+    },
+    "graph": {
+      "status": 200,
+      "data": {
+        "nodes": [
+          {
+            "id": 129,
+            "path": "poetry.lock",
+            "is_focus": true
+          },
+          {
+            "id": 130,
+            "path": "pyproject.toml",
+            "is_focus": false
+          }
+        ],
+        "edges": [
+          {
+            "source": 129,
+            "target": 130,
+            "weight": 0.16216216216216217,
+            "pair_count": 12.0,
+            "src_count": 16,
+            "dst_count": 70,
+            "jaccard": 0.16216216216216217,
+            "jaccard_weighted": 0.16216216216216217,
+            "p_dst_given_src": 0.75,
+            "p_src_given_dst": 0.17142857142857143
+          }
+        ],
+        "focus_id": 129
+      }
+    }
+  },
+  "pyproject.toml": {
+    "jaccard": {
+      "status": 200,
+      "data": [
+        {
+          "file_id": 135,
+          "path": "frontend/package.json",
+          "pair_count": 57.0,
+          "jaccard": 0.7702702702702703,
+          "jaccard_weighted": 0.7702702702702703,
+          "p_dst_given_src": 0.8142857142857143,
+          "p_src_given_dst": 0.9344262295081968
+        },
+        {
+          "file_id": 134,
+          "path": "frontend/package-lock.json",
+          "pair_count": 56.0,
+          "jaccard": 0.7466666666666667,
+          "jaccard_weighted": 0.7466666666666667,
+          "p_dst_given_src": 0.8,
+          "p_src_given_dst": 0.9180327868852459
+        },
+        {
+          "file_id": 132,
+          "path": "containers/dev/compose.yml",
+          "pair_count": 50.0,
+          "jaccard": 0.7142857142857143,
+          "jaccard_weighted": 0.7142857142857143,
+          "p_dst_given_src": 0.7142857142857143,
+          "p_src_given_dst": 1.0
+        },
+        {
+          "file_id": 133,
+          "path": "docker-compose.yml",
+          "pair_count": 43.0,
+          "jaccard": 0.6056338028169014,
+          "jaccard_weighted": 0.6056338028169014,
+          "p_dst_given_src": 0.6142857142857143,
+          "p_src_given_dst": 0.9772727272727273
+        },
+        {
+          "file_id": 136,
+          "path": "openhands/runtime/impl/kubernetes/README.md",
+          "pair_count": 18.0,
+          "jaccard": 0.2571428571428571,
+          "jaccard_weighted": 0.2571428571428571,
+          "p_dst_given_src": 0.2571428571428571,
+          "p_src_given_dst": 1.0
+        },
+        {
+          "file_id": 129,
+          "path": "poetry.lock",
+          "pair_count": 12.0,
+          "jaccard": 0.16216216216216217,
+          "jaccard_weighted": 0.16216216216216217,
+          "p_dst_given_src": 0.17142857142857143,
+          "p_src_given_dst": 0.75
+        }
+      ]
+    },
+    "jaccard_weighted": {
+      "status": 200,
+      "data": [
+        {
+          "file_id": 135,
+          "path": "frontend/package.json",
+          "pair_count": 57.0,
+          "jaccard": 0.7702702702702703,
+          "jaccard_weighted": 0.7702702702702703,
+          "p_dst_given_src": 0.8142857142857143,
+          "p_src_given_dst": 0.9344262295081968
+        },
+        {
+          "file_id": 134,
+          "path": "frontend/package-lock.json",
+          "pair_count": 56.0,
+          "jaccard": 0.7466666666666667,
+          "jaccard_weighted": 0.7466666666666667,
+          "p_dst_given_src": 0.8,
+          "p_src_given_dst": 0.9180327868852459
+        },
+        {
+          "file_id": 132,
+          "path": "containers/dev/compose.yml",
+          "pair_count": 50.0,
+          "jaccard": 0.7142857142857143,
+          "jaccard_weighted": 0.7142857142857143,
+          "p_dst_given_src": 0.7142857142857143,
+          "p_src_given_dst": 1.0
+        },
+        {
+          "file_id": 133,
+          "path": "docker-compose.yml",
+          "pair_count": 43.0,
+          "jaccard": 0.6056338028169014,
+          "jaccard_weighted": 0.6056338028169014,
+          "p_dst_given_src": 0.6142857142857143,
+          "p_src_given_dst": 0.9772727272727273
+        },
+        {
+          "file_id": 136,
+          "path": "openhands/runtime/impl/kubernetes/README.md",
+          "pair_count": 18.0,
+          "jaccard": 0.2571428571428571,
+          "jaccard_weighted": 0.2571428571428571,
+          "p_dst_given_src": 0.2571428571428571,
+          "p_src_given_dst": 1.0
+        },
+        {
+          "file_id": 129,
+          "path": "poetry.lock",
+          "pair_count": 12.0,
+          "jaccard": 0.16216216216216217,
+          "jaccard_weighted": 0.16216216216216217,
+          "p_dst_given_src": 0.17142857142857143,
+          "p_src_given_dst": 0.75
+        }
+      ]
+    },
+    "graph": {
+      "status": 200,
+      "data": {
+        "nodes": [
+          {
+            "id": 129,
+            "path": "poetry.lock",
+            "is_focus": false
+          },
+          {
+            "id": 130,
+            "path": "pyproject.toml",
+            "is_focus": true
+          },
+          {
+            "id": 132,
+            "path": "containers/dev/compose.yml",
+            "is_focus": false
+          },
+          {
+            "id": 133,
+            "path": "docker-compose.yml",
+            "is_focus": false
+          },
+          {
+            "id": 134,
+            "path": "frontend/package-lock.json",
+            "is_focus": false
+          },
+          {
+            "id": 135,
+            "path": "frontend/package.json",
+            "is_focus": false
+          },
+          {
+            "id": 136,
+            "path": "openhands/runtime/impl/kubernetes/README.md",
+            "is_focus": false
+          }
+        ],
+        "edges": [
+          {
+            "source": 130,
+            "target": 135,
+            "weight": 0.7702702702702703,
+            "pair_count": 57.0,
+            "src_count": 70,
+            "dst_count": 61,
+            "jaccard": 0.7702702702702703,
+            "jaccard_weighted": 0.7702702702702703,
+            "p_dst_given_src": 0.8142857142857143,
+            "p_src_given_dst": 0.9344262295081968
+          },
+          {
+            "source": 130,
+            "target": 134,
+            "weight": 0.7466666666666667,
+            "pair_count": 56.0,
+            "src_count": 70,
+            "dst_count": 61,
+            "jaccard": 0.7466666666666667,
+            "jaccard_weighted": 0.7466666666666667,
+            "p_dst_given_src": 0.8,
+            "p_src_given_dst": 0.9180327868852459
+          },
+          {
+            "source": 130,
+            "target": 132,
+            "weight": 0.7142857142857143,
+            "pair_count": 50.0,
+            "src_count": 70,
+            "dst_count": 50,
+            "jaccard": 0.7142857142857143,
+            "jaccard_weighted": 0.7142857142857143,
+            "p_dst_given_src": 0.7142857142857143,
+            "p_src_given_dst": 1.0
+          },
+          {
+            "source": 130,
+            "target": 133,
+            "weight": 0.6056338028169014,
+            "pair_count": 43.0,
+            "src_count": 70,
+            "dst_count": 44,
+            "jaccard": 0.6056338028169014,
+            "jaccard_weighted": 0.6056338028169014,
+            "p_dst_given_src": 0.6142857142857143,
+            "p_src_given_dst": 0.9772727272727273
+          },
+          {
+            "source": 130,
+            "target": 136,
+            "weight": 0.2571428571428571,
+            "pair_count": 18.0,
+            "src_count": 70,
+            "dst_count": 18,
+            "jaccard": 0.2571428571428571,
+            "jaccard_weighted": 0.2571428571428571,
+            "p_dst_given_src": 0.2571428571428571,
+            "p_src_given_dst": 1.0
+          },
+          {
+            "source": 130,
+            "target": 129,
+            "weight": 0.16216216216216217,
+            "pair_count": 12.0,
+            "src_count": 70,
+            "dst_count": 16,
+            "jaccard": 0.16216216216216217,
+            "jaccard_weighted": 0.16216216216216217,
+            "p_dst_given_src": 0.17142857142857143,
+            "p_src_given_dst": 0.75
+          }
+        ],
+        "focus_id": 130
+      }
+    }
+  },
+  "frontend/src/i18n/translation.json": {
+    "jaccard": {
+      "status": 200,
+      "data": [
+        {
+          "file_id": 64,
+          "path": "frontend/src/i18n/declaration.ts",
+          "pair_count": 6.0,
+          "jaccard": 0.6666666666666666,
+          "jaccard_weighted": 0.6666666666666666,
+          "p_dst_given_src": 0.75,
+          "p_src_given_dst": 0.8571428571428571
+        }
+      ]
+    },
+    "jaccard_weighted": {
+      "status": 200,
+      "data": [
+        {
+          "file_id": 64,
+          "path": "frontend/src/i18n/declaration.ts",
+          "pair_count": 6.0,
+          "jaccard": 0.6666666666666666,
+          "jaccard_weighted": 0.6666666666666666,
+          "p_dst_given_src": 0.75,
+          "p_src_given_dst": 0.8571428571428571
+        }
+      ]
+    },
+    "graph": {
+      "status": 200,
+      "data": {
+        "nodes": [
+          {
+            "id": 64,
+            "path": "frontend/src/i18n/declaration.ts",
+            "is_focus": false
+          },
+          {
+            "id": 65,
+            "path": "frontend/src/i18n/translation.json",
+            "is_focus": true
+          }
+        ],
+        "edges": [
+          {
+            "source": 65,
+            "target": 64,
+            "weight": 0.6666666666666666,
+            "pair_count": 6.0,
+            "src_count": 8,
+            "dst_count": 7,
+            "jaccard": 0.6666666666666666,
+            "jaccard_weighted": 0.6666666666666666,
+            "p_dst_given_src": 0.75,
+            "p_src_given_dst": 0.8571428571428571
+          }
+        ],
+        "focus_id": 65
+      }
+    }
+  },
+  "frontend/src/i18n/declaration.ts": {
+    "jaccard": {
+      "status": 200,
+      "data": [
+        {
+          "file_id": 65,
+          "path": "frontend/src/i18n/translation.json",
+          "pair_count": 6.0,
+          "jaccard": 0.6666666666666666,
+          "jaccard_weighted": 0.6666666666666666,
+          "p_dst_given_src": 0.8571428571428571,
+          "p_src_given_dst": 0.75
+        }
+      ]
+    },
+    "jaccard_weighted": {
+      "status": 200,
+      "data": [
+        {
+          "file_id": 65,
+          "path": "frontend/src/i18n/translation.json",
+          "pair_count": 6.0,
+          "jaccard": 0.6666666666666666,
+          "jaccard_weighted": 0.6666666666666666,
+          "p_dst_given_src": 0.8571428571428571,
+          "p_src_given_dst": 0.75
+        }
+      ]
+    },
+    "graph": {
+      "status": 200,
+      "data": {
+        "nodes": [
+          {
+            "id": 64,
+            "path": "frontend/src/i18n/declaration.ts",
+            "is_focus": true
+          },
+          {
+            "id": 65,
+            "path": "frontend/src/i18n/translation.json",
+            "is_focus": false
+          }
+        ],
+        "edges": [
+          {
+            "source": 64,
+            "target": 65,
+            "weight": 0.6666666666666666,
+            "pair_count": 6.0,
+            "src_count": 7,
+            "dst_count": 8,
+            "jaccard": 0.6666666666666666,
+            "jaccard_weighted": 0.6666666666666666,
+            "p_dst_given_src": 0.8571428571428571,
+            "p_src_given_dst": 0.75
+          }
+        ],
+        "focus_id": 64
+      }
+    }
+  },
+  "openhands/llm/llm.py": {
+    "jaccard": {
+      "status": 200,
+      "data": []
+    },
+    "jaccard_weighted": {
+      "status": 200,
+      "data": []
+    },
+    "graph": {
+      "status": 200,
+      "data": {
+        "nodes": [
+          {
+            "id": 226,
+            "path": "openhands/llm/llm.py",
+            "is_focus": true
+          }
+        ],
+        "edges": [],
+        "focus_id": 226
+      }
+    }
+  },
+  "openhands/controller/agent_controller.py": {
+    "jaccard": {
+      "status": 200,
+      "data": []
+    },
+    "jaccard_weighted": {
+      "status": 200,
+      "data": []
+    },
+    "graph": {
+      "status": 200,
+      "data": {
+        "nodes": [
+          {
+            "id": 788,
+            "path": "openhands/controller/agent_controller.py",
+            "is_focus": true
+          }
+        ],
+        "edges": [],
+        "focus_id": 788
+      }
+    }
+  },
+  "openhands/runtime/base.py": {
+    "jaccard": {
+      "status": 200,
+      "data": []
+    },
+    "jaccard_weighted": {
+      "status": 200,
+      "data": []
+    },
+    "graph": {
+      "status": 200,
+      "data": {
+        "nodes": [
+          {
+            "id": 337,
+            "path": "openhands/runtime/base.py",
+            "is_focus": true
+          }
+        ],
+        "edges": [],
+        "focus_id": 337
+      }
+    }
+  },
+  "openhands/server/session/session.py": {
+    "jaccard": {
+      "status": 200,
+      "data": []
+    },
+    "jaccard_weighted": {
+      "status": 200,
+      "data": []
+    },
+    "graph": {
+      "status": 200,
+      "data": {
+        "nodes": [
+          {
+            "id": 589,
+            "path": "openhands/server/session/session.py",
+            "is_focus": true
+          }
+        ],
+        "edges": [],
+        "focus_id": 589
+      }
+    }
+  },
+  "tests/unit/test_agent_controller.py": {
+    "jaccard": {
+      "status": 404,
+      "error": "404 Client Error: Not Found for url: http://localhost:8000/repos/openhands/coupling?path=tests%2Funit%2Ftest_agent_controller.py&metric=jaccard&min_weight=0.0&limit=50"
+    },
+    "jaccard_weighted": {
+      "status": 404,
+      "error": "404 Client Error: Not Found for url: http://localhost:8000/repos/openhands/coupling?path=tests%2Funit%2Ftest_agent_controller.py&metric=jaccard_weighted&min_weight=0.0&limit=50"
+    },
+    "graph": {
+      "status": 404,
+      "error": "404 Client Error: Not Found for url: http://localhost:8000/repos/openhands/coupling/graph?path=tests%2Funit%2Ftest_agent_controller.py&metric=jaccard&min_weight=0.1&limit=20"
+    }
+  },
+  "tests/unit/test_config.py": {
+    "jaccard": {
+      "status": 200,
+      "data": []
+    },
+    "jaccard_weighted": {
+      "status": 200,
+      "data": []
+    },
+    "graph": {
+      "status": 200,
+      "data": {
+        "nodes": [
+          {
+            "id": 525,
+            "path": "tests/unit/test_config.py",
+            "is_focus": true
+          }
+        ],
+        "edges": [],
+        "focus_id": 525
+      }
+    }
+  }
+}
