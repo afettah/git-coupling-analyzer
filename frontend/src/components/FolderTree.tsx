@@ -19,9 +19,9 @@ interface TreeNode {
 }
 
 interface FolderTreeSettings {
-    maxDepth: number;
-    showFiles: boolean;
-    colorPalette: string[];
+    maxDepth: number;  // Max folder depth to show (files at hidden depths group into visible parent)
+    showFiles: boolean; // When false, files are hidden but counted in parent folders
+    colorPalette: string[]; // Folder colors by depth level
 }
 
 interface HoverInfo {
@@ -89,7 +89,6 @@ function SettingsPanel({
     maxAvailableDepth: number;
 }) {
     const [showPaletteEditor, setShowPaletteEditor] = useState(false);
-    const [customColor, setCustomColor] = useState('#fbbf24');
 
     return (
         <div className="mb-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
@@ -97,26 +96,27 @@ function SettingsPanel({
                 <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Settings</span>
             </div>
 
-            {/* Max Depth Slider */}
+            {/* Folder Depth Slider */}
             <div className="mb-3">
                 <label className="flex items-center justify-between text-xs text-slate-400 mb-1">
-                    <span>Max Depth</span>
+                    <span>Folder Depth</span>
                     <span className="text-slate-300 font-mono">
-                        {settings.maxDepth === maxAvailableDepth ? 'Unlimited' : settings.maxDepth}
+                        {settings.maxDepth >= maxAvailableDepth ? 'All' : `${settings.maxDepth} level${settings.maxDepth > 1 ? 's' : ''}`}
                     </span>
                 </label>
                 <input
                     type="range"
                     min={1}
                     max={maxAvailableDepth}
-                    value={settings.maxDepth}
+                    value={Math.min(settings.maxDepth, maxAvailableDepth)}
                     onChange={(e) => onSettingsChange({ ...settings, maxDepth: parseInt(e.target.value) })}
                     className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-500"
                 />
                 <div className="flex justify-between text-[10px] text-slate-600 mt-0.5">
                     <span>1</span>
-                    <span>{maxAvailableDepth}</span>
+                    <span>All ({maxAvailableDepth})</span>
                 </div>
+                <p className="text-[10px] text-slate-500 mt-1">Files in deeper folders are grouped into visible parents</p>
             </div>
 
             {/* Show Files Toggle */}
@@ -128,10 +128,10 @@ function SettingsPanel({
                         onChange={(e) => onSettingsChange({ ...settings, showFiles: e.target.checked })}
                         className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-900"
                     />
-                    <span className="text-xs text-slate-400">Show files</span>
+                    <span className="text-xs text-slate-400">Show individual files</span>
                 </label>
                 {!settings.showFiles && (
-                    <p className="text-[10px] text-slate-500 mt-1 ml-6">Files are grouped into parent folders</p>
+                    <p className="text-[10px] text-slate-500 mt-1 ml-6">Files are hidden but counted in folder stats</p>
                 )}
             </div>
 
@@ -171,9 +171,11 @@ function SettingsPanel({
                     {showPaletteEditor && (
                         <button
                             onClick={() => {
+                                // Add a new color from the default palette
+                                const nextIndex = settings.colorPalette.length % DEFAULT_FOLDER_PALETTE.length;
                                 onSettingsChange({
                                     ...settings,
-                                    colorPalette: [...settings.colorPalette, customColor]
+                                    colorPalette: [...settings.colorPalette, DEFAULT_FOLDER_PALETTE[nextIndex]]
                                 });
                             }}
                             className="w-5 h-5 rounded border border-dashed border-slate-500 flex items-center justify-center text-slate-500 hover:border-sky-400 hover:text-sky-400"
@@ -359,19 +361,20 @@ export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
         const isExpanded = expanded.has(fullPath);
         const folderColor = getFolderColor(depth);
 
-        // Check if we've reached max depth
-        const atMaxDepth = depth >= settings.maxDepth;
+        // Check if we've reached max folder depth - only affects subfolder visibility, not files
+        const atMaxFolderDepth = depth >= settings.maxDepth;
 
         if (isDir) {
             const children = node.__children || {};
             const stats = aggregateFileStats(node);
 
             // Filter children based on settings
+            // Depth limit only hides sub-folders, files are always shown if showFiles is enabled
             const filteredChildren = Object.entries(children).filter(([, childNode]) => {
                 const childIsDir = childNode.__type === 'dir' || childNode.__children;
-                // If at max depth, don't show any children
-                if (atMaxDepth) return false;
-                // If not showing files, only show directories
+                // If child is a folder and we're at max depth, don't show it
+                if (childIsDir && atMaxFolderDepth) return false;
+                // If not showing files, don't show file nodes (but they're counted in stats)
                 if (!settings.showFiles && !childIsDir) return false;
                 return true;
             });
@@ -405,18 +408,23 @@ export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
                         {/* Inline info badge on hover */}
                         <span className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 text-[10px] text-slate-500">
                             {stats.fileCount > 0 && (
-                                <span title="Files">
+                                <span title="Files" className="flex items-center gap-0.5">
                                     📄 {stats.fileCount}
                                 </span>
                             )}
+                            {stats.childFolders > 0 && (
+                                <span title="Subfolders" className="flex items-center gap-0.5">
+                                    📁 {stats.childFolders}
+                                </span>
+                            )}
                             {stats.commits > 0 && (
-                                <span title="Commits">
+                                <span title="Commits" className="flex items-center gap-0.5">
                                     ⚡ {stats.commits}
                                 </span>
                             )}
                         </span>
                     </div>
-                    {isExpanded && !atMaxDepth && (
+                    {isExpanded && (
                         <div>
                             {filteredChildren
                                 .sort(([a, nodeA], [b, nodeB]) => {
@@ -495,8 +503,8 @@ export default function FolderTree({ repoId, onFileSelect }: FolderTreeProps) {
                 <button
                     onClick={() => setShowSettings(!showSettings)}
                     className={`p-1.5 rounded transition-colors ${showSettings
-                            ? 'bg-sky-500/20 text-sky-400'
-                            : 'text-slate-500 hover:text-slate-400 hover:bg-slate-800'
+                        ? 'bg-sky-500/20 text-sky-400'
+                        : 'text-slate-500 hover:text-slate-400 hover:bg-slate-800'
                         }`}
                     title="Settings"
                 >

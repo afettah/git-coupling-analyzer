@@ -91,11 +91,16 @@ export const DEFAULT_CLUSTER_PALETTES: ColorPalette[] = [
 ];
 
 export const DEFAULT_FOLDER_COLORS = [
-    '#1e293b', // Level 0 - darkest
-    '#334155', // Level 1
-    '#475569', // Level 2
-    '#64748b', // Level 3
-    '#94a3b8'  // Level 4 - lightest
+    '#fbbf24', // amber-400 - Level 0 (root level, most visible)
+    '#34d399', // emerald-400 - Level 1
+    '#60a5fa', // blue-400 - Level 2
+    '#f472b6', // pink-400 - Level 3
+    '#a78bfa', // violet-400 - Level 4
+    '#2dd4bf', // teal-400 - Level 5
+    '#fb923c', // orange-400 - Level 6
+    '#818cf8', // indigo-400 - Level 7
+    '#4ade80', // green-400 - Level 8
+    '#f87171', // red-400 - Level 9 (deepest)
 ];
 
 export const DEFAULT_COLOR_SETTINGS: CityColorSettings = {

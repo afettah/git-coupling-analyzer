@@ -182,13 +182,18 @@ export const CityControls = memo(function CityControls({
                     <input
                         type="range"
                         min="1"
-                        max="6"
+                        max="10"
                         step="1"
                         value={maxDepth}
                         onChange={(e) => onMaxDepthChange(parseInt(e.target.value))}
                         className="w-full accent-blue-500"
                     />
-                    <span className="text-xs text-slate-400">{maxDepth} levels</span>
+                    <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-400">
+                            {maxDepth >= 10 ? 'All levels' : `${maxDepth} level${maxDepth > 1 ? 's' : ''}`}
+                        </span>
+                    </div>
+                    <p className="text-[9px] text-slate-500 mt-0.5">Files in deeper folders grouped in visible parents</p>
                 </ControlGroup>
 
                 {/* Toggles */}
