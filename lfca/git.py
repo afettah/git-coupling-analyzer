@@ -152,3 +152,132 @@ def get_head_oid(repo_path: Path) -> str:
         capture_output=True, text=True, check=True
     )
     return result.stdout.strip()
+
+
+@dataclass(frozen=True)
+class GitRemoteInfo:
+    """Information about the git remote."""
+    remote_url: str | None
+    web_url: str | None
+    provider: str | None  # github, gitlab, azure_devops, bitbucket
+    default_branch: str
+
+
+def get_remote_url(repo_path: Path, remote: str = "origin") -> str | None:
+    """Get the remote URL for a repository."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_path), "remote", "get-url", remote],
+            capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except Exception:
+        pass
+    return None
+
+
+def get_default_branch(repo_path: Path, remote: str = "origin") -> str:
+    """Get the default branch name."""
+    # Try to get from remote HEAD
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_path), "symbolic-ref", f"refs/remotes/{remote}/HEAD"],
+            capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            ref = result.stdout.strip()
+            # refs/remotes/origin/main -> main
+            if ref.startswith(f"refs/remotes/{remote}/"):
+                return ref.split("/")[-1]
+    except Exception:
+        pass
+    
+    # Try common defaults
+    for branch in ["main", "master", "develop"]:
+        try:
+            result = subprocess.run(
+                ["git", "-C", str(repo_path), "rev-parse", "--verify", f"refs/heads/{branch}"],
+                capture_output=True, text=True
+            )
+            if result.returncode == 0:
+                return branch
+        except Exception:
+            pass
+    
+    return "main"
+
+
+def detect_git_provider(remote_url: str) -> str | None:
+    """Detect the git hosting provider from the remote URL."""
+    if not remote_url:
+        return None
+    
+    url_lower = remote_url.lower()
+    
+    if "github.com" in url_lower:
+        return "github"
+    elif "gitlab.com" in url_lower or "gitlab." in url_lower:
+        return "gitlab"
+    elif "dev.azure.com" in url_lower or "visualstudio.com" in url_lower:
+        return "azure_devops"
+    elif "bitbucket.org" in url_lower or "bitbucket." in url_lower:
+        return "bitbucket"
+    
+    return None
+
+
+def transform_to_web_url(remote_url: str) -> str | None:
+    """Transform a git remote URL to a web URL."""
+    if not remote_url:
+        return None
+    
+    url = remote_url.strip()
+    
+    # SSH format: git@github.com:org/repo.git
+    ssh_match = re.match(r'^git@([^:]+):(.+?)(?:\.git)?$', url)
+    if ssh_match:
+        host, path = ssh_match.groups()
+        
+        # Azure DevOps SSH: git@ssh.dev.azure.com:v3/org/project/repo
+        azure_ssh = re.match(r'^ssh\.dev\.azure\.com$', host)
+        if azure_ssh:
+            parts = path.lstrip('/').split('/')
+            if len(parts) >= 4 and parts[0] == 'v3':
+                org, project, repo = parts[1], parts[2], parts[3]
+                return f"https://dev.azure.com/{org}/{project}/_git/{repo}"
+        
+        return f"https://{host}/{path}"
+    
+    # HTTPS format: https://github.com/org/repo.git
+    https_match = re.match(r'^https?://([^/]+)/(.+?)(?:\.git)?$', url)
+    if https_match:
+        host, path = https_match.groups()
+        
+        # Azure DevOps HTTPS: https://org@dev.azure.com/org/project/_git/repo
+        azure_https = re.match(r'^([^@]+)@dev\.azure\.com$', host)
+        if azure_https:
+            # Return clean URL without auth
+            org_match = re.match(r'^([^/]+)/([^/]+)/_git/(.+)$', path)
+            if org_match:
+                org, project, repo = org_match.groups()
+                return f"https://dev.azure.com/{org}/{project}/_git/{repo}"
+        
+        return f"https://{host}/{path}"
+    
+    return None
+
+
+def get_git_remote_info(repo_path: Path, remote: str = "origin") -> GitRemoteInfo:
+    """Get comprehensive git remote information."""
+    remote_url = get_remote_url(repo_path, remote)
+    web_url = transform_to_web_url(remote_url) if remote_url else None
+    provider = detect_git_provider(remote_url) if remote_url else None
+    default_branch = get_default_branch(repo_path, remote)
+    
+    return GitRemoteInfo(
+        remote_url=remote_url,
+        web_url=web_url,
+        provider=provider,
+        default_branch=default_branch
+    )

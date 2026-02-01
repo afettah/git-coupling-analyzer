@@ -249,35 +249,21 @@ File commit counts differ from raw git analysis.
 
 ---
 
-## Metrics
+## Test Scenarios
 
-### Validation Results
+For comprehensive end-to-end test scenarios, expected results, and all API endpoints, see:
 
-| Category | Passed | Failed | Total | Pass Rate |
-|----------|--------|--------|-------|-----------|
-| File Counts | 0 | 1 | 1 | 0% |
-| Hotspot Ranking | 0 | 9 | 9 | 0% |
-| Coupling Pairs | 2 | 1 | 3 | 67% |
-| Clustering | 4 | 3 | 7 | 57% |
-| Component Coupling | 0 | 3 | 3 | 0% |
-| Evidence API | 6 | 4 | 10 | 60% |
-| **Total** | **11** | **22** | **33** | **33%** |
-
-**Note:** Most "failures" are expected behaviors due to filtering, not actual bugs.
-
-### Real Bug Count
-
-| Status | Count |
-|--------|-------|
-| Fixed | 1 |
-| Open | 2 |
-| Known Behavior | 4 |
+**[E2E Test Scenarios](e2e.md)**
 
 ---
 
 ## References
 
-- [API QA Findings Report](../../QA/output/openhands/API_QA_FINDINGS.md)
-- [Validation Report](../../QA/output/openhands/api_tests/VALIDATION_REPORT.md)
-- [Detailed Statistics](../../QA/output/openhands/detailed_stats/)
-- [API Code](../../lfca/api.py)
+- [E2E Test Scenarios](e2e.md)
+- [API QA Findings Report](details/API_QA_FINDINGS.md)
+- [Detailed QA Report](details/DETAILED_QA_REPORT.md)
+- [Ground Truth Findings](details/FINDINGS_REPORT.md)
+- [Validation Report](details/VALIDATION_REPORT.md)
+- [API Test Summary](details/API_TEST_SUMMARY.md)
+- [Detailed Statistics](../../../QA/output/openhands/detailed_stats/)
+- [API Code](../../../lfca/api.py)

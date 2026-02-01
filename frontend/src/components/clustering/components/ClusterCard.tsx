@@ -1,11 +1,11 @@
 /**
  * Cluster Card Component (Refactored)
  * 
- * Displays a summary card for a single cluster.
+ * Displays a summary card for a single cluster with clickable files.
  */
 
 import { useMemo, useState, useCallback } from 'react';
-import { Flame, FolderTree, FileText, ExternalLink } from 'lucide-react';
+import { Flame, FolderTree, FileText, ExternalLink, FileSearch } from 'lucide-react';
 import type { ClusterData, RepoUrlConfig } from '../types';
 import { aggregateFolders, formatNumber, formatPercent, getFileName, getFolderPath, buildFileUrl, countUniqueFolders } from '../utils';
 import { ProgressBar } from '@/components/shared';
@@ -16,6 +16,7 @@ export interface ClusterCardProps {
     onExplore: () => void;
     onExport: () => void;
     repoUrlConfig?: RepoUrlConfig;
+    onFileSelect?: (path: string) => void;
 }
 
 export function ClusterCard({
@@ -23,7 +24,8 @@ export function ClusterCard({
     folderDepth,
     onExplore,
     onExport,
-    repoUrlConfig
+    repoUrlConfig,
+    onFileSelect
 }: ClusterCardProps) {
     const [pathMode, setPathMode] = useState<'name' | 'path'>('name');
 
@@ -137,6 +139,7 @@ export function ClusterCard({
                                 pathMode={pathMode}
                                 folderDepth={folderDepth}
                                 repoUrlConfig={repoUrlConfig}
+                                onFileSelect={onFileSelect}
                             />
                         );
                     })}
@@ -190,6 +193,7 @@ interface FilePreviewItemProps {
     pathMode: 'name' | 'path';
     folderDepth: number;
     repoUrlConfig?: RepoUrlConfig;
+    onFileSelect?: (path: string) => void;
 }
 
 function FilePreviewItem({
@@ -197,7 +201,8 @@ function FilePreviewItem({
     isHot,
     pathMode,
     folderDepth,
-    repoUrlConfig
+    repoUrlConfig,
+    onFileSelect
 }: FilePreviewItemProps) {
     return (
         <div className={`flex items-center justify-between rounded-lg px-3 py-2 ${isHot
@@ -218,6 +223,18 @@ function FilePreviewItem({
                 <span className={`truncate ${isHot ? 'text-rose-200' : 'text-slate-200'}`}>
                     {pathMode === 'name' ? getFileName(file) : file}
                 </span>
+                {onFileSelect && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onFileSelect(file);
+                        }}
+                        className="text-slate-500 hover:text-sky-400 flex-shrink-0"
+                        title="View file details"
+                    >
+                        <FileSearch className="w-3.5 h-3.5" />
+                    </button>
+                )}
                 {repoUrlConfig && (
                     <a
                         href={buildFileUrl(repoUrlConfig, file)}
@@ -225,6 +242,7 @@ function FilePreviewItem({
                         rel="noopener noreferrer"
                         className="text-slate-500 hover:text-sky-400 flex-shrink-0"
                         onClick={(e) => e.stopPropagation()}
+                        title="Open in repository"
                     >
                         <ExternalLink className="w-3 h-3" />
                     </a>

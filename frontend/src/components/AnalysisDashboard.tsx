@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { type RepoInfo, type AnalysisStatus, getAnalysisStatus, startAnalysis } from '../api';
+import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
+import { type RepoInfo, type AnalysisStatus, type GitRemoteInfo, getAnalysisStatus, startAnalysis, getGitInfo } from '../api';
 import { ArrowLeft, Play, BarChart3, Network, Box, Settings2, Loader2, GitCommit, AlertTriangle } from 'lucide-react';
 import ImpactGraph from './ImpactGraph';
 import ClusteringView from './ClusteringView';
@@ -22,18 +23,45 @@ interface AnalysisDashboardProps {
 }
 
 export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange }: AnalysisDashboardProps) {
+    const [searchParams] = useSearchParams();
+    const location = useLocation();
+    const navigate = useNavigate();
     const [status, setStatus] = useState<AnalysisStatus | null>(null);
     const [loading, setLoading] = useState(false);
     const [detailsSelection, setDetailsSelection] = useState<DetailsSelection | null>(null);
+    const [gitInfo, setGitInfo] = useState<GitRemoteInfo | null>(null);
+
+    // Extract file/folder path from URL pathname (e.g., /repos/openhands/file-details/src/app.py)
+    useEffect(() => {
+        const pathMatch = location.pathname.match(/\/repos\/[^/]+\/(file-details|folder-details)\/(.+)/);
+        if (pathMatch) {
+            const type = pathMatch[1] === 'file-details' ? 'file' : 'folder';
+            const filePath = decodeURIComponent(pathMatch[2]);
+            setDetailsSelection({ path: filePath, type });
+        } else if (activeTab !== 'file-details' && activeTab !== 'folder-details') {
+            // Clear selection when navigating away from details tabs
+            setDetailsSelection(null);
+        }
+    }, [location.pathname, activeTab]);
+
+    // Also handle ?file= query param for backwards compatibility (e.g., from clustering view)
+    useEffect(() => {
+        const fileParam = searchParams.get('file');
+        if (fileParam && !detailsSelection) {
+            // Redirect to proper URL format
+            navigate(`/repos/${repo.id}/file-details/${encodeURIComponent(fileParam)}`, { replace: true });
+        }
+    }, [searchParams, detailsSelection, repo.id, navigate]);
 
     const handleOpenDetails = (path: string, type: 'file' | 'folder') => {
-        setDetailsSelection({ path, type });
-        onTabChange(type === 'file' ? 'file-details' : 'folder-details');
+        const tab = type === 'file' ? 'file-details' : 'folder-details';
+        // Navigate to URL with file/folder path
+        navigate(`/repos/${repo.id}/${tab}/${encodeURIComponent(path)}`);
     };
 
     const handleCloseDetails = () => {
         setDetailsSelection(null);
-        onTabChange('tree');
+        navigate(`/repos/${repo.id}/tree`);
     };
 
     const fetchStatus = async () => {
@@ -45,8 +73,18 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
         }
     };
 
+    const fetchGitInfo = async () => {
+        try {
+            const data = await getGitInfo(repo.id);
+            setGitInfo(data);
+        } catch (e) {
+            console.error('Failed to fetch git info:', e);
+        }
+    };
+
     useEffect(() => {
         fetchStatus();
+        fetchGitInfo();
         const interval = setInterval(fetchStatus, 3000);
         return () => clearInterval(interval);
     }, [repo.id]);
@@ -68,9 +106,9 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
     const isFailed = status?.state === 'failed';
 
     return (
-        <div className="flex h-screen bg-slate-950 text-slate-50">
-            {/* Sidebar */}
-            <aside className="w-64 border-r border-slate-800 bg-slate-900 flex flex-col">
+        <div className="min-h-screen bg-slate-950 text-slate-50">
+            {/* Sidebar - fixed position */}
+            <aside className="fixed top-0 left-0 w-64 h-screen border-r border-slate-800 bg-slate-900 flex flex-col z-10">
                 <div className="p-6 border-b border-slate-800">
                     <button
                         onClick={onBack}
@@ -143,10 +181,10 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                 </div>
             </aside>
 
-            {/* Main Content */}
-            <main className="flex-1 overflow-auto flex flex-col">
+            {/* Main Content - offset by sidebar width */}
+            <main className="ml-64 min-h-screen">
                 {isFailed ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+                    <div className="min-h-screen flex flex-col items-center justify-center text-center p-8">
                         <div className="bg-red-500/10 p-6 rounded-2xl text-red-400 mb-6">
                             <AlertTriangle size={64} />
                         </div>
@@ -165,7 +203,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                         </button>
                     </div>
                 ) : !isComplete && !isRunning ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+                    <div className="min-h-screen flex flex-col items-center justify-center text-center p-8">
                         <div className="bg-sky-500/10 p-6 rounded-2xl text-sky-400 mb-6">
                             <GitCommit size={64} />
                         </div>
@@ -182,12 +220,15 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                         </button>
                     </div>
                 ) : (
-                    <div className="flex-1 flex flex-col">
+                    <div className="min-h-screen">
                         {activeTab === 'graph' && <ImpactGraph repoId={repo.id} />}
                         {activeTab === 'tree' && (
                             <FolderTree
                                 repoId={repo.id}
                                 onOpenDetails={handleOpenDetails}
+                                gitWebUrl={gitInfo?.git_web_url ?? undefined}
+                                gitProvider={gitInfo?.git_provider ?? undefined}
+                                defaultBranch={gitInfo?.git_default_branch}
                             />
                         )}
                         {activeTab === 'file-details' && detailsSelection?.type === 'file' && (
@@ -196,8 +237,11 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                                 filePath={detailsSelection.path}
                                 onClose={handleCloseDetails}
                                 onFileSelect={(path) => {
-                                    setDetailsSelection({ path, type: 'file' });
+                                    navigate(`/repos/${repo.id}/file-details/${encodeURIComponent(path)}`);
                                 }}
+                                gitWebUrl={gitInfo?.git_web_url ?? undefined}
+                                gitProvider={gitInfo?.git_provider ?? undefined}
+                                defaultBranch={gitInfo?.git_default_branch}
                             />
                         )}
                         {activeTab === 'folder-details' && detailsSelection?.type === 'folder' && (
@@ -206,9 +250,11 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                                 folderPath={detailsSelection.path}
                                 onClose={handleCloseDetails}
                                 onFileSelect={(path) => {
-                                    setDetailsSelection({ path, type: 'file' });
-                                    onTabChange('file-details');
+                                    navigate(`/repos/${repo.id}/file-details/${encodeURIComponent(path)}`);
                                 }}
+                                gitWebUrl={gitInfo?.git_web_url ?? undefined}
+                                gitProvider={gitInfo?.git_provider ?? undefined}
+                                defaultBranch={gitInfo?.git_default_branch}
                             />
                         )}
                         {activeTab === 'clustering' && <ClusteringView repoId={repo.id} />}

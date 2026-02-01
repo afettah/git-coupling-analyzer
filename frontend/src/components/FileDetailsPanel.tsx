@@ -153,6 +153,12 @@ export function FileDetailsPanel({
     const fileUrl = buildFileUrl(gitWebUrl, gitProvider, defaultBranch, filePath);
     const blameUrl = buildBlameUrl(gitWebUrl, gitProvider, defaultBranch, filePath);
 
+    const handleCopyPath = useCallback(() => {
+        navigator.clipboard.writeText(filePath);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    }, [filePath]);
+
     // Load file details
     useEffect(() => {
         const loadData = async () => {
@@ -184,18 +190,21 @@ export function FileDetailsPanel({
             } else if ((e.metaKey || e.ctrlKey) && e.key === 'o' && fileUrl) {
                 e.preventDefault();
                 window.open(fileUrl, '_blank');
+            } else if (e.key === 'Tab' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                // Tab to cycle through tabs (only when not in an input)
+                const activeElement = document.activeElement;
+                if (activeElement?.tagName !== 'INPUT' && activeElement?.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    const currentIndex = TABS.findIndex(t => t.id === activeTab);
+                    const nextIndex = (currentIndex + 1) % TABS.length;
+                    setActiveTab(TABS[nextIndex].id);
+                }
             }
         };
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [onClose, fileUrl, filePath]);
-
-    const handleCopyPath = useCallback(() => {
-        navigator.clipboard.writeText(filePath);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    }, [filePath]);
+    }, [onClose, fileUrl, activeTab, handleCopyPath]);
 
     if (loading) {
         return (
@@ -221,7 +230,7 @@ export function FileDetailsPanel({
             'text-emerald-400';
 
     return (
-        <div className="h-full flex flex-col bg-slate-900 border-l border-slate-800">
+        <div className="h-full flex flex-col bg-slate-900 border-l border-slate-800 overflow-hidden">
             {/* Header */}
             <div className="p-4 border-b border-slate-800 flex-shrink-0">
                 <div className="flex items-start justify-between gap-4">

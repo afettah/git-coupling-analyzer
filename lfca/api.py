@@ -23,6 +23,22 @@ from lfca.logging_utils import get_logger
 
 logger = get_logger(__name__)
 
+
+def parse_timestamp(ts: int | datetime.datetime | None) -> datetime.datetime | None:
+    """Convert a timestamp (Unix int or datetime) to datetime object."""
+    if ts is None:
+        return None
+    if hasattr(ts, 'as_py'):
+        ts = ts.as_py()
+    if isinstance(ts, datetime.datetime):
+        return ts
+    if isinstance(ts, (int, float)):
+        try:
+            return datetime.datetime.fromtimestamp(ts)
+        except (ValueError, OSError):
+            return None
+    return None
+
 app = FastAPI(title="LFCA API", version="2.0")
 
 app.add_middleware(
@@ -266,10 +282,101 @@ def create_repository(request: CreateRepoRequest) -> RepoInfo:
         "INSERT OR REPLACE INTO repo_meta (key, value) VALUES ('name', ?)",
         (repo_name,)
     )
+    
+    # Detect and store git remote info
+    from lfca.git import get_git_remote_info
+    try:
+        remote_info = get_git_remote_info(repo_path)
+        if remote_info.remote_url:
+            storage.conn.execute(
+                "INSERT OR REPLACE INTO repo_meta (key, value) VALUES ('git_remote_url', ?)",
+                (remote_info.remote_url,)
+            )
+        if remote_info.web_url:
+            storage.conn.execute(
+                "INSERT OR REPLACE INTO repo_meta (key, value) VALUES ('git_web_url', ?)",
+                (remote_info.web_url,)
+            )
+        if remote_info.provider:
+            storage.conn.execute(
+                "INSERT OR REPLACE INTO repo_meta (key, value) VALUES ('git_provider', ?)",
+                (remote_info.provider,)
+            )
+        storage.conn.execute(
+            "INSERT OR REPLACE INTO repo_meta (key, value) VALUES ('git_default_branch', ?)",
+            (remote_info.default_branch,)
+        )
+    except Exception as e:
+        logger.warning(f"Could not detect git remote: {e}")
+    
     storage.conn.commit()
     storage.close()
     
     return RepoInfo(id=repo_id, name=repo_name, state="not_started")
+
+
+# --- Git Remote Info ---
+
+class GitRemoteInfoResponse(BaseModel):
+    git_remote_url: str | None = None
+    git_web_url: str | None = None
+    git_provider: str | None = None
+    git_default_branch: str = "main"
+
+
+@app.get("/repos/{repo_id}/git-info", response_model=GitRemoteInfoResponse)
+def get_git_info(repo_id: str, data_dir: str = "data") -> GitRemoteInfoResponse:
+    """Get git remote information for a repository."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        # Get stored values from repo_meta
+        rows = storage.conn.execute("""
+            SELECT key, value FROM repo_meta 
+            WHERE key IN ('git_remote_url', 'git_web_url', 'git_provider', 'git_default_branch')
+        """).fetchall()
+        
+        meta = {r[0]: r[1] for r in rows}
+        
+        return GitRemoteInfoResponse(
+            git_remote_url=meta.get('git_remote_url'),
+            git_web_url=meta.get('git_web_url'),
+            git_provider=meta.get('git_provider'),
+            git_default_branch=meta.get('git_default_branch', 'main')
+        )
+    finally:
+        storage.close()
+
+
+class UpdateGitInfoRequest(BaseModel):
+    git_web_url: str | None = None
+    git_provider: str | None = None
+    git_default_branch: str | None = None
+
+
+@app.put("/repos/{repo_id}/git-info")
+def update_git_info(repo_id: str, request: UpdateGitInfoRequest, data_dir: str = "data") -> dict:
+    """Manually update git remote information."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        if request.git_web_url is not None:
+            storage.conn.execute(
+                "INSERT OR REPLACE INTO repo_meta (key, value) VALUES ('git_web_url', ?)",
+                (request.git_web_url,)
+            )
+        if request.git_provider is not None:
+            storage.conn.execute(
+                "INSERT OR REPLACE INTO repo_meta (key, value) VALUES ('git_provider', ?)",
+                (request.git_provider,)
+            )
+        if request.git_default_branch is not None:
+            storage.conn.execute(
+                "INSERT OR REPLACE INTO repo_meta (key, value) VALUES ('git_default_branch', ?)",
+                (request.git_default_branch,)
+            )
+        storage.conn.commit()
+        return {"status": "updated"}
+    finally:
+        storage.close()
 
 
 # --- Repository Structure ---
@@ -393,6 +500,50 @@ def get_file_history(
         storage.close()
 
 
+# --- File Lineage ---
+
+class FileLineageEntry(BaseModel):
+    path: str
+    start_commit_oid: str
+    end_commit_oid: str | None = None
+
+
+@app.get("/repos/{repo_id}/files/{path:path}/lineage", response_model=List[FileLineageEntry])
+def get_file_lineage(
+    repo_id: str,
+    path: str,
+    data_dir: str = "data"
+) -> List[FileLineageEntry]:
+    """Get file rename/move lineage history."""
+    storage = get_storage(repo_id, data_dir)
+    try:
+        # Get file_id using storage helper
+        file_info = storage.get_file_by_path(path)
+        if not file_info:
+            raise HTTPException(status_code=404, detail=f"File not found: {path}")
+        
+        file_id = file_info["file_id"]
+        
+        # Get lineage entries
+        lineage = storage.conn.execute("""
+            SELECT path, start_commit_oid, end_commit_oid
+            FROM file_lineage
+            WHERE file_id = ?
+            ORDER BY start_commit_oid
+        """, (file_id,)).fetchall()
+        
+        return [
+            FileLineageEntry(
+                path=entry[0],
+                start_commit_oid=entry[1],
+                end_commit_oid=entry[2]
+            )
+            for entry in lineage
+        ]
+    finally:
+        storage.close()
+
+
 # --- File Details ---
 
 class FileDetails(BaseModel):
@@ -500,9 +651,8 @@ def get_file_details(
                 commits_lookup = {c["commit_oid"]: c for c in commits_table.to_pylist()}
                 changes = changes_table.to_pylist()
                 
-                from datetime import datetime, timedelta
-                now = datetime.now()
-                thirty_days_ago = now - timedelta(days=30)
+                now = datetime.datetime.now()
+                thirty_days_ago = now - datetime.timedelta(days=30)
                 
                 commit_dates = []
                 
@@ -516,12 +666,11 @@ def get_file_details(
                     author_commit_counts[author] = author_commit_counts.get(author, 0) + 1
                     
                     commit_ts = change.get("commit_ts") or commit_info.get("authored_ts")
-                    if commit_ts:
-                        ts = commit_ts.as_py() if hasattr(commit_ts, 'as_py') else commit_ts
-                        if isinstance(ts, datetime):
-                            commit_dates.append(ts)
-                            if ts > thirty_days_ago:
-                                commits_last_30_days += 1
+                    ts = parse_timestamp(commit_ts)
+                    if ts:
+                        commit_dates.append(ts)
+                        if ts > thirty_days_ago:
+                            commits_last_30_days += 1
                 
                 if commit_dates:
                     first_commit_date = min(commit_dates).isoformat()
@@ -539,9 +688,8 @@ def get_file_details(
         total_commits = file_info.get("total_commits", 0) or 0
         churn_rate = 0.0
         if first_commit_date and last_commit_date:
-            from datetime import datetime
-            first_dt = datetime.fromisoformat(first_commit_date)
-            last_dt = datetime.fromisoformat(last_commit_date)
+            first_dt = datetime.datetime.fromisoformat(first_commit_date)
+            last_dt = datetime.datetime.fromisoformat(last_commit_date)
             weeks = max(1, (last_dt - first_dt).days / 7)
             churn_rate = round(total_commits / weeks, 2)
         
@@ -621,7 +769,6 @@ def get_file_activity(
         
         if changes_path.exists() and commits_path.exists():
             try:
-                from datetime import datetime
                 from collections import defaultdict
                 
                 changes_ds = ds.dataset(changes_path)
@@ -644,33 +791,32 @@ def get_file_activity(
                     commit_ts = change.get("commit_ts") or commit_info.get("authored_ts")
                     author = commit_info.get("author_name", "Unknown")
                     
-                    if commit_ts:
-                        ts = commit_ts.as_py() if hasattr(commit_ts, 'as_py') else commit_ts
-                        if isinstance(ts, datetime):
-                            # Period key based on granularity
-                            if granularity == "daily":
-                                period_key = ts.strftime("%Y-%m-%d")
-                            elif granularity == "weekly":
-                                period_key = ts.strftime("%Y-W%W")
-                            elif granularity == "quarterly":
-                                quarter = (ts.month - 1) // 3 + 1
-                                period_key = f"{ts.year}-Q{quarter}"
-                            else:  # monthly
-                                period_key = ts.strftime("%Y-%m")
-                            
-                            period_commits[period_key] += 1
-                            period_lines_added[period_key] += change.get("lines_added", 0) or 0
-                            period_lines_deleted[period_key] += change.get("lines_deleted", 0) or 0
-                            period_authors[period_key].add(author)
-                            
-                            # Daily commits for heatmap
-                            day_key = ts.strftime("%Y-%m-%d")
-                            daily_commits[day_key] += 1
-                            
-                            # Day/hour matrix
-                            day_of_week = ts.weekday()
-                            hour = ts.hour
-                            day_hour_matrix[day_of_week][hour] += 1
+                    ts = parse_timestamp(commit_ts)
+                    if ts:
+                        # Period key based on granularity
+                        if granularity == "daily":
+                            period_key = ts.strftime("%Y-%m-%d")
+                        elif granularity == "weekly":
+                            period_key = ts.strftime("%Y-W%W")
+                        elif granularity == "quarterly":
+                            quarter = (ts.month - 1) // 3 + 1
+                            period_key = f"{ts.year}-Q{quarter}"
+                        else:  # monthly
+                            period_key = ts.strftime("%Y-%m")
+                        
+                        period_commits[period_key] += 1
+                        period_lines_added[period_key] += change.get("lines_added", 0) or 0
+                        period_lines_deleted[period_key] += change.get("lines_deleted", 0) or 0
+                        period_authors[period_key].add(author)
+                        
+                        # Daily commits for heatmap
+                        day_key = ts.strftime("%Y-%m-%d")
+                        daily_commits[day_key] += 1
+                        
+                        # Day/hour matrix
+                        day_of_week = ts.weekday()
+                        hour = ts.hour
+                        day_hour_matrix[day_of_week][hour] += 1
                 
                 # Sort periods
                 sorted_periods = sorted(period_commits.keys())
@@ -736,7 +882,6 @@ def get_file_authors(
         
         if changes_path.exists() and commits_path.exists():
             try:
-                from datetime import datetime
                 from collections import defaultdict
                 
                 changes_ds = ds.dataset(changes_path)
@@ -768,17 +913,16 @@ def get_file_authors(
                     stats["lines_added"] += change.get("lines_added", 0) or 0
                     stats["lines_deleted"] += change.get("lines_deleted", 0) or 0
                     
-                    if commit_ts:
-                        ts = commit_ts.as_py() if hasattr(commit_ts, 'as_py') else commit_ts
-                        if isinstance(ts, datetime):
-                            if stats["first_commit"] is None or ts < stats["first_commit"]:
-                                stats["first_commit"] = ts
-                            if stats["last_commit"] is None or ts > stats["last_commit"]:
-                                stats["last_commit"] = ts
-                            
-                            # Monthly timeline
-                            month_key = ts.strftime("%Y-%m")
-                            author_timeline[month_key][author] += 1
+                    ts = parse_timestamp(commit_ts)
+                    if ts:
+                        if stats["first_commit"] is None or ts < stats["first_commit"]:
+                            stats["first_commit"] = ts
+                        if stats["last_commit"] is None or ts > stats["last_commit"]:
+                            stats["last_commit"] = ts
+                        
+                        # Monthly timeline
+                        month_key = ts.strftime("%Y-%m")
+                        author_timeline[month_key][author] += 1
                 
                 # Calculate total commits for percentage
                 total_commits = sum(s["commits"] for s in author_stats.values())
@@ -845,8 +989,6 @@ def get_file_commits(
         
         if changes_path.exists() and commits_path.exists():
             try:
-                from datetime import datetime
-                
                 changes_ds = ds.dataset(changes_path)
                 commits_ds = ds.dataset(commits_path)
                 
@@ -882,11 +1024,8 @@ def get_file_commits(
                             continue
                     
                     commit_ts = change.get("commit_ts") or commit_info.get("authored_ts")
-                    ts_str = None
-                    if commit_ts:
-                        ts = commit_ts.as_py() if hasattr(commit_ts, 'as_py') else commit_ts
-                        if isinstance(ts, datetime):
-                            ts_str = ts.isoformat()
+                    ts = parse_timestamp(commit_ts)
+                    ts_str = ts.isoformat() if ts else None
                     
                     commit_list.append({
                         "oid": oid,
@@ -937,6 +1076,7 @@ def get_folder_details(
             raise HTTPException(404, f"Folder not found or empty: {path}")
         
         file_ids = [r[0] for r in rows]
+        file_id_set = set(file_ids)
         file_count = len(rows)
         total_commits = sum(r[2] or 0 for r in rows)
         
@@ -959,6 +1099,7 @@ def get_folder_details(
         total_lines_deleted = 0
         authors = set()
         author_commit_counts = {}
+        file_line_stats = {}  # For treemap data
         
         if changes_path.exists() and commits_path.exists():
             try:
@@ -973,8 +1114,18 @@ def get_folder_details(
                 changes = changes_table.to_pylist()
                 
                 for change in changes:
-                    total_lines_added += change.get("lines_added", 0) or 0
-                    total_lines_deleted += change.get("lines_deleted", 0) or 0
+                    lines_added = change.get("lines_added", 0) or 0
+                    lines_deleted = change.get("lines_deleted", 0) or 0
+                    total_lines_added += lines_added
+                    total_lines_deleted += lines_deleted
+                    
+                    # Track per-file stats for treemap
+                    fid = change.get("file_id")
+                    if fid:
+                        if fid not in file_line_stats:
+                            file_line_stats[fid] = {"added": 0, "deleted": 0}
+                        file_line_stats[fid]["added"] += lines_added
+                        file_line_stats[fid]["deleted"] += lines_deleted
                     
                     commit_info = commits_lookup.get(change.get("commit_oid"), {})
                     author = commit_info.get("author_name", "Unknown")
@@ -1016,6 +1167,75 @@ def get_folder_details(
             for r in rows[:10]
         ]
         
+        # Treemap data: files with size (total changes) and churn level
+        treemap_data = []
+        for r in rows:
+            fid, fpath, fcommits = r[0], r[1], r[2] or 0
+            stats = file_line_stats.get(fid, {"added": 0, "deleted": 0})
+            churn = stats["added"] + stats["deleted"]
+            treemap_data.append({
+                "path": fpath,
+                "name": fpath.split("/")[-1] if fpath else "unknown",
+                "size": max(1, churn),  # Size by total changes
+                "commits": fcommits,
+                "churn_level": "high" if fcommits > 50 else "medium" if fcommits > 20 else "low"
+            })
+        
+        # Churn distribution: bucket files by commit count
+        churn_buckets = {"0-5": 0, "6-10": 0, "11-20": 0, "21-50": 0, "51+": 0}
+        for r in rows:
+            commits = r[2] or 0
+            if commits <= 5:
+                churn_buckets["0-5"] += 1
+            elif commits <= 10:
+                churn_buckets["6-10"] += 1
+            elif commits <= 20:
+                churn_buckets["11-20"] += 1
+            elif commits <= 50:
+                churn_buckets["21-50"] += 1
+            else:
+                churn_buckets["51+"] += 1
+        
+        churn_distribution = [
+            {"bucket": k, "count": v} for k, v in churn_buckets.items()
+        ]
+        
+        # Coupling analysis: internal vs external
+        internal_coupling = 0
+        external_coupling = 0
+        coupled_external_files = []
+        
+        edges_path = storage.parquet_dir / "edges.parquet"
+        if edges_path.exists():
+            try:
+                edges_ds = ds.dataset(edges_path)
+                # Get edges where file_a is in this folder
+                edges_table = edges_ds.to_table(filter=ds.field("file_a_id").isin(file_ids))
+                edges_list = edges_table.to_pylist()
+                
+                external_file_ids = set()
+                for edge in edges_list:
+                    file_b_id = edge.get("file_b_id")
+                    if file_b_id in file_id_set:
+                        internal_coupling += 1
+                    else:
+                        external_coupling += 1
+                        external_file_ids.add(file_b_id)
+                
+                # Get paths of external coupled files
+                if external_file_ids:
+                    external_files = storage.conn.execute("""
+                        SELECT file_id, path_current FROM files WHERE file_id IN ({})
+                    """.format(",".join("?" * len(external_file_ids))), list(external_file_ids)).fetchall()
+                    coupled_external_files = [{"path": ef[1]} for ef in external_files[:20] if ef[1]]
+                    
+            except Exception as e:
+                logger.warning(f"Error reading edges for folder coupling: {e}")
+        
+        # Cohesion score: ratio of internal to total coupling
+        total_coupling = internal_coupling + external_coupling
+        cohesion_score = (internal_coupling / total_coupling * 100) if total_coupling > 0 else 100
+        
         return {
             "path": path,
             "file_count": file_count,
@@ -1026,7 +1246,15 @@ def get_folder_details(
             "authors_count": len(authors),
             "top_author": top_author,
             "health_score": health_score,
-            "hot_files": hot_files
+            "hot_files": hot_files,
+            "treemap_data": treemap_data,
+            "churn_distribution": churn_distribution,
+            "coupling_stats": {
+                "internal_coupling": internal_coupling,
+                "external_coupling": external_coupling,
+                "cohesion_score": round(cohesion_score, 1),
+                "coupled_external_files": coupled_external_files
+            }
         }
     finally:
         storage.close()

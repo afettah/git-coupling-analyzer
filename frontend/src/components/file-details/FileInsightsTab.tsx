@@ -6,7 +6,7 @@
 
 import { type FileDetailsResponse, type CoupledFile } from '../../api';
 import { cn } from '@/lib/utils';
-import { AlertTriangle, CheckCircle, Info, TrendingUp, TrendingDown, Shield } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Info, TrendingUp, TrendingDown, Shield, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 
 interface FileInsightsTabProps {
     details: FileDetailsResponse;
@@ -75,6 +75,65 @@ function Recommendation({ icon, title, description }: { icon: React.ReactNode; t
             <div>
                 <div className="text-sm font-medium text-slate-200">{title}</div>
                 <div className="text-xs text-slate-500 mt-0.5">{description}</div>
+            </div>
+        </div>
+    );
+}
+
+// Trend indicator component
+function TrendIndicator({
+    label,
+    currentValue,
+    trend,
+    trendLabel,
+    format = 'number',
+    invertColors = false
+}: {
+    label: string;
+    currentValue: number;
+    trend: 'up' | 'down' | 'stable';
+    trendLabel: string;
+    format?: 'number' | 'percent';
+    invertColors?: boolean; // For metrics where "up" is bad (like churn)
+}) {
+    const displayValue = format === 'percent' 
+        ? `${Math.round(currentValue)}%` 
+        : currentValue.toLocaleString();
+    
+    // Determine colors based on trend and inversion
+    let TrendIcon = Minus;
+    let trendColor = 'text-slate-400';
+    let trendBg = 'bg-slate-500/10';
+    
+    if (trend === 'up') {
+        TrendIcon = ArrowUpRight;
+        if (invertColors) {
+            trendColor = 'text-red-400';
+            trendBg = 'bg-red-500/10';
+        } else {
+            trendColor = 'text-emerald-400';
+            trendBg = 'bg-emerald-500/10';
+        }
+    } else if (trend === 'down') {
+        TrendIcon = ArrowDownRight;
+        if (invertColors) {
+            trendColor = 'text-emerald-400';
+            trendBg = 'bg-emerald-500/10';
+        } else {
+            trendColor = 'text-red-400';
+            trendBg = 'bg-red-500/10';
+        }
+    }
+
+    return (
+        <div className="flex items-center justify-between p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
+            <div>
+                <div className="text-xs text-slate-500 mb-1">{label}</div>
+                <div className="text-lg font-semibold text-slate-200">{displayValue}</div>
+            </div>
+            <div className={cn('flex items-center gap-1 px-2 py-1 rounded text-xs font-medium', trendBg, trendColor)}>
+                <TrendIcon size={14} />
+                <span>{trendLabel}</span>
             </div>
         </div>
     );
@@ -195,6 +254,38 @@ export function FileInsightsTab({ details, coupling }: FileInsightsTabProps) {
         });
     }
 
+    // Calculate trends
+    // Activity trend: Compare recent activity to historical average
+    const fileAgeMonths = details.first_commit_date 
+        ? Math.max(1, Math.round((Date.now() - new Date(details.first_commit_date).getTime()) / (30 * 24 * 60 * 60 * 1000)))
+        : 1;
+    const avgCommitsPerMonth = details.total_commits / fileAgeMonths;
+    const recentActivity = details.commits_last_30_days;
+    const activityRatio = avgCommitsPerMonth > 0 ? recentActivity / avgCommitsPerMonth : 0;
+    
+    const activityTrend = activityRatio > 1.5 ? 'up' : activityRatio < 0.5 ? 'down' : 'stable';
+    const activityTrendLabel = activityRatio > 1.5 
+        ? `${Math.round((activityRatio - 1) * 100)}% more active` 
+        : activityRatio < 0.5 
+            ? `${Math.round((1 - activityRatio) * 100)}% less active`
+            : 'Normal activity';
+
+    // Churn trend: Is the file becoming more volatile?
+    const churnTrend = details.churn_rate > 5 ? 'up' : details.churn_rate < 2 ? 'down' : 'stable';
+    const churnTrendLabel = details.churn_rate > 5 
+        ? 'High churn' 
+        : details.churn_rate < 2 
+            ? 'Stable'
+            : 'Moderate';
+
+    // Coupling trend: Based on current coupling level
+    const couplingTrend = details.max_coupling > 0.7 ? 'up' : details.max_coupling < 0.3 ? 'down' : 'stable';
+    const couplingTrendLabel = details.max_coupling > 0.7 
+        ? 'Tightly coupled' 
+        : details.max_coupling < 0.3 
+            ? 'Loosely coupled'
+            : 'Normal';
+
     return (
         <div className="p-4 space-y-6">
             {/* Overall health score */}
@@ -239,6 +330,38 @@ export function FileInsightsTab({ details, coupling }: FileInsightsTabProps) {
                     </div>
                 </div>
             )}
+
+            {/* Trends */}
+            <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
+                <h3 className="text-sm font-semibold text-slate-300 mb-4">📈 Trends</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <TrendIndicator
+                        label="Recent Activity"
+                        currentValue={recentActivity}
+                        trend={activityTrend}
+                        trendLabel={activityTrendLabel}
+                        invertColors={true}
+                    />
+                    <TrendIndicator
+                        label="Churn Rate"
+                        currentValue={Math.round(details.churn_rate * 10) / 10}
+                        trend={churnTrend}
+                        trendLabel={churnTrendLabel}
+                        invertColors={true}
+                    />
+                    <TrendIndicator
+                        label="Max Coupling"
+                        currentValue={Math.round(details.max_coupling * 100)}
+                        trend={couplingTrend}
+                        trendLabel={couplingTrendLabel}
+                        format="percent"
+                        invertColors={true}
+                    />
+                </div>
+                <p className="text-xs text-slate-500 mt-3">
+                    Comparing recent (30 days) to historical average ({fileAgeMonths} months of history)
+                </p>
+            </div>
 
             {/* Quick stats summary */}
             <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">

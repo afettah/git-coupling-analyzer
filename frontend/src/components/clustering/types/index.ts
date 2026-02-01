@@ -194,6 +194,7 @@ export interface ClusterCardProps {
     onExplore: () => void;
     onExport: () => void;
     repoUrlConfig?: RepoUrlConfig;
+    onFileSelect?: (path: string) => void;
 }
 
 export interface ClusterModalProps {
@@ -201,6 +202,7 @@ export interface ClusterModalProps {
     onClose: () => void;
     onExport: () => void;
     repoUrlConfig?: RepoUrlConfig;
+    onFileSelect?: (path: string) => void;
 }
 
 export interface FilterBarProps {

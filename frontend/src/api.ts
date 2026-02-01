@@ -149,6 +149,20 @@ export const createRepo = (payload: { path: string; name?: string }) =>
 export const deleteRepo = (repoId: string) =>
     api.delete(`/repos/${repoId}`).then(res => res.data);
 
+// Git remote info
+export interface GitRemoteInfo {
+    git_remote_url: string | null;
+    git_web_url: string | null;
+    git_provider: 'github' | 'gitlab' | 'azure_devops' | 'bitbucket' | null;
+    git_default_branch: string;
+}
+
+export const getGitInfo = (repoId: string) =>
+    api.get<GitRemoteInfo>(`/repos/${repoId}/git-info`).then(res => res.data);
+
+export const updateGitInfo = (repoId: string, info: Partial<GitRemoteInfo>) =>
+    api.put(`/repos/${repoId}/git-info`, info).then(res => res.data);
+
 export const startAnalysis = (repoId: string, config: AnalysisConfig) =>
     api.post(`/repos/${repoId}/analysis/start`, config).then(res => res.data);
 
@@ -245,6 +259,20 @@ export interface FolderDetailsResponse {
     top_author: string | null;
     health_score: number;
     hot_files: Array<{ path: string; commits: number }>;
+    treemap_data: Array<{
+        path: string;
+        name: string;
+        size: number;
+        commits: number;
+        churn_level: 'high' | 'medium' | 'low';
+    }>;
+    churn_distribution: Array<{ bucket: string; count: number }>;
+    coupling_stats: {
+        internal_coupling: number;
+        external_coupling: number;
+        cohesion_score: number;
+        coupled_external_files: Array<{ path: string }>;
+    };
 }
 
 export const getFileDetails = (repoId: string, path: string) =>

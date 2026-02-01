@@ -1,6 +1,6 @@
 # Subtask: File Details Panel - Basic
 
-**Status:** Not Started  
+**Status:** ✅ Complete  
 **Effort:** 3 days
 
 ---
@@ -13,30 +13,30 @@ Create the basic file details panel structure with tabs and stats cards.
 
 ## Tasks
 
-- [ ] Create `FileDetailsPanel.tsx` component
-- [ ] Panel opens as tab in main content area
+- [x] Create `FileDetailsPanel.tsx` component
+- [x] Panel opens as tab in main content area
 
 ### Header Section
-- [ ] File icon and name
-- [ ] Full path subtitle
-- [ ] Action buttons: Open in Repo, Blame, Copy Path, Bookmark
+- [x] File icon and name
+- [x] Full path subtitle
+- [x] Action buttons: Open in Repo, Blame, Copy Path, Bookmark
 
 ### Stats Cards Row
-- [ ] 📊 **Commits** — Total count, recent (30d)
-- [ ] 👥 **Authors** — Count, top author
-- [ ] 📅 **Age** — First commit date, age string
-- [ ] 🔗 **Coupling** — Coupled file count, max coupling %
-- [ ] ➕ **Additions** — Total lines added, net
-- [ ] ➖ **Deletions** — Total lines deleted
-- [ ] 📏 **Churn Rate** — Changes per week
-- [ ] ⚠️ **Risk Score** — Calculated score (0-100)
+- [x] 📊 **Commits** — Total count, recent (30d)
+- [x] 👥 **Authors** — Count, top author
+- [x] 📅 **Age** — First commit date, age string
+- [x] 🔗 **Coupling** — Coupled file count, max coupling %
+- [x] ➕ **Additions** — Total lines added, net
+- [x] ➖ **Deletions** — Total lines deleted
+- [x] 📏 **Churn Rate** — Changes per week
+- [x] ⚠️ **Risk Score** — Calculated score (0-100)
 
 ### Tab Navigation
-- [ ] Activity tab (default)
-- [ ] Authors tab
-- [ ] Coupling tab
-- [ ] Commits tab
-- [ ] Insights tab
+- [x] Activity tab (default)
+- [x] Authors tab
+- [x] Coupling tab
+- [x] Commits tab
+- [x] Insights tab
 
 ---
 

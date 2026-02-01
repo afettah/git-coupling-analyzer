@@ -1,6 +1,6 @@
 # Subtask: Commits & Insights Tabs
 
-**Status:** Not Started  
+**Status:** ⚠️ Partial  
 **Effort:** 3 days
 
 ---
@@ -14,17 +14,31 @@ Add commit history browser and health insights tabs.
 ## Tasks
 
 ### Commits Tab
-- [ ] **Commit timeline** — Scrollable list with virtual rendering
-- [ ] **Search** — Filter by message, author, date
+- [x] **Commit timeline** — Scrollable list with virtual rendering (basic pagination)
+- [x] **Search** — Filter by message, author, date
 - [ ] **Filters** — Exclude merges, bots
 - [ ] **Commit detail modal** — Full message, changes, links
-- [ ] **Link to remote** — Open in GitHub/GitLab/Azure DevOps
+- [x] **Link to remote** — Open in GitHub/GitLab/Azure DevOps (UI ready, needs git remote)
 
 ### Insights Tab
-- [ ] **Health score card** — Overall score with breakdown
-- [ ] **Risk indicators** — High churn, many authors, etc.
-- [ ] **Recommendations** — Actionable suggestions
+- [x] **Health score card** — Overall score with breakdown
+- [x] **Risk indicators** — High churn, many authors, etc.
+- [x] **Recommendations** — Actionable suggestions
 - [ ] **Trends** — Improving or degrading metrics
+
+---
+
+## Implementation Notes
+
+**Implemented:**
+- `FileCommitsTab.tsx` with search, pagination, commit list
+- `FileInsightsTab.tsx` with health score breakdown, risk indicators, recommendations
+- API endpoint `/files/{path}/commits`
+
+**Missing:**
+- Merge/bot filters
+- Commit detail modal
+- Trends visualization
 
 ---
 

@@ -2,14 +2,15 @@
  * Folder Summary View Component
  * 
  * Renders a summary table of files grouped by folder.
- * Collapsible rows to show individual files.
+ * Collapsible rows to show individual files with navigation links.
  */
 
 import { useMemo, useState } from 'react';
-import { ChevronRight, ChevronDown, FileText } from 'lucide-react';
+import { ChevronRight, ChevronDown, FileText, FileSearch } from 'lucide-react';
 
 export interface FolderSummaryViewProps {
     files: string[];
+    onFileSelect?: (path: string) => void;
 }
 
 interface FolderEntry {
@@ -37,7 +38,7 @@ function groupFilesInFolders(files: string[]): FolderEntry[] {
         .sort((a, b) => b.count - a.count);
 }
 
-export function FolderSummaryView({ files }: FolderSummaryViewProps) {
+export function FolderSummaryView({ files, onFileSelect }: FolderSummaryViewProps) {
     const folders = useMemo(() => groupFilesInFolders(files), [files]);
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
@@ -94,7 +95,19 @@ export function FolderSummaryView({ files }: FolderSummaryViewProps) {
                                         <td className="px-3 py-1.5"></td>
                                         <td className="px-3 py-1.5 text-xs text-slate-400 pl-8 flex items-center gap-2">
                                             <FileText className="w-3 h-3 text-slate-500" />
-                                            {file.split('/').pop()}
+                                            <span className="flex-1">{file.split('/').pop()}</span>
+                                            {onFileSelect && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onFileSelect(file);
+                                                    }}
+                                                    className="text-slate-500 hover:text-sky-400"
+                                                    title="View file details"
+                                                >
+                                                    <FileSearch className="w-3 h-3" />
+                                                </button>
+                                            )}
                                         </td>
                                         <td className="px-3 py-1.5"></td>
                                     </tr>

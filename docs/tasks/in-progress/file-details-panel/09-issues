@@ -1,0 +1,105 @@
+# Issues Tracking (File Details Panel)
+
+## QA Testing Results (February 1, 2026)
+
+Comprehensive testing performed using Chrome DevTools MCP.
+
+---
+
+## Fixed Issues (January 31, 2026)
+
+| Issue | Status | Fix Applied |
+|-------|--------|-------------|
+| Age is not working show Unknown | ✅ Fixed | Timestamp parsing now handles Unix integers |
+| 📈 Activity Timeline not work | ✅ Fixed | Timestamps converted correctly in API |
+| 📅 Contribution Heatmap empty | ✅ Fixed | API returns proper date strings |
+| 📊 Lines Changed Over Time empty | ⚠️ Partial | UI works, but no line data in parquet |
+| ⚡ Change Velocity not shown | ✅ Fixed | Data now renders |
+| Double scroll bar | ✅ Fixed | Changed main container from `overflow-auto` to `min-h-0` |
+
+---
+
+## New Issues Found (February 1, 2026)
+
+### 1. Impact Graph "File not found" Error
+**Severity:** Medium  
+**Status:** ✅ Fixed  
+**Location:** `/repos/{id}/graph?path=...`
+
+**Symptom:** When a valid file path is in the URL (e.g., `pyproject.toml`), the UI shows "File not found. Pick a file from the tree or a preset." but the graph data still loads and renders.
+
+**Root Cause:** The `getLineage()` API call was failing (returning 404 for files without lineage data), which caused the entire `loadData` try block to fail, showing the error message even when the primary data loaded successfully.
+
+**Fix Applied:** Made lineage data optional in `ImpactGraph.tsx` - wrapped `getLineage()` in its own try-catch so it doesn't fail the entire data load if lineage is unavailable.
+
+### 2. Empty Lineage Data (Not a Bug)
+**Severity:** Low  
+**Status:** ⚠️ By Design  
+**Location:** Impact Graph → Lineage section
+
+**Symptom:** Lineage section shows no data.
+
+**Analysis:** 
+- The `/files/{path}/lineage` API endpoint exists and works correctly (returns 200)
+- The `file_lineage` table in the database is empty because the extraction doesn't currently track file renames
+- This is expected behavior - the endpoint returns an empty array `[]`
+
+**Resolution:** 
+- The lineage feature requires enhance extraction to track file renames via `git log --follow`
+- Not blocking for this feature epic
+
+---
+
+## Remaining Issues (Moved to global-issues.md)
+
+| Issue | Status | Reason |
+|-------|--------|--------|
+| URL should contain file path | ❌ Open | Architectural change needed |
+| Commits shows less than GitHub | ❌ Open | Extraction may have date filters |
+| Additions/Deletions always 0 | ⚠️ By Design | Extract uses `--name-status` not `--numstat` |
+| Coupling always 0 | ✅ Not a bug | Some files genuinely have 0 coupling |
+| Churn Rate 0 | ⚠️ Partial | Depends on commit date range |
+
+---
+
+## Features Verified Working ✅
+
+All tested via Chrome DevTools MCP on February 1, 2026:
+
+### File Details Panel
+- [x] Opens correctly from context menu
+- [x] Activity tab - Timeline, heatmap, velocity charts render
+- [x] Authors tab - Pie chart and contributor table work
+- [x] Coupling tab - Network graph and coupled files table display
+- [x] "Why coupled?" modal - Shows coupling evidence
+- [x] "Go to file" navigation - Works correctly
+- [x] Commits tab - Commit list with search/filter works  
+- [x] Insights tab - Health score and recommendations display
+- [x] Header links - "Open in Repo", "Blame" links work
+
+### Folder Details Panel
+- [x] Opens correctly from context menu
+- [x] Hot Files tab - File list renders
+- [x] Treemap tab - Interactive treemap works
+- [x] Coupling tab - Cohesion score displays
+
+### Context Menu
+- [x] File context menu - All options work
+- [x] Folder context menu - All options work
+- [x] Copy path - Copies correctly
+- [x] Open in repository - Links work
+
+### Git Remote Integration
+- [x] GitHub URLs generated correctly
+- [x] File/folder/blame links work
+
+---
+
+## Non-Feature Issues (See global-issues.md)
+
+These issues require changes outside the File Details Panel feature scope:
+
+1. **Low Commit Counts** — Analysis date filters, re-extract needed
+2. **Missing Line Stats** — Extract enhancement needed  
+3. **URL State Persistence** — Router architecture change needed
+4. **Lineage Data Empty** — Extract enhancement for rename tracking needed

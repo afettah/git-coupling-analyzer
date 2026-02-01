@@ -7,13 +7,28 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getFileCommits, type FileCommitsResponse, type FileCommit } from '../../api';
 import { Spinner } from '../shared';
-import { Search, ExternalLink, GitCommit } from 'lucide-react';
+import { Search, ExternalLink, GitCommit, X, Calendar, User } from 'lucide-react';
 
 interface FileCommitsTabProps {
     repoId: string;
     filePath: string;
     gitWebUrl?: string;
     gitProvider?: string;
+}
+
+// Common bot patterns
+const BOT_PATTERNS = [
+    /\[bot\]$/i,
+    /bot$/i,
+    /^dependabot/i,
+    /^renovate/i,
+    /^github-actions/i,
+    /^semantic-release/i,
+    /^greenkeeper/i,
+];
+
+function isBot(author: string): boolean {
+    return BOT_PATTERNS.some(pattern => pattern.test(author));
 }
 
 // Format relative time
@@ -50,23 +65,122 @@ function buildCommitUrl(gitWebUrl: string | undefined, provider: string | undefi
     }
 }
 
-// Commit item component
-function CommitItem({
+// Commit detail modal
+function CommitDetailModal({
     commit,
     gitWebUrl,
-    gitProvider
+    gitProvider,
+    onClose
 }: {
     commit: FileCommit;
     gitWebUrl?: string;
     gitProvider?: string;
+    onClose: () => void;
+}) {
+    const commitUrl = buildCommitUrl(gitWebUrl, gitProvider, commit.oid);
+    
+    return (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6" onClick={onClose}>
+            <div className="bg-slate-900 border border-slate-700 rounded-lg p-5 max-w-lg w-full" onClick={e => e.stopPropagation()}>
+                <div className="flex items-start justify-between gap-4 mb-4">
+                    <h3 className="text-sm font-semibold text-slate-200">Commit Details</h3>
+                    <button onClick={onClose} className="p-1 text-slate-500 hover:text-slate-300">
+                        <X size={16} />
+                    </button>
+                </div>
+                
+                <div className="space-y-4">
+                    {/* Commit hash */}
+                    <div className="flex items-center gap-2">
+                        <GitCommit size={14} className="text-slate-500" />
+                        <code className="text-sm text-sky-400 font-mono">{commit.oid}</code>
+                        {commitUrl && (
+                            <a
+                                href={commitUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1 text-slate-500 hover:text-sky-400"
+                            >
+                                <ExternalLink size={12} />
+                            </a>
+                        )}
+                    </div>
+                    
+                    {/* Message */}
+                    <div className="bg-slate-800/50 rounded-lg p-3">
+                        <p className="text-sm text-slate-200 whitespace-pre-wrap">{commit.message || 'No message'}</p>
+                    </div>
+                    
+                    {/* Author and date */}
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="flex items-center gap-2">
+                            <User size={14} className="text-slate-500" />
+                            <span className="text-slate-400">Author:</span>
+                            <span className="text-slate-200">{commit.author}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Calendar size={14} className="text-slate-500" />
+                            <span className="text-slate-400">Date:</span>
+                            <span className="text-slate-200">
+                                {commit.date ? new Date(commit.date).toLocaleString() : 'Unknown'}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    {/* Changes */}
+                    <div className="flex items-center gap-4 pt-3 border-t border-slate-700">
+                        <span className="text-sm text-slate-400">Changes:</span>
+                        <span className="text-sm text-emerald-400">+{commit.lines_added} additions</span>
+                        <span className="text-sm text-red-400">-{commit.lines_deleted} deletions</span>
+                    </div>
+                </div>
+                
+                <div className="mt-5 flex justify-end gap-2">
+                    {commitUrl && (
+                        <a
+                            href={commitUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1.5 text-sm bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 rounded-lg transition-colors"
+                        >
+                            View in Repository
+                        </a>
+                    )}
+                    <button
+                        onClick={onClose}
+                        className="px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Commit item component
+function CommitItem({
+    commit,
+    gitWebUrl,
+    gitProvider,
+    onShowDetail
+}: {
+    commit: FileCommit;
+    gitWebUrl?: string;
+    gitProvider?: string;
+    onShowDetail: () => void;
 }) {
     const commitUrl = buildCommitUrl(gitWebUrl, gitProvider, commit.oid);
     const shortOid = commit.oid.slice(0, 7);
+    const botCommit = isBot(commit.author);
 
     return (
-        <div className="p-3 border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors group">
+        <div 
+            className="p-3 border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors group cursor-pointer"
+            onClick={onShowDetail}
+        >
             <div className="flex items-start gap-3">
-                <div className="p-1.5 bg-slate-800 rounded text-slate-500">
+                <div className={`p-1.5 rounded ${botCommit ? 'bg-purple-900/50 text-purple-400' : 'bg-slate-800 text-slate-500'}`}>
                     <GitCommit size={14} />
                 </div>
 
@@ -78,6 +192,7 @@ function CommitItem({
                                 href={commitUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={e => e.stopPropagation()}
                                 className="p-1 text-slate-600 hover:text-sky-400 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
                             >
                                 <ExternalLink size={14} />
@@ -87,7 +202,10 @@ function CommitItem({
 
                     <div className="flex items-center gap-3 mt-1.5 text-xs">
                         <span className="font-mono text-slate-500">{shortOid}</span>
-                        <span className="text-slate-500">@{commit.author}</span>
+                        <span className={`${botCommit ? 'text-purple-400' : 'text-slate-500'}`}>
+                            @{commit.author}
+                            {botCommit && <span className="ml-1 text-[10px] bg-purple-500/20 px-1 rounded">bot</span>}
+                        </span>
                         <span className="text-slate-600">{formatRelativeTime(commit.date)}</span>
                         <span className="flex items-center gap-1">
                             <span className="text-emerald-500">+{commit.lines_added}</span>
@@ -107,6 +225,8 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
     const [loadingMore, setLoadingMore] = useState(false);
     const [search, setSearch] = useState('');
     const [excludeMerges, setExcludeMerges] = useState(false);
+    const [excludeBots, setExcludeBots] = useState(false);
+    const [selectedCommit, setSelectedCommit] = useState<FileCommit | null>(null);
     const [offset, setOffset] = useState(0);
     const limit = 30;
 
@@ -157,7 +277,9 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
         return () => clearTimeout(timer);
     }, [searchInput]);
 
-    const hasMore = data && data.commits.length < data.total_count;
+    // Filter out bots if needed
+    const filteredCommits = data?.commits.filter(c => !excludeBots || !isBot(c.author)) || [];
+    const hasMore = data && filteredCommits.length < data.total_count;
 
     if (loading) {
         return (
@@ -182,7 +304,9 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
                             className="w-full pl-9 pr-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500"
                         />
                     </div>
-
+                </div>
+                
+                <div className="flex items-center gap-4 mt-2">
                     <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
                         <input
                             type="checkbox"
@@ -192,33 +316,51 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
                         />
                         Exclude merges
                     </label>
+                    <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={excludeBots}
+                            onChange={(e) => setExcludeBots(e.target.checked)}
+                            className="rounded border-slate-600 bg-slate-700 text-purple-500 focus:ring-purple-500"
+                        />
+                        Exclude bots
+                    </label>
                 </div>
 
                 {data && (
                     <div className="mt-2 text-xs text-slate-500">
-                        Showing {data.commits.length} of {data.total_count} commits
+                        Showing {filteredCommits.length} of {data.total_count} commits
+                        {excludeBots && data.commits.length !== filteredCommits.length && (
+                            <span className="ml-1 text-purple-400">
+                                ({data.commits.length - filteredCommits.length} bot commits hidden)
+                            </span>
+                        )}
                     </div>
                 )}
             </div>
 
             {/* Commit list */}
             <div className="flex-1 overflow-auto">
-                {!data || data.commits.length === 0 ? (
+                {filteredCommits.length === 0 ? (
                     <div className="p-8 text-center text-slate-500">
                         <GitCommit size={32} className="mx-auto mb-3 opacity-50" />
                         <p>No commits found</p>
                         {search && (
                             <p className="text-xs mt-1">Try a different search term</p>
                         )}
+                        {excludeBots && (
+                            <p className="text-xs mt-1">Try disabling "Exclude bots"</p>
+                        )}
                     </div>
                 ) : (
                     <>
-                        {data.commits.map((commit) => (
+                        {filteredCommits.map((commit) => (
                             <CommitItem
                                 key={commit.oid}
                                 commit={commit}
                                 gitWebUrl={gitWebUrl}
                                 gitProvider={gitProvider}
+                                onShowDetail={() => setSelectedCommit(commit)}
                             />
                         ))}
 
@@ -236,6 +378,16 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
                     </>
                 )}
             </div>
+
+            {/* Commit detail modal */}
+            {selectedCommit && (
+                <CommitDetailModal
+                    commit={selectedCommit}
+                    gitWebUrl={gitWebUrl}
+                    gitProvider={gitProvider}
+                    onClose={() => setSelectedCommit(null)}
+                />
+            )}
         </div>
     );
 }

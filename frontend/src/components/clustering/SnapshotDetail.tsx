@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { NavLink, Route, Routes, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getClusteringSnapshot, getClusteringSnapshotEdges } from '../../api';
 import type { ClusterResult } from '../../api';
@@ -33,6 +33,12 @@ export default function SnapshotDetail({ repoId }: SnapshotDetailProps) {
 
     // City-specific state
     const [colorBy, setColorBy] = useState<'cluster' | 'coupling'>('cluster');
+
+    // File selection handler - navigates to file details
+    const handleFileSelect = useCallback((path: string) => {
+        // Navigate to the AnalysisDashboard file-details tab with the selected file
+        navigate(`/repos/${repoId}/file-details?file=${encodeURIComponent(path)}`);
+    }, [navigate, repoId]);
 
     // Determine active view from URL
     const activeView = useMemo((): ActiveView => {
@@ -193,6 +199,7 @@ export default function SnapshotDetail({ repoId }: SnapshotDetailProps) {
                         clusters={filteredClusters}
                         viewMode={viewMode}
                         depth={depth}
+                        onFileSelect={handleFileSelect}
                     />
                 } />
                 <Route path="draw" element={

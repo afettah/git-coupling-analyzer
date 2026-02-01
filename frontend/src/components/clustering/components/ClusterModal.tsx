@@ -19,6 +19,7 @@ export interface ClusterModalProps {
     onClose: () => void;
     onExport: () => void;
     repoUrlConfig?: RepoUrlConfig;
+    onFileSelect?: (path: string) => void;
 }
 
 const VIEW_OPTIONS = [
@@ -27,7 +28,7 @@ const VIEW_OPTIONS = [
     { value: 'summary' as const, label: 'Folder Summary' }
 ];
 
-export function ClusterModal({ cluster, onClose, onExport, repoUrlConfig }: ClusterModalProps) {
+export function ClusterModal({ cluster, onClose, onExport, repoUrlConfig, onFileSelect }: ClusterModalProps) {
     const [viewMode, setViewMode] = useState<ModalViewMode>('tree');
 
     const tree = useMemo(
@@ -117,18 +118,18 @@ export function ClusterModal({ cluster, onClose, onExport, repoUrlConfig }: Clus
                 {/* File View */}
                 <div className="min-h-[200px]">
                     {viewMode === 'tree' && (
-                        <FileTreeView node={tree} repoUrlConfig={repoUrlConfig} />
+                        <FileTreeView node={tree} repoUrlConfig={repoUrlConfig} onFileSelect={onFileSelect} />
                     )}
                     {viewMode === 'flat' && (
-                        <FileListView files={files} repoUrlConfig={repoUrlConfig} />
+                        <FileListView files={files} repoUrlConfig={repoUrlConfig} onFileSelect={onFileSelect} />
                     )}
                     {viewMode === 'summary' && (
-                        <FolderSummaryView files={files} />
+                        <FolderSummaryView files={files} onFileSelect={onFileSelect} />
                     )}
                 </div>
 
                 {/* Insights */}
-                <ClusterInsights cluster={cluster} repoUrlConfig={repoUrlConfig} />
+                <ClusterInsights cluster={cluster} repoUrlConfig={repoUrlConfig} onFileSelect={onFileSelect} />
             </div>
         </Modal>
     );

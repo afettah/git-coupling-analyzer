@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import * as d3 from 'd3';
 import { getImpactGraph, getImpact, getLineage, listFiles, type ApiErrorInfo } from '../api';
-import { Search, Info, History } from 'lucide-react';
+import { Search, Info, History, FileSearch } from 'lucide-react';
 
 interface ImpactGraphProps {
     repoId: string;
@@ -10,6 +10,7 @@ interface ImpactGraphProps {
 
 export default function ImpactGraph({ repoId }: ImpactGraphProps) {
     const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
     const urlPath = searchParams.get('path') || '';
 
     const svgRef = useRef<SVGSVGElement>(null);
@@ -101,7 +102,15 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
         try {
             const g = await getImpactGraph(repoId, { path: trimmedPath, top: topEdges });
             const imp = await getImpact(repoId, { path: trimmedPath, top: 10 });
-            const lin = await getLineage(repoId, trimmedPath);
+
+            // Lineage is optional - don't fail if it's empty or unavailable
+            let lin: any[] = [];
+            try {
+                lin = await getLineage(repoId, trimmedPath);
+            } catch (lineageError) {
+                // Lineage data not available - this is fine
+                console.debug('Lineage not available:', lineageError);
+            }
 
             setData(g);
             setImpacts(imp);
@@ -221,6 +230,15 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                     >
                         {loading ? 'Loading...' : 'Load Impact'}
                     </button>
+                    {filePath && (
+                        <button
+                            onClick={() => navigate(`/repos/${repoId}/file-details?file=${encodeURIComponent(filePath)}`)}
+                            className="px-3 py-2 rounded-lg text-sm border border-slate-700 text-slate-300 hover:border-sky-400 hover:text-sky-400 transition-all"
+                            title="View file details"
+                        >
+                            <FileSearch className="w-4 h-4" />
+                        </button>
+                    )}
                 </div>
                 <div className="flex-1 relative bg-slate-950">
                     <svg ref={svgRef} className="w-full h-full" />
@@ -259,8 +277,15 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                         <div className="space-y-2">
                             {impacts.length ? impacts.map((imp, i) => (
                                 <div key={i} className="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between items-center text-xs">
-                                    <div className="truncate pr-2 font-mono" title={imp.path}>{imp.path?.split('/').pop()}</div>
-                                    <div className="text-sky-400 font-bold">{(imp.jaccard * 100).toFixed(1)}%</div>
+                                    <div className="truncate pr-2 font-mono flex-1" title={imp.path}>{imp.path?.split('/').pop()}</div>
+                                    <div className="text-sky-400 font-bold mr-2">{(imp.jaccard * 100).toFixed(1)}%</div>
+                                    <button
+                                        onClick={() => navigate(`/repos/${repoId}/file-details?file=${encodeURIComponent(imp.path)}`)}
+                                        className="text-slate-500 hover:text-sky-400 flex-shrink-0"
+                                        title="View file details"
+                                    >
+                                        <FileSearch className="w-3.5 h-3.5" />
+                                    </button>
                                 </div>
                             )) : <div className="text-slate-500 text-xs">No data loaded</div>}
                         </div>

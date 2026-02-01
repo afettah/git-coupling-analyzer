@@ -180,50 +180,27 @@ High-coupling pairs verified:
 
 ---
 
-## Test Categories
+## Test Scenarios
 
-### 1. Repository Statistics Validation
+For comprehensive end-to-end test scenarios including:
+- Project lifecycle (create, analyze, delete)
+- File exploration and details
+- Coupling analysis
+- All clustering algorithms and parameter combinations
+- Snapshot management
+- Error handling
 
-Validate extraction completeness by comparing with git commands:
-
-```bash
-# Basic counts
-git rev-list --count HEAD              # Total commits
-git ls-tree -r HEAD --name-only | wc -l # Current files
-git log --merges --oneline | wc -l     # Merge commits
-git log --format='%ae' | sort -u | wc -l # Unique authors
-```
-
-### 2. Coupling Ground Truth
-
-Known patterns to validate:
-
-| Pattern | Expected Behavior | Verified |
-|---------|-------------------|----------|
-| Test/implementation pairs | `test_X.py ↔ X.py` should show high coupling | ✅ |
-| Config consumers | `config.py` coupled with files that import it | ✅ |
-| Files always alone | Should show zero coupling | ✅ |
-| Files never alone | Should show high coupling | ✅ |
-
-### 3. Manual Test Cases
-
-#### Case 1: Hot File Detection ✅
-- Top files: pyproject.toml, package.json, package-lock.json
-- Matches expected pattern (config/lock files most active)
-
-#### Case 2: Coupling Accuracy ✅
-- Lock file pairs show Jaccard > 0.9
-- Cross-stack coupling detected (Python ↔ Frontend)
-
-#### Case 3: Cluster Coherence ✅
-- Package management files cluster together
-- i18n files cluster together
-- Singletons are files with <5 co-occurrences
+**See: [E2E Test Scenarios](e2e.md)**
 
 ---
 
 ## References
 
-- [QA Output Index](../../QA/output/openhands/QA_INDEX.md)
-- [API QA Findings](../../QA/output/openhands/API_QA_FINDINGS.md)
+- [E2E Test Scenarios](e2e.md)
+- [QA Output Index](details/QA_INDEX.md)
+- [API QA Findings](details/API_QA_FINDINGS.md)
+- [Detailed QA Report](details/DETAILED_QA_REPORT.md)
+- [Ground Truth Findings](details/FINDINGS_REPORT.md)
+- [Validation Report](details/VALIDATION_REPORT.md)
+- [API Test Summary](details/API_TEST_SUMMARY.md)
 - [Issues Tracker](issues.md)

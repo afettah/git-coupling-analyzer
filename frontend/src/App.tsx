@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { type RepoInfo, getRepos } from './api';
 import RepoList from './components/RepoList';
 import AnalysisDashboard from './components/AnalysisDashboard';
@@ -70,6 +70,8 @@ function App() {
 
         <Route path="/repos/:repoId" element={<Navigate to="graph" replace />} />
         <Route path="/repos/:repoId/clustering/*" element={<ClusteringWorkspaceWrapper repos={repos} />} />
+        <Route path="/repos/:repoId/file-details/*" element={<AnalysisDashboardWrapper repos={repos} />} />
+        <Route path="/repos/:repoId/folder-details/*" element={<AnalysisDashboardWrapper repos={repos} />} />
         <Route path="/repos/:repoId/:tab" element={<AnalysisDashboardWrapper repos={repos} />} />
       </Routes>
 
@@ -91,9 +93,22 @@ function App() {
 type DashboardTab = 'graph' | 'tree' | 'clustering' | 'settings' | 'file-details' | 'folder-details';
 
 function AnalysisDashboardWrapper({ repos }: { repos: RepoInfo[] }) {
-  const { repoId, tab } = useParams<{ repoId: string; tab: string }>();
+  const { repoId, tab, '*': wildcard } = useParams<{ repoId: string; tab: string; '*': string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const repo = repos.find(r => r.id === repoId);
+
+  // Determine active tab - for file-details/* and folder-details/* routes, extract from pathname
+  const getActiveTab = (): DashboardTab => {
+    const pathname = location.pathname;
+    if (pathname.includes('/file-details/') || pathname.match(/\/file-details$/)) {
+      return 'file-details';
+    }
+    if (pathname.includes('/folder-details/') || pathname.match(/\/folder-details$/)) {
+      return 'folder-details';
+    }
+    return (tab as DashboardTab) || 'graph';
+  };
 
   if (!repo) {
     if (repos.length > 0) {
@@ -110,7 +125,7 @@ function AnalysisDashboardWrapper({ repos }: { repos: RepoInfo[] }) {
     <AnalysisDashboard
       repo={repo}
       onBack={() => navigate('/repos')}
-      activeTab={(tab as DashboardTab) || 'graph'}
+      activeTab={getActiveTab()}
       onTabChange={(newTab: DashboardTab) => navigate(`/repos/${repoId}/${newTab}`)}
     />
   );

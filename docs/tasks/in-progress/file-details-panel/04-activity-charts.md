@@ -1,6 +1,6 @@
 # Subtask: Activity Charts
 
-**Status:** Not Started  
+**Status:** ✅ Complete (with data limitations)  
 **Effort:** 3 days
 
 ---
@@ -14,27 +14,41 @@ Add interactive charts for file activity visualization in the Activity tab.
 ## Tasks
 
 ### Timeline View (Default)
-- [ ] Area chart showing commits over time
-- [ ] Granularity toggle: Daily / Weekly / Monthly / Quarterly
-- [ ] Metric selector: Commits / Lines Changed / Authors Active
+- [x] Area chart showing commits over time (basic bar chart implemented)
+- [x] Granularity toggle: Daily / Weekly / Monthly / Quarterly
+- [x] Metric selector: Commits / Lines Changed / Authors Active
 
 ### Heatmap Calendar
-- [ ] GitHub-style contribution heatmap
-- [ ] Color intensity = commit count
-- [ ] Year selector
+- [x] GitHub-style contribution heatmap (basic implementation)
+- [x] Color intensity = commit count
+- [x] Year selector
 
 ### Day/Hour Activity Matrix
-- [ ] 7×24 grid showing activity patterns
-- [ ] Identify when file is typically modified
+- [x] 7×24 grid showing activity patterns
+- [x] Identify when file is typically modified
 
 ### Lines Changed Chart
-- [ ] Stacked area for additions/deletions
-- [ ] Color: green for additions, red for deletions
+- [x] Stacked area for additions/deletions
+- [x] Color: green for additions, red for deletions
+- **Note:** Requires `lines_added`/`lines_deleted` data in parquet (see global-issues.md)
 
 ### Velocity Chart
-- [ ] Changes per time unit
-- [ ] Trend line
-- [ ] Peak indicators
+- [x] Changes per time unit
+- [x] Trend line (moving average)
+- [x] Peak indicators (>1.5x average)
+
+---
+
+## Implementation Notes
+
+**Fixed (Jan 31, 2026):**
+- Timestamp parsing now correctly converts Unix integers to datetime objects
+- Charts render data correctly when available
+
+**Data Limitation:**
+- `lines_added`/`lines_deleted` are not captured during extraction (requires `--numstat`)
+- These charts will show 0s until extraction is enhanced
+- More polished visualizations (currently using basic CSS charts)
 
 ---
 

@@ -99,9 +99,9 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
     }
 
     return (
-        <div className="p-4 space-y-6">
+        <div className="p-4 space-y-6 overflow-x-hidden">
             {/* Timeline Chart */}
-            <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
+            <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50 overflow-hidden">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-semibold text-slate-300">📈 Activity Timeline</h3>
                     <div className="flex items-center gap-2">
@@ -217,7 +217,7 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
             </div>
 
             {/* Heatmap Calendar */}
-            <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
+            <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50 overflow-hidden">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-semibold text-slate-300">📅 Contribution Heatmap</h3>
                     <div className="flex gap-1">
@@ -282,6 +282,151 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
                     </div>
                     <span>More</span>
                 </div>
+            </div>
+
+            {/* Lines Changed Stacked Area Chart */}
+            <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50 overflow-hidden">
+                <h3 className="text-sm font-semibold text-slate-300 mb-4">📊 Lines Changed Over Time</h3>
+
+                <div className="h-40 flex items-end gap-1">
+                    {data.lines_by_period.map((item, i) => {
+                        const total = item.added + item.deleted;
+                        const heightPercent = (total / maxLinesChanged) * 100;
+                        const addedPercent = total > 0 ? (item.added / total) * 100 : 50;
+
+                        return (
+                            <div
+                                key={i}
+                                className="flex-1 min-w-[4px] max-w-[24px] flex flex-col group relative"
+                                style={{ height: `${heightPercent}%` }}
+                                title={`${item.period}: +${item.added} / -${item.deleted}`}
+                            >
+                                <div
+                                    className="bg-emerald-500/80 hover:bg-emerald-400 transition-colors rounded-t"
+                                    style={{ height: `${addedPercent}%` }}
+                                />
+                                <div
+                                    className="bg-red-500/80 hover:bg-red-400 transition-colors rounded-b"
+                                    style={{ height: `${100 - addedPercent}%` }}
+                                />
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-slate-900 text-xs text-slate-300 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                                    {item.period}: <span className="text-emerald-400">+{item.added}</span> / <span className="text-red-400">-{item.deleted}</span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Legend */}
+                <div className="flex items-center gap-4 mt-3 text-xs">
+                    <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 rounded bg-emerald-500" />
+                        <span className="text-slate-400">Additions</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 rounded bg-red-500" />
+                        <span className="text-slate-400">Deletions</span>
+                    </div>
+                </div>
+
+                {/* X-axis labels */}
+                {data.lines_by_period.length > 0 && (
+                    <div className="flex justify-between mt-2 text-[10px] text-slate-600">
+                        <span>{data.lines_by_period[0]?.period}</span>
+                        <span>{data.lines_by_period[data.lines_by_period.length - 1]?.period}</span>
+                    </div>
+                )}
+            </div>
+
+            {/* Velocity Chart */}
+            <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
+                <h3 className="text-sm font-semibold text-slate-300 mb-4">⚡ Change Velocity</h3>
+
+                {(() => {
+                    // Calculate velocity (commits per period) with moving average
+                    const velocityData = data.commits_by_period.map((item, i, arr) => {
+                        // Simple moving average (3 periods)
+                        const windowSize = 3;
+                        const start = Math.max(0, i - windowSize + 1);
+                        const window = arr.slice(start, i + 1);
+                        const avg = window.reduce((sum, w) => sum + w.count, 0) / window.length;
+                        return { ...item, avg };
+                    });
+
+                    const maxVelocity = Math.max(1, ...velocityData.map(d => d.count));
+                    const avgVelocity = velocityData.length > 0
+                        ? velocityData.reduce((sum, d) => sum + d.count, 0) / velocityData.length
+                        : 0;
+
+                    // Find peaks (periods with notably high activity)
+                    const threshold = avgVelocity * 1.5;
+                    const peaks = velocityData.filter(d => d.count > threshold);
+
+                    return (
+                        <>
+                            <div className="h-32 relative flex items-end gap-1">
+                                {/* Average line */}
+                                <div
+                                    className="absolute left-0 right-0 border-t border-dashed border-amber-500/50 pointer-events-none"
+                                    style={{ bottom: `${(avgVelocity / maxVelocity) * 100}%` }}
+                                >
+                                    <span className="absolute right-0 -top-3 text-[10px] text-amber-400">avg: {avgVelocity.toFixed(1)}</span>
+                                </div>
+
+                                {velocityData.map((item, i) => {
+                                    const isPeak = item.count > threshold;
+                                    const heightPercent = (item.count / maxVelocity) * 100;
+
+                                    return (
+                                        <div
+                                            key={i}
+                                            className={cn(
+                                                'flex-1 min-w-[4px] max-w-[24px] rounded-t transition-colors group relative',
+                                                isPeak
+                                                    ? 'bg-amber-500/80 hover:bg-amber-400'
+                                                    : 'bg-sky-500/60 hover:bg-sky-400'
+                                            )}
+                                            style={{ height: `${heightPercent}%` }}
+                                        >
+                                            {isPeak && (
+                                                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[6px] border-b-amber-400" />
+                                            )}
+                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-slate-900 text-xs text-slate-300 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                                                {item.period}: {item.count} commits
+                                                {isPeak && <span className="text-amber-400 ml-1">⚡ peak</span>}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Stats summary */}
+                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-700/50 text-xs">
+                                <div className="text-slate-500">
+                                    <span className="text-slate-300 font-medium">{peaks.length}</span> peak periods detected
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-1">
+                                        <div className="w-2 h-2 rounded bg-sky-500" />
+                                        <span className="text-slate-400">Normal</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <div className="w-2 h-2 rounded bg-amber-500" />
+                                        <span className="text-slate-400">Peak (&gt;1.5× avg)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* X-axis labels */}
+                            {velocityData.length > 0 && (
+                                <div className="flex justify-between mt-2 text-[10px] text-slate-600">
+                                    <span>{velocityData[0]?.period}</span>
+                                    <span>{velocityData[velocityData.length - 1]?.period}</span>
+                                </div>
+                            )}
+                        </>
+                    );
+                })()}
             </div>
 
             {/* Day/Hour Matrix */}

@@ -1,12 +1,15 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { getFileTree } from '../api';
 import { ContextMenu, type ContextMenuItem } from './shared';
-import { FileCode, Link2, Flame, ClipboardCopy } from 'lucide-react';
+import { FileCode, Link2, Flame, ClipboardCopy, ExternalLink, GitBranch } from 'lucide-react';
 
 interface FolderTreeProps {
     repoId: string;
     onFileSelect?: (path: string) => void;
     onOpenDetails?: (path: string, type: 'file' | 'folder') => void;
+    gitWebUrl?: string;
+    gitProvider?: 'github' | 'gitlab' | 'azure_devops' | 'bitbucket' | null;
+    defaultBranch?: string;
 }
 
 interface TreeNode {
@@ -595,7 +598,7 @@ function countFilters(tree: Record<string, TreeNode>): Record<QuickFilter, numbe
     return counts;
 }
 
-export default function FolderTree({ repoId, onFileSelect, onOpenDetails }: FolderTreeProps) {
+export default function FolderTree({ repoId, onFileSelect, onOpenDetails, gitWebUrl, gitProvider, defaultBranch }: FolderTreeProps) {
     const [tree, setTree] = useState<Record<string, TreeNode>>({});
     const [loading, setLoading] = useState(true);
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -706,6 +709,54 @@ export default function FolderTree({ repoId, onFileSelect, onOpenDetails }: Fold
         navigator.clipboard.writeText(path);
     }, []);
 
+    // Build remote URLs
+    const buildFileUrl = useCallback((filePath: string): string | null => {
+        if (!gitWebUrl) return null;
+        const branch = defaultBranch || 'main';
+        switch (gitProvider) {
+            case 'github':
+                return `${gitWebUrl}/blob/${branch}/${filePath}`;
+            case 'gitlab':
+                return `${gitWebUrl}/-/blob/${branch}/${filePath}`;
+            case 'azure_devops':
+                return `${gitWebUrl}?path=/${filePath}`;
+            case 'bitbucket':
+                return `${gitWebUrl}/src/${branch}/${filePath}`;
+            default:
+                return `${gitWebUrl}/blob/${branch}/${filePath}`;
+        }
+    }, [gitWebUrl, gitProvider, defaultBranch]);
+
+    const buildBlameUrl = useCallback((filePath: string): string | null => {
+        if (!gitWebUrl) return null;
+        const branch = defaultBranch || 'main';
+        switch (gitProvider) {
+            case 'github':
+                return `${gitWebUrl}/blame/${branch}/${filePath}`;
+            case 'gitlab':
+                return `${gitWebUrl}/-/blame/${branch}/${filePath}`;
+            default:
+                return null;
+        }
+    }, [gitWebUrl, gitProvider, defaultBranch]);
+
+    const buildFolderUrl = useCallback((folderPath: string): string | null => {
+        if (!gitWebUrl) return null;
+        const branch = defaultBranch || 'main';
+        switch (gitProvider) {
+            case 'github':
+                return `${gitWebUrl}/tree/${branch}/${folderPath}`;
+            case 'gitlab':
+                return `${gitWebUrl}/-/tree/${branch}/${folderPath}`;
+            case 'azure_devops':
+                return `${gitWebUrl}?path=/${folderPath}`;
+            case 'bitbucket':
+                return `${gitWebUrl}/src/${branch}/${folderPath}`;
+            default:
+                return `${gitWebUrl}/tree/${branch}/${folderPath}`;
+        }
+    }, [gitWebUrl, gitProvider, defaultBranch]);
+
     // Build context menu items
     const getContextMenuItems = useCallback((): ContextMenuItem[] => {
         if (!contextMenu.target) return [];
@@ -713,7 +764,10 @@ export default function FolderTree({ repoId, onFileSelect, onOpenDetails }: Fold
         const { path, type } = contextMenu.target;
 
         if (type === 'file') {
-            return [
+            const fileUrl = buildFileUrl(path);
+            const blameUrl = buildBlameUrl(path);
+            
+            const items: ContextMenuItem[] = [
                 {
                     id: 'open-details',
                     label: 'Open Details Panel',
@@ -721,24 +775,55 @@ export default function FolderTree({ repoId, onFileSelect, onOpenDetails }: Fold
                     onClick: () => onOpenDetails?.(path, 'file'),
                 },
                 { id: 'divider1', label: '', divider: true },
-                {
-                    id: 'copy-path',
-                    label: 'Copy Path',
-                    icon: <ClipboardCopy size={14} />,
-                    shortcut: '⌘C',
-                    onClick: () => handleCopyPath(path),
-                },
-                {
-                    id: 'show-coupling',
-                    label: 'Show Coupled Files',
-                    icon: <Link2 size={14} />,
-                    onClick: () => {
-                        onOpenDetails?.(path, 'file');
-                    },
-                },
             ];
+            
+            if (fileUrl) {
+                items.push({
+                    id: 'open-in-repo',
+                    label: 'Open in Repository',
+                    icon: <ExternalLink size={14} />,
+                    onClick: () => window.open(fileUrl, '_blank'),
+                });
+            }
+            if (blameUrl) {
+                items.push({
+                    id: 'view-blame',
+                    label: 'View Blame',
+                    icon: <GitBranch size={14} />,
+                    onClick: () => window.open(blameUrl, '_blank'),
+                });
+            }
+            
+            items.push({
+                id: 'copy-path',
+                label: 'Copy Path',
+                icon: <ClipboardCopy size={14} />,
+                shortcut: '⌘C',
+                onClick: () => handleCopyPath(path),
+            });
+            
+            if (fileUrl) {
+                items.push({
+                    id: 'copy-remote-url',
+                    label: 'Copy Remote URL',
+                    icon: <ClipboardCopy size={14} />,
+                    onClick: () => navigator.clipboard.writeText(fileUrl),
+                });
+            }
+            
+            items.push({ id: 'divider2', label: '', divider: true });
+            items.push({
+                id: 'show-coupling',
+                label: 'Show Coupled Files',
+                icon: <Link2 size={14} />,
+                onClick: () => onOpenDetails?.(path, 'file'),
+            });
+            
+            return items;
         } else {
-            return [
+            const folderUrl = buildFolderUrl(path);
+            
+            const items: ContextMenuItem[] = [
                 {
                     id: 'open-details',
                     label: 'Open Details Panel',
@@ -746,22 +831,36 @@ export default function FolderTree({ repoId, onFileSelect, onOpenDetails }: Fold
                     onClick: () => onOpenDetails?.(path, 'folder'),
                 },
                 { id: 'divider1', label: '', divider: true },
-                {
-                    id: 'copy-path',
-                    label: 'Copy Path',
-                    icon: <ClipboardCopy size={14} />,
-                    shortcut: '⌘C',
-                    onClick: () => handleCopyPath(path),
-                },
-                {
-                    id: 'show-hot-files',
-                    label: 'Show Hot Files',
-                    icon: <Flame size={14} />,
-                    onClick: () => onOpenDetails?.(path, 'folder'),
-                },
             ];
+            
+            if (folderUrl) {
+                items.push({
+                    id: 'browse-in-repo',
+                    label: 'Browse in Repository',
+                    icon: <ExternalLink size={14} />,
+                    onClick: () => window.open(folderUrl, '_blank'),
+                });
+            }
+            
+            items.push({
+                id: 'copy-path',
+                label: 'Copy Path',
+                icon: <ClipboardCopy size={14} />,
+                shortcut: '⌘C',
+                onClick: () => handleCopyPath(path),
+            });
+            
+            items.push({ id: 'divider2', label: '', divider: true });
+            items.push({
+                id: 'show-hot-files',
+                label: 'Show Hot Files',
+                icon: <Flame size={14} />,
+                onClick: () => onOpenDetails?.(path, 'folder'),
+            });
+            
+            return items;
         }
-    }, [contextMenu.target, onOpenDetails, handleCopyPath]);
+    }, [contextMenu.target, onOpenDetails, handleCopyPath, buildFileUrl, buildBlameUrl, buildFolderUrl]);
 
     // Check if node should be visible based on active filters
     const isNodeVisible = useCallback((node: TreeNode, isDir: boolean): boolean => {

@@ -1,6 +1,6 @@
 # Subtask: Folder Details Panel
 
-**Status:** Not Started  
+**Status:** ⚠️ Partial  
 **Effort:** 3 days
 
 ---
@@ -14,14 +14,14 @@ Create folder-level details panel with aggregated stats and visualizations.
 ## Tasks
 
 ### Folder Overview
-- [ ] **Stats cards** — Total files, commits, authors, coupling
-- [ ] **Health score** — Aggregated from child files
-- [ ] **Quick actions** — Open in repo, export
+- [x] **Stats cards** — Total files, commits, authors, coupling
+- [x] **Health score** — Aggregated from child files
+- [x] **Quick actions** — Open in repo, export (UI ready)
 
 ### Hot Files View
-- [ ] **Top 10 hottest files** — Sortable table
+- [x] **Top 10 hottest files** — Sortable table
 - [ ] **Churn distribution** — Mini bar chart
-- [ ] **Click to open file details**
+- [x] **Click to open file details**
 
 ### Activity Treemap
 - [ ] **Treemap visualization** — Size = LOC or commits
@@ -32,6 +32,21 @@ Create folder-level details panel with aggregated stats and visualizations.
 - [ ] **Internal coupling** — Files within folder
 - [ ] **External coupling** — Dependencies outside folder
 - [ ] **Cohesion score** — How well folder is encapsulated
+
+---
+
+## Implementation Notes
+
+**Implemented:**
+- `FolderDetailsPanel.tsx` with stats cards, hot files list, health score
+- API endpoint `/repos/{repo_id}/folders/{path}/details`
+- Click-through to file details
+
+**Missing:**
+- Treemap visualization
+- Coupling map visualization
+- Churn distribution chart
+- Cohesion score
 
 ---
 

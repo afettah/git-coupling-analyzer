@@ -10,98 +10,104 @@
 
 - [Main Findings Report](FINDINGS_REPORT.md) - Comprehensive ground truth analysis
 - [API QA Findings](API_QA_FINDINGS.md) - API testing results and issues found
-- [Validation Report](api_tests/VALIDATION_REPORT.md) - Automated validation results
+- [Detailed QA Report](DETAILED_QA_REPORT.md) - Bug documentation with reproduction steps
+- [Validation Report](VALIDATION_REPORT.md) - Automated validation results
+- [API Test Summary](API_TEST_SUMMARY.md) - Human-readable API test summary
 
 ---
 
 ## 1. Ground Truth Data (from Git)
 
+Data files are located in: `QA/output/openhands/`
+
 ### Repository Statistics
 
 | File | Description | Use Case |
 |------|-------------|----------|
-| [basic_stats.json](basic_stats.json) | Commit counts, file counts, dates | Verify repository-level stats |
-| [quick_stats.json](quick_stats.json) | Quick summary stats | Dashboard validation |
-| [repo_stats.json](repo_stats.json) | Detailed repo statistics | Deep validation |
+| basic_stats.json | Commit counts, file counts, dates | Verify repository-level stats |
+| quick_stats.json | Quick summary stats | Dashboard validation |
+| repo_stats.json | Detailed repo statistics | Deep validation |
 
 ### File Analysis
 
 | File | Description | Use Case |
 |------|-------------|----------|
-| [file_commits.json](file_commits.json) | Top 100 files by commit count | Hotspot validation |
-| [file_commits.csv](file_commits.csv) | All file commit counts | Ranking validation |
-| [file_churn.csv](file_churn.csv) | Lines changed per file | Churn analysis |
-| [deleted_files.json](deleted_files.json) | Deleted file tracking | History validation |
+| file_commits.json | Top 100 files by commit count | Hotspot validation |
+| file_commits.csv | All file commit counts | Ranking validation |
+| file_churn.csv | Lines changed per file | Churn analysis |
+| deleted_files.json | Deleted file tracking | History validation |
 
 ### Coupling Ground Truth
 
 | File | Description | Use Case |
 |------|-------------|----------|
-| [coupling_ground_truth.json](coupling_ground_truth.json) | Known high-coupling pairs | Coupling API validation |
-| [coupling_ground_truth.csv](coupling_ground_truth.csv) | CSV format | Import for comparison |
-| [cochange_pairs.json](cochange_pairs.json) | Top co-change pairs | Edge validation |
-| [cochange_pairs.csv](cochange_pairs.csv) | CSV format | Import for analysis |
-| [test_impl_coupling.json](test_impl_coupling.json) | Test-implementation pairs | Pattern validation |
+| coupling_ground_truth.json | Known high-coupling pairs | Coupling API validation |
+| coupling_ground_truth.csv | CSV format | Import for comparison |
+| cochange_pairs.json | Top co-change pairs | Edge validation |
+| cochange_pairs.csv | CSV format | Import for analysis |
+| test_impl_coupling.json | Test-implementation pairs | Pattern validation |
 
 ### Author & Module Analysis
 
 | File | Description | Use Case |
 |------|-------------|----------|
-| [author_analysis.json](author_analysis.json) | Contributor statistics | Author-based filtering |
-| [author_stats.csv](author_stats.csv) | Author CSV | Import for analysis |
-| [module_analysis.json](module_analysis.json) | Folder-level stats | Component validation |
-| [folder_stats.csv](folder_stats.csv) | Folder CSV | Import for analysis |
+| author_analysis.json | Contributor statistics | Author-based filtering |
+| author_stats.csv | Author CSV | Import for analysis |
+| module_analysis.json | Folder-level stats | Component validation |
+| folder_stats.csv | Folder CSV | Import for analysis |
 
 ### Special Cases
 
 | File | Description | Use Case |
 |------|-------------|----------|
-| [bulk_commits.json](bulk_commits.json) | Commits with >50 files | Bulk commit filtering |
-| [renames.json](renames.json) | File rename tracking | History tracking |
-| [hotspot_analysis.json](hotspot_analysis.json) | Code churn hotspots | Quality analysis |
+| bulk_commits.json | Commits with >50 files | Bulk commit filtering |
+| renames.json | File rename tracking | History tracking |
+| hotspot_analysis.json | Code churn hotspots | Quality analysis |
 
 ---
 
 ## 2. API Test Results
 
+API test data files are located in: `QA/output/openhands/api_tests/`
+
 ### Full API Data
 
 | File | Description |
 |------|-------------|
-| [api_tests/full_api_results.json](api_tests/full_api_results.json) | Complete API responses |
-| [api_tests/API_TEST_SUMMARY.md](api_tests/API_TEST_SUMMARY.md) | Human-readable summary |
+| full_api_results.json | Complete API responses |
 
 ### Individual Endpoints
 
 | File | Endpoint |
 |------|----------|
-| [api_tests/repository_info.json](api_tests/repository_info.json) | GET /repos |
-| [api_tests/file_info.json](api_tests/file_info.json) | GET /repos/{id}/files |
-| [api_tests/coupling_data.json](api_tests/coupling_data.json) | GET /repos/{id}/coupling |
-| [api_tests/coupling_evidence.json](api_tests/coupling_evidence.json) | GET /repos/{id}/coupling/evidence |
-| [api_tests/file_history.json](api_tests/file_history.json) | GET /repos/{id}/files/{path}/history |
-| [api_tests/component_coupling.json](api_tests/component_coupling.json) | GET /repos/{id}/coupling/components |
-| [api_tests/clustering.json](api_tests/clustering.json) | POST /repos/{id}/clustering/run |
-| [api_tests/analysis_status.json](api_tests/analysis_status.json) | GET /repos/{id}/analysis/status |
+| repository_info.json | GET /repos |
+| file_info.json | GET /repos/{id}/files |
+| coupling_data.json | GET /repos/{id}/coupling |
+| coupling_evidence.json | GET /repos/{id}/coupling/evidence |
+| file_history.json | GET /repos/{id}/files/{path}/history |
+| component_coupling.json | GET /repos/{id}/coupling/components |
+| clustering.json | POST /repos/{id}/clustering/run |
+| analysis_status.json | GET /repos/{id}/analysis/status |
 
 ### Validation
 
 | File | Description |
 |------|-------------|
-| [api_tests/VALIDATION_REPORT.json](api_tests/VALIDATION_REPORT.json) | Automated validation results |
-| [api_tests/VALIDATION_REPORT.md](api_tests/VALIDATION_REPORT.md) | Markdown validation report |
+| VALIDATION_REPORT.json | Automated validation results (JSON) |
 
 ---
 
 ## 3. Detailed Statistics
 
+Detailed statistics files are located in: `QA/output/openhands/detailed_stats/`
+
 | File | Description |
 |------|-------------|
-| [detailed_stats/file_details.json](detailed_stats/file_details.json) | Per-file coupling info |
-| [detailed_stats/file_details.csv](detailed_stats/file_details.csv) | CSV for analysis |
-| [detailed_stats/clustering_details.json](detailed_stats/clustering_details.json) | Clustering run results |
-| [detailed_stats/folder_statistics.json](detailed_stats/folder_statistics.json) | Folder-level stats |
-| [detailed_stats/coupling_matrix.json](detailed_stats/coupling_matrix.json) | Top files coupling matrix |
+| file_details.json | Per-file coupling info |
+| file_details.csv | CSV for analysis |
+| clustering_details.json | Clustering run results |
+| folder_statistics.json | Folder-level stats |
+| coupling_matrix.json | Top files coupling matrix |
 
 ---
 

@@ -14,9 +14,10 @@ export interface ClustersTabProps {
     clusters: ClusterData[];
     viewMode: ViewMode;
     depth: number;
+    onFileSelect?: (path: string) => void;
 }
 
-export function ClustersTab({ clusters, viewMode, depth }: ClustersTabProps) {
+export function ClustersTab({ clusters, viewMode, depth, onFileSelect }: ClustersTabProps) {
     // Modal state
     const [selectedCluster, setSelectedCluster] = useState<ClusterData | null>(null);
 
@@ -65,6 +66,7 @@ export function ClustersTab({ clusters, viewMode, depth }: ClustersTabProps) {
                             folderDepth={depth}
                             onExplore={() => handleExplore(cluster)}
                             onExport={() => handleExportCluster(cluster)}
+                            onFileSelect={onFileSelect}
                         />
                     ))}
                 </div>
@@ -83,6 +85,7 @@ export function ClustersTab({ clusters, viewMode, depth }: ClustersTabProps) {
                     cluster={selectedCluster}
                     onClose={handleCloseModal}
                     onExport={() => handleExportCluster(selectedCluster)}
+                    onFileSelect={onFileSelect}
                 />
             )}
         </div>

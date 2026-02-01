@@ -1,6 +1,6 @@
 # Subtask: Authors & Coupling Tabs
 
-**Status:** Not Started  
+**Status:** ✅ Complete (with data limitations)  
 **Effort:** 3 days
 
 ---
@@ -14,16 +14,31 @@ Add author analysis and coupling visualization tabs to the file details panel.
 ## Tasks
 
 ### Authors Tab
-- [ ] **Author donut chart** — Commits by author
-- [ ] **Author list** — Sortable table with stats
-- [ ] **Author timeline** — When each author contributed
-- [ ] **Ownership badge** — Primary owner indicator
+- [x] **Author donut chart** — Commits by author
+- [x] **Author list** — Sortable table with stats
+- [x] **Author timeline** — When each author contributed (basic)
+- [x] **Ownership badge** — Primary owner indicator (crown icon)
 
 ### Coupling Tab
-- [ ] **Coupling network graph** — Mini force graph
-- [ ] **Coupled files list** — Sortable by Jaccard
-- [ ] **Coupling evidence modal** — Why coupled (commits)
-- [ ] **Coupling trends** — Improving/worsening indicators
+- [x] **Coupling network graph** — Mini force graph (basic SVG)
+- [x] **Coupled files list** — Sortable by Jaccard
+- [x] **Coupling evidence modal** — Why coupled (commits)
+- [ ] **Coupling trends** — Improving/worsening indicators (future enhancement)
+
+---
+
+## Implementation Notes
+
+**Fixed (Jan 31, 2026):**
+- Timestamp parsing in `/files/{path}/authors` endpoint
+- Author statistics now render correctly
+
+**Data Limitation:**
+- `lines_added`/`lines_deleted` per author will show 0s (extraction limitation)
+- Coupling data is correctly populated from edges table
+
+**Future Enhancement:**
+- Coupling trends would require historical snapshot data
 
 ---
 
