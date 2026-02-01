@@ -78,7 +78,7 @@ function CommitDetailModal({
     onClose: () => void;
 }) {
     const commitUrl = buildCommitUrl(gitWebUrl, gitProvider, commit.oid);
-    
+
     return (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6" onClick={onClose}>
             <div className="bg-slate-900 border border-slate-700 rounded-lg p-5 max-w-lg w-full" onClick={e => e.stopPropagation()}>
@@ -88,7 +88,7 @@ function CommitDetailModal({
                         <X size={16} />
                     </button>
                 </div>
-                
+
                 <div className="space-y-4">
                     {/* Commit hash */}
                     <div className="flex items-center gap-2">
@@ -105,12 +105,12 @@ function CommitDetailModal({
                             </a>
                         )}
                     </div>
-                    
+
                     {/* Message */}
                     <div className="bg-slate-800/50 rounded-lg p-3">
                         <p className="text-sm text-slate-200 whitespace-pre-wrap">{commit.message || 'No message'}</p>
                     </div>
-                    
+
                     {/* Author and date */}
                     <div className="grid grid-cols-2 gap-4 text-sm">
                         <div className="flex items-center gap-2">
@@ -126,7 +126,7 @@ function CommitDetailModal({
                             </span>
                         </div>
                     </div>
-                    
+
                     {/* Changes */}
                     <div className="flex items-center gap-4 pt-3 border-t border-slate-700">
                         <span className="text-sm text-slate-400">Changes:</span>
@@ -134,7 +134,7 @@ function CommitDetailModal({
                         <span className="text-sm text-red-400">-{commit.lines_deleted} deletions</span>
                     </div>
                 </div>
-                
+
                 <div className="mt-5 flex justify-end gap-2">
                     {commitUrl && (
                         <a
@@ -175,7 +175,7 @@ function CommitItem({
     const botCommit = isBot(commit.author);
 
     return (
-        <div 
+        <div
             className="p-3 border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors group cursor-pointer"
             onClick={onShowDetail}
         >
@@ -305,7 +305,7 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
                         />
                     </div>
                 </div>
-                
+
                 <div className="flex items-center gap-4 mt-2">
                     <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
                         <input

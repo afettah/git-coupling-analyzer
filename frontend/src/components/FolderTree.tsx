@@ -766,7 +766,7 @@ export default function FolderTree({ repoId, onFileSelect, onOpenDetails, gitWeb
         if (type === 'file') {
             const fileUrl = buildFileUrl(path);
             const blameUrl = buildBlameUrl(path);
-            
+
             const items: ContextMenuItem[] = [
                 {
                     id: 'open-details',
@@ -776,7 +776,7 @@ export default function FolderTree({ repoId, onFileSelect, onOpenDetails, gitWeb
                 },
                 { id: 'divider1', label: '', divider: true },
             ];
-            
+
             if (fileUrl) {
                 items.push({
                     id: 'open-in-repo',
@@ -793,7 +793,7 @@ export default function FolderTree({ repoId, onFileSelect, onOpenDetails, gitWeb
                     onClick: () => window.open(blameUrl, '_blank'),
                 });
             }
-            
+
             items.push({
                 id: 'copy-path',
                 label: 'Copy Path',
@@ -801,7 +801,7 @@ export default function FolderTree({ repoId, onFileSelect, onOpenDetails, gitWeb
                 shortcut: '⌘C',
                 onClick: () => handleCopyPath(path),
             });
-            
+
             if (fileUrl) {
                 items.push({
                     id: 'copy-remote-url',
@@ -810,7 +810,7 @@ export default function FolderTree({ repoId, onFileSelect, onOpenDetails, gitWeb
                     onClick: () => navigator.clipboard.writeText(fileUrl),
                 });
             }
-            
+
             items.push({ id: 'divider2', label: '', divider: true });
             items.push({
                 id: 'show-coupling',
@@ -818,11 +818,11 @@ export default function FolderTree({ repoId, onFileSelect, onOpenDetails, gitWeb
                 icon: <Link2 size={14} />,
                 onClick: () => onOpenDetails?.(path, 'file'),
             });
-            
+
             return items;
         } else {
             const folderUrl = buildFolderUrl(path);
-            
+
             const items: ContextMenuItem[] = [
                 {
                     id: 'open-details',
@@ -832,7 +832,7 @@ export default function FolderTree({ repoId, onFileSelect, onOpenDetails, gitWeb
                 },
                 { id: 'divider1', label: '', divider: true },
             ];
-            
+
             if (folderUrl) {
                 items.push({
                     id: 'browse-in-repo',
@@ -841,7 +841,7 @@ export default function FolderTree({ repoId, onFileSelect, onOpenDetails, gitWeb
                     onClick: () => window.open(folderUrl, '_blank'),
                 });
             }
-            
+
             items.push({
                 id: 'copy-path',
                 label: 'Copy Path',
@@ -849,7 +849,7 @@ export default function FolderTree({ repoId, onFileSelect, onOpenDetails, gitWeb
                 shortcut: '⌘C',
                 onClick: () => handleCopyPath(path),
             });
-            
+
             items.push({ id: 'divider2', label: '', divider: true });
             items.push({
                 id: 'show-hot-files',
@@ -857,7 +857,7 @@ export default function FolderTree({ repoId, onFileSelect, onOpenDetails, gitWeb
                 icon: <Flame size={14} />,
                 onClick: () => onOpenDetails?.(path, 'folder'),
             });
-            
+
             return items;
         }
     }, [contextMenu.target, onOpenDetails, handleCopyPath, buildFileUrl, buildBlameUrl, buildFolderUrl]);

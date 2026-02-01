@@ -206,8 +206,8 @@ function FilePreviewItem({
 }: FilePreviewItemProps) {
     return (
         <div className={`flex items-center justify-between rounded-lg px-3 py-2 ${isHot
-                ? 'bg-rose-500/10 border border-rose-500/30'
-                : 'bg-slate-950 border border-slate-800'
+            ? 'bg-rose-500/10 border border-rose-500/30'
+            : 'bg-slate-950 border border-slate-800'
             }`}>
             <div className="flex items-center gap-2 min-w-0">
                 {isHot ? (

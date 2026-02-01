@@ -242,7 +242,7 @@ function CouplingVisualization({
 }) {
     const total = stats.internal_coupling + stats.external_coupling;
     const internalPercent = total > 0 ? (stats.internal_coupling / total) * 100 : 50;
-    
+
     const cohesionColor = stats.cohesion_score >= 70
         ? 'text-emerald-400'
         : stats.cohesion_score >= 40
@@ -264,7 +264,7 @@ function CouplingVisualization({
                         className={cn(
                             'h-full rounded-full transition-all',
                             stats.cohesion_score >= 70 ? 'bg-emerald-500' :
-                            stats.cohesion_score >= 40 ? 'bg-amber-500' : 'bg-red-500'
+                                stats.cohesion_score >= 40 ? 'bg-amber-500' : 'bg-red-500'
                         )}
                         style={{ width: `${stats.cohesion_score}%` }}
                     />

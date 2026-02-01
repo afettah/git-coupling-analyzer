@@ -96,15 +96,15 @@ function TrendIndicator({
     format?: 'number' | 'percent';
     invertColors?: boolean; // For metrics where "up" is bad (like churn)
 }) {
-    const displayValue = format === 'percent' 
-        ? `${Math.round(currentValue)}%` 
+    const displayValue = format === 'percent'
+        ? `${Math.round(currentValue)}%`
         : currentValue.toLocaleString();
-    
+
     // Determine colors based on trend and inversion
     let TrendIcon = Minus;
     let trendColor = 'text-slate-400';
     let trendBg = 'bg-slate-500/10';
-    
+
     if (trend === 'up') {
         TrendIcon = ArrowUpRight;
         if (invertColors) {
@@ -256,33 +256,33 @@ export function FileInsightsTab({ details, coupling }: FileInsightsTabProps) {
 
     // Calculate trends
     // Activity trend: Compare recent activity to historical average
-    const fileAgeMonths = details.first_commit_date 
+    const fileAgeMonths = details.first_commit_date
         ? Math.max(1, Math.round((Date.now() - new Date(details.first_commit_date).getTime()) / (30 * 24 * 60 * 60 * 1000)))
         : 1;
     const avgCommitsPerMonth = details.total_commits / fileAgeMonths;
     const recentActivity = details.commits_last_30_days;
     const activityRatio = avgCommitsPerMonth > 0 ? recentActivity / avgCommitsPerMonth : 0;
-    
+
     const activityTrend = activityRatio > 1.5 ? 'up' : activityRatio < 0.5 ? 'down' : 'stable';
-    const activityTrendLabel = activityRatio > 1.5 
-        ? `${Math.round((activityRatio - 1) * 100)}% more active` 
-        : activityRatio < 0.5 
+    const activityTrendLabel = activityRatio > 1.5
+        ? `${Math.round((activityRatio - 1) * 100)}% more active`
+        : activityRatio < 0.5
             ? `${Math.round((1 - activityRatio) * 100)}% less active`
             : 'Normal activity';
 
     // Churn trend: Is the file becoming more volatile?
     const churnTrend = details.churn_rate > 5 ? 'up' : details.churn_rate < 2 ? 'down' : 'stable';
-    const churnTrendLabel = details.churn_rate > 5 
-        ? 'High churn' 
-        : details.churn_rate < 2 
+    const churnTrendLabel = details.churn_rate > 5
+        ? 'High churn'
+        : details.churn_rate < 2
             ? 'Stable'
             : 'Moderate';
 
     // Coupling trend: Based on current coupling level
     const couplingTrend = details.max_coupling > 0.7 ? 'up' : details.max_coupling < 0.3 ? 'down' : 'stable';
-    const couplingTrendLabel = details.max_coupling > 0.7 
-        ? 'Tightly coupled' 
-        : details.max_coupling < 0.3 
+    const couplingTrendLabel = details.max_coupling > 0.7
+        ? 'Tightly coupled'
+        : details.max_coupling < 0.3
             ? 'Loosely coupled'
             : 'Normal';
 
