@@ -33,26 +33,12 @@
 ---
 
 ## 1. Test Environment Setup
-
-### Prerequisites
-
-```bash
-# 1. Start backend API server
-cd /home/afettah/workspace/git-coupling-analyzer
-source .venv/bin/activate
-uvicorn lfca.api:app --reload --port 8000
-
-# 2. Start frontend (separate terminal)
-cd frontend
-npm run dev
-
-# 3. Ensure clean state (optional - for fresh testing)
-rm -rf data/repos/*
 ```
 
 ### Test Repository
 
 - **Path**: `/home/afettah/workspace/git-coupling-analyzer/tmp/OpenHands`
+- **Analyses**: Detailed analysis of the proejct are in /home/afettah/workspace/git-coupling-analyzer/QA
 - **Expected Commits**: ~5,971 total (5,970 non-merge)
 - **Expected Files at HEAD**: ~2,765
 - **Expected Edges (min_cooccurrence=5)**: ~400-500
