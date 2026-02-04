@@ -99,11 +99,38 @@ CREATE TABLE IF NOT EXISTS analysis_runs (
     commit_count INTEGER DEFAULT 0,
     file_count INTEGER DEFAULT 0,
     edge_count INTEGER DEFAULT 0,
+    skipped_invalid_status INTEGER DEFAULT 0,
+    skipped_invalid_path INTEGER DEFAULT 0,
+    skipped_suspicious_path INTEGER DEFAULT 0,
+    validation_issues INTEGER DEFAULT 0,
+    skipped_incomplete INTEGER DEFAULT 0,
     started_at TEXT,
     finished_at TEXT,
     error TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Validation log for tracking skipped items and parsing issues
+CREATE TABLE IF NOT EXISTS validation_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id TEXT NOT NULL,
+    commit_oid TEXT,
+    issue_type TEXT NOT NULL,
+    severity TEXT NOT NULL,
+    token_value TEXT,
+    expected_value TEXT,
+    message TEXT NOT NULL,
+    -- Extended context for debugging (recommendation #6)
+    author TEXT,
+    committed_at INTEGER,
+    subject TEXT,
+    cursor_position INTEGER,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_validation_run ON validation_log(run_id);
+CREATE INDEX IF NOT EXISTS idx_validation_type ON validation_log(issue_type);
+CREATE INDEX IF NOT EXISTS idx_validation_severity ON validation_log(severity);
 
 -- Repository metadata
 CREATE TABLE IF NOT EXISTS repo_meta (

@@ -15,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 import pyarrow.dataset as ds
 
-from lfca.config import RepoPaths, CouplingConfig
+from lfca.config import RepoPaths, CouplingConfig, ValidationMode
 from lfca.storage import Storage
 from lfca.sync import build_file_tree, get_folder_list
 from lfca.clustering.insights import calculate_cluster_insights, compare_clusters
@@ -81,6 +81,8 @@ class RepoInfo(BaseModel):
     state: str
     file_count: int = 0
     commit_count: int = 0
+    validation_issues: int = 0
+    has_errors: bool = False
 
 
 class FileInfo(BaseModel):
@@ -119,6 +121,17 @@ class AnalysisRequest(BaseModel):
     since: str | None = None
     until: str | None = None
     data_dir: str = "data"
+    # Validation settings
+    validation_mode: str = Field(
+        default="soft",
+        description="Validation mode: 'strict' (abort on errors), 'soft' (log and skip), 'permissive' (accept questionable data)"
+    )
+    max_validation_issues: int = Field(
+        default=200,
+        ge=10,
+        le=10000,
+        description="Maximum validation issues to log per run (for performance)"
+    )
 
 
 class ClusterRequest(BaseModel):
@@ -190,6 +203,181 @@ def index() -> FileResponse:
     return FileResponse(_STATIC_DIR / "index.html")
 
 
+@app.get("/repos/{repo_id}/coupling/test-impl")
+async def get_test_impl_coupling(
+    repo_id: str,
+    data_dir: str = "data",
+    min_coupling: float = Query(0.3, ge=0, le=1),
+    limit: int = Query(100, ge=1, le=1000)
+):
+    """
+    Get test-implementation file coupling pairs.
+    
+    Returns files where one matches 'test' pattern and the other doesn't,
+    with coupling above threshold.
+    """
+    storage = get_storage(repo_id, data_dir)
+    
+    query = """
+        SELECT 
+            f1.path_current as test_file,
+            f2.path_current as impl_file,
+            e.jaccard,
+            e.pair_count,
+            e.p_dst_given_src as p_impl_given_test,
+            e.p_src_given_dst as p_test_given_impl
+        FROM edges e
+        JOIN files f1 ON e.src_file_id = f1.file_id
+        JOIN files f2 ON e.dst_file_id = f2.file_id
+        WHERE (
+            (f1.path_current LIKE '%test%' AND f2.path_current NOT LIKE '%test%')
+            OR
+            (f2.path_current LIKE '%test%' AND f1.path_current NOT LIKE '%test%')
+        )
+        AND e.jaccard >= ?
+        ORDER BY e.jaccard DESC
+        LIMIT ?
+    """
+    
+    results = storage.conn.execute(query, (min_coupling, limit)).fetchall()
+    return {"pairs": [dict(r) for r in results], "count": len(results)}
+
+
+@app.get("/repos/{repo_id}/validation/stats")
+async def get_validation_stats(
+    repo_id: str,
+    data_dir: str = "data",
+    run_id: str | None = Query(None, description="Specific run ID, or latest if omitted")
+):
+    """
+    Get validation statistics for a repository analysis run.
+    Shows counts of skipped items by category.
+    """
+    storage = get_storage(repo_id, data_dir)
+    
+    # Get run_id if not provided
+    if not run_id:
+        row = storage.conn.execute(
+            "SELECT run_id FROM analysis_runs ORDER BY created_at DESC LIMIT 1"
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="No analysis runs found")
+        run_id = row[0]
+    
+    # Get stats from analysis_runs table
+    row = storage.conn.execute("""
+        SELECT 
+            run_id, state, commit_count, file_count,
+            skipped_invalid_status, skipped_invalid_path, 
+            skipped_suspicious_path, validation_issues,
+            started_at, finished_at
+        FROM analysis_runs
+        WHERE run_id = ?
+    """, (run_id,)).fetchone()
+    
+    if not row:
+        raise HTTPException(status_code=404, detail=f"Run not found: {run_id}")
+    
+    return {
+        "run_id": row[0],
+        "state": row[1],
+        "commit_count": row[2],
+        "file_count": row[3],
+        "validation": {
+            "skipped_invalid_status": row[4] or 0,
+            "skipped_invalid_path": row[5] or 0,
+            "skipped_suspicious_path": row[6] or 0,
+            "total_issues": row[7] or 0
+        },
+        "started_at": row[8],
+        "finished_at": row[9]
+    }
+
+
+@app.get("/repos/{repo_id}/validation/log")
+async def get_validation_log(
+    repo_id: str,
+    data_dir: str = "data",
+    run_id: str | None = Query(None, description="Specific run ID, or latest if omitted"),
+    issue_type: str | None = Query(None, description="Filter by issue type: invalid_status, invalid_path"),
+    severity: str | None = Query(None, description="Filter by severity: warning, error"),
+    search: str | None = Query(None, description="Search in token_value or message"),
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0)
+):
+    """
+    Query validation log with filtering and search.
+    Returns detailed log entries for skipped/invalid items.
+    """
+    storage = get_storage(repo_id, data_dir)
+    
+    # Get run_id if not provided
+    if not run_id:
+        row = storage.conn.execute(
+            "SELECT run_id FROM analysis_runs ORDER BY created_at DESC LIMIT 1"
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="No analysis runs found")
+        run_id = row[0]
+    
+    # Build query with filters
+    conditions = ["vl.run_id = ?"]
+    params = [run_id]
+    
+    if issue_type:
+        conditions.append("vl.issue_type = ?")
+        params.append(issue_type)
+    
+    if severity:
+        conditions.append("vl.severity = ?")
+        params.append(severity)
+    
+    if search:
+        conditions.append("(vl.token_value LIKE ? OR vl.message LIKE ?)")
+        search_pattern = f"%{search}%"
+        params.extend([search_pattern, search_pattern])
+    
+    where_clause = " AND ".join(conditions)
+    
+    # Get total count
+    count_query = f"SELECT COUNT(*) FROM validation_log vl WHERE {where_clause}"
+    total = storage.conn.execute(count_query, params).fetchone()[0]
+    
+    # Get paginated results
+    params.extend([limit, offset])
+    query = f"""
+        SELECT 
+            vl.id, vl.commit_oid, vl.issue_type, vl.severity,
+            vl.token_value, vl.expected_value, vl.message, vl.created_at
+        FROM validation_log vl
+        WHERE {where_clause}
+        ORDER BY vl.id DESC
+        LIMIT ? OFFSET ?
+    """
+    
+    rows = storage.conn.execute(query, params).fetchall()
+    
+    return {
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "run_id": run_id,
+        "items": [
+            {
+                "id": r[0],
+                "commit_oid": r[1],
+                "issue_type": r[2],
+                "severity": r[3],
+                "token_value": r[4],
+                "expected_value": r[5],
+                "message": r[6],
+                "created_at": r[7]
+            }
+            for r in rows
+        ]
+    }
+
+
 @app.get("/repos", response_model=List[RepoInfo])
 def list_repositories(data_dir: str = "data") -> List[RepoInfo]:
     repos_base = Path(data_dir) / "repos"
@@ -207,20 +395,25 @@ def list_repositories(data_dir: str = "data") -> List[RepoInfo]:
         try:
             # Get latest run info
             row = storage.conn.execute("""
-                SELECT state, commit_count, file_count FROM analysis_runs
+                SELECT state, commit_count, file_count, validation_issues, error
+                FROM analysis_runs
                 ORDER BY created_at DESC LIMIT 1
             """).fetchone()
             
             state = row[0] if row else "not_started"
             commit_count = row[1] or 0 if row else 0
             file_count = row[2] or 0 if row else 0
+            validation_issues = row[3] or 0 if row and len(row) > 3 else 0
+            has_errors = bool(row[4]) if row and len(row) > 4 else False
             
             results.append(RepoInfo(
                 id=repo_id,
                 name=repo_id,
                 state=state,
                 commit_count=commit_count,
-                file_count=file_count
+                file_count=file_count,
+                validation_issues=validation_issues,
+                has_errors=has_errors
             ))
         finally:
             storage.close()
@@ -1475,6 +1668,8 @@ def _run_analysis_job(repo_id: str, request: AnalysisRequest) -> None:
         ticket_id_pattern=request.ticket_id_pattern,
         min_cooccurrence=request.min_cooccurrence,
         window_days=request.window_days,
+        validation_mode=ValidationMode(request.validation_mode),
+        max_validation_issues=request.max_validation_issues,
     )
     
     run_id = create_run(paths, config)

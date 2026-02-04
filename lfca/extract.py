@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable
+from typing import Callable, List
 
 import pyarrow as pa
 
-from lfca.config import RepoPaths, CouplingConfig
-from lfca.git import iter_log
+from lfca.config import RepoPaths, CouplingConfig, ValidationMode
+from lfca.git import iter_log, ValidationIssue
 from lfca.storage import Storage
 from lfca.sync import sync_head_files
 from lfca.logging_utils import get_logger
@@ -24,6 +24,13 @@ class ExtractStats:
     file_count: int = 0
     change_count: int = 0
     transaction_count: int = 0
+    skipped_invalid_status: int = 0
+    skipped_invalid_path: int = 0
+    skipped_suspicious_path: int = 0
+    skipped_incomplete: int = 0
+    validation_issues: int = 0
+    # Capped sample of issues for logging (avoid memory bloat)
+    issue_samples: List[ValidationIssue] = field(default_factory=list)
 
 
 class HistoryExtractor:
@@ -43,23 +50,42 @@ class HistoryExtractor:
         progress_callback: Callable[[int], None] | None = None,
     ) -> ExtractStats:
         """Run extraction from mirror."""
-        logger.info(f"Starting extraction (since={since}, until={until})")
+        logger.info(f"Starting extraction (since={since}, until={until}, mode={self.config.validation_mode.value})")
         self.paths.ensure_dirs()
         
         stats = ExtractStats()
         file_commit_counts: Counter[int] = Counter()
+        max_issues = self.config.max_validation_issues
         
         # Collect commits for Parquet
         commits_data = []
         changes_data = []
         
-        # Process git log from MIRROR
+        # Process git log from MIRROR with validation mode
         for header, changes in iter_log(
             self.paths.mirror_path,
             since=since,
-            until=until
+            until=until,
+            validation_mode=self.config.validation_mode.value,
         ):
             stats.commit_count += 1
+            
+            # Record validation issues from git log parsing (with cap)
+            if header.validation_issues:
+                for issue in header.validation_issues:
+                    stats.validation_issues += 1
+                    
+                    # Count by type
+                    if issue.issue_type == "invalid_status":
+                        stats.skipped_invalid_status += 1
+                    elif issue.issue_type == "invalid_path":
+                        stats.skipped_invalid_path += 1
+                    elif issue.issue_type == "incomplete_change":
+                        stats.skipped_incomplete += 1
+                    
+                    # Keep sample of issues (capped for performance)
+                    if len(stats.issue_samples) < max_issues:
+                        stats.issue_samples.append(issue)
             
             if progress_callback and stats.commit_count % 100 == 0:
                 progress_callback(stats.commit_count)
@@ -90,6 +116,17 @@ class HistoryExtractor:
                 for status, path, old_path in changes:
                     if not path:
                         continue
+                    
+                    # Defense-in-depth: skip invalid paths that leaked through
+                    if len(path) <= 3 and path.isalpha():
+                        logger.warning(f"Skipping invalid path: {path!r}")
+                        stats.skipped_suspicious_path += 1
+                        continue
+                    if not ('/' in path or '.' in path):
+                        if len(path) < 10:  # Short paths without / or . are suspicious
+                            logger.warning(f"Skipping suspicious path: {path!r}")
+                            stats.skipped_suspicious_path += 1
+                            continue
                     
                     # Get or create file
                     file_id = self.storage.get_or_create_file(path)

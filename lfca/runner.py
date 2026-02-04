@@ -71,7 +71,21 @@ def run_analysis(
         stats = extractor.run(since=since, until=until, progress_callback=progress_callback)
         extractor.close()
         
-        update_state("running", commit_count=stats.commit_count, file_count=stats.file_count)
+        update_state(
+            "running",
+            commit_count=stats.commit_count,
+            file_count=stats.file_count,
+            skipped_invalid_status=stats.skipped_invalid_status,
+            skipped_invalid_path=stats.skipped_invalid_path,
+            skipped_suspicious_path=stats.skipped_suspicious_path,
+            skipped_incomplete=stats.skipped_incomplete,
+            validation_issues=stats.validation_issues
+        )
+        
+        # Store validation issue samples to DB (capped for performance)
+        if stats.issue_samples:
+            storage.record_validation_issues_batch(run_id, stats.issue_samples)
+            storage.conn.commit()
         
         # 3. Build edges
         logger.info("Building coupling edges...")
@@ -86,13 +100,24 @@ def run_analysis(
         )
         
         logger.info(f"Analysis complete: {stats.commit_count} commits, {stats.file_count} files, {edge_count} edges")
+        if stats.validation_issues > 0:
+            logger.warning(f"Validation issues: {stats.validation_issues} total "
+                         f"({stats.skipped_invalid_status} invalid status, "
+                         f"{stats.skipped_invalid_path} invalid paths, "
+                         f"{stats.skipped_suspicious_path} suspicious paths, "
+                         f"{stats.skipped_incomplete} incomplete changes)")
         
         return {
             "run_id": run_id,
             "state": "complete",
             "commit_count": stats.commit_count,
             "file_count": stats.file_count,
-            "edge_count": edge_count
+            "edge_count": edge_count,
+            "validation_issues": stats.validation_issues,
+            "skipped_invalid_status": stats.skipped_invalid_status,
+            "skipped_invalid_path": stats.skipped_invalid_path,
+            "skipped_suspicious_path": stats.skipped_suspicious_path,
+            "skipped_incomplete": stats.skipped_incomplete,
         }
     
     except Exception as e:

@@ -2,7 +2,20 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
+
+
+class ValidationMode(str, Enum):
+    """Validation mode for git log parsing.
+    
+    - strict: Abort on any invalid token (for CI pipelines, data quality gates)
+    - soft: Log issues and skip invalid tokens (default, balanced approach)
+    - permissive: Accept questionable data, tag for filtering (exploratory analysis)
+    """
+    STRICT = "strict"
+    SOFT = "soft"
+    PERMISSIVE = "permissive"
 
 
 @dataclass
@@ -35,6 +48,10 @@ class CouplingConfig:
     # Edge computation
     topk_edges_per_file: int = 50
     
+    # Validation settings
+    validation_mode: ValidationMode = ValidationMode.SOFT
+    max_validation_issues: int = 200  # Cap logged issues per run for performance
+    
     def to_dict(self) -> dict:
         return {
             "min_revisions": self.min_revisions,
@@ -49,6 +66,8 @@ class CouplingConfig:
             "window_days": self.window_days,
             "decay_half_life_days": self.decay_half_life_days,
             "topk_edges_per_file": self.topk_edges_per_file,
+            "validation_mode": self.validation_mode.value,
+            "max_validation_issues": self.max_validation_issues,
         }
     
     @classmethod

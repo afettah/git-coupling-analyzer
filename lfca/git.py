@@ -2,16 +2,143 @@ from __future__ import annotations
 
 import re
 import subprocess
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import Enum, auto
 from pathlib import Path
 from typing import Iterable, Iterator, List
 
 
 _COMMIT_MARKER = "__LFCA_COMMIT__"
 _HEX40_RE = re.compile(r"^[0-9a-f]{40}$")
+_VALID_STATUS_RE = re.compile(r"^([AMDTUXB]|[RC]\d{2,3})$")
 
 
-@dataclass(frozen=True)
+class ParseState(Enum):
+    """State machine states for deterministic git log parsing."""
+    EXPECT_COMMIT_OR_STATUS = auto()  # After header or change, expect next commit or status
+    EXPECT_PATH = auto()              # After A/M/D status, expect file path
+    EXPECT_OLD_PATH = auto()          # After R/C status, expect old path
+    EXPECT_NEW_PATH = auto()          # After old path in rename, expect new path
+
+
+@dataclass
+class ValidationIssue:
+    """Record of a validation issue during parsing."""
+    commit_oid: str | None
+    issue_type: str
+    severity: str  # 'warning' | 'error'
+    token_value: str | None
+    expected_value: str | None
+    message: str
+    # Extended context for debugging
+    author: str | None = None
+    committed_at: int | None = None
+    subject: str | None = None
+    cursor_position: int | None = None
+
+
+@dataclass
+class ParseContext:
+    """Mutable context for the state machine parser."""
+    state: ParseState = ParseState.EXPECT_COMMIT_OR_STATUS
+    cursor: int = 0
+    pending_status: str | None = None
+    pending_old_path: str | None = None
+
+
+@dataclass
+class ValidationIssue:
+    """Record of a validation issue during parsing."""
+    commit_oid: str | None
+    issue_type: str
+    severity: str  # 'warning' | 'error'
+    token_value: str | None
+    expected_value: str | None
+    message: str
+    # Extended context for debugging
+    author: str | None = None
+    committed_at: int | None = None
+    subject: str | None = None
+    cursor_position: int | None = None
+
+
+@dataclass
+class ParseContext:
+    """Mutable context for the state machine parser."""
+    state: ParseState = ParseState.EXPECT_COMMIT_OR_STATUS
+    cursor: int = 0
+    pending_status: str | None = None
+    pending_old_path: str | None = None
+
+
+def _is_valid_git_status(token: str) -> bool:
+    """Check if token is a valid git status code."""
+    return bool(_VALID_STATUS_RE.match(token))
+
+
+def _is_valid_path(path: str, strict: bool = True) -> bool:
+    """Reject obviously invalid file paths.
+    
+    Args:
+        path: The path to validate
+        strict: If True, apply stricter validation rules
+    """
+    if not path or len(path) < 2:
+        return False
+    # Single letters are status codes, not files
+    if len(path) == 1:
+        return False
+    # Rename similarity codes (R100, R091, etc.)
+    if re.match(r'^[RC]\d{2,3}$', path):
+        return False
+    # Git commit hashes
+    if re.match(r'^[0-9a-f]{40}$', path):
+        return False
+    # Unix timestamps
+    if re.match(r'^\d{9,10}$', path):
+        return False
+    # Email addresses (no slash, has @)
+    if '@' in path and '/' not in path:
+        return False
+    # Internal markers
+    if path.startswith('__LFCA_'):
+        return False
+    
+    if strict:
+        # In strict mode, short paths without / or . are suspicious
+        if len(path) <= 3 and path.isalpha():
+            return False
+        if not ('/' in path or '.' in path) and len(path) < 10:
+            return False
+    
+    return True
+
+
+def _create_issue(
+    issue_type: str,
+    token: str | None,
+    expected: str,
+    message: str,
+    header: "CommitHeader | None" = None,
+    cursor: int | None = None,
+    severity: str = "warning"
+) -> ValidationIssue:
+    """Factory for creating validation issues with commit context."""
+    return ValidationIssue(
+        commit_oid=header.commit_oid if header else None,
+        issue_type=issue_type,
+        severity=severity,
+        token_value=token,
+        expected_value=expected,
+        message=message,
+        author=header.author_name if header else None,
+        committed_at=header.committer_ts if header else None,
+        subject=header.subject if header else None,
+        cursor_position=cursor,
+    )
+
+
+@dataclass
 class CommitHeader:
     commit_oid: str
     parents: List[str]
@@ -20,6 +147,7 @@ class CommitHeader:
     authored_ts: int
     committer_ts: int
     subject: str
+    validation_issues: List[ValidationIssue] = field(default_factory=list)
 
 
 def _token_stream(proc: subprocess.Popen[bytes], chunk_size: int = 1 << 20) -> Iterator[str]:
@@ -41,8 +169,25 @@ def iter_log(
     since: str | None = None,
     until: str | None = None,
     ref: str = "HEAD",
-    all_refs: bool = False
+    all_refs: bool = False,
+    validation_mode: str = "soft",  # strict | soft | permissive
 ) -> Iterable[tuple[CommitHeader, list[tuple[str, str, str | None]]]]:
+    """Parse git log with deterministic state machine.
+    
+    Args:
+        repo_path: Path to git repository
+        since: Only commits after this date
+        until: Only commits before this date
+        ref: Git reference to start from
+        all_refs: If True, include all branches
+        validation_mode: How to handle validation errors
+            - "strict": Raise exception on invalid data
+            - "soft": Log and skip invalid tokens (default)
+            - "permissive": Accept questionable data with warning
+    
+    Yields:
+        Tuples of (CommitHeader, list of changes)
+    """
     args = [
         "git",
         "-C",
@@ -82,27 +227,83 @@ def iter_log(
         raise RuntimeError("Failed to open git log output stream.")
 
     tokens = _token_stream(proc)
+    
+    # State machine context
+    ctx = ParseContext()
     current_header: CommitHeader | None = None
     current_changes: list[tuple[str, str, str | None]] = []
+    validation_issues: list[ValidationIssue] = []
+    strict_path_check = validation_mode != "permissive"
+
+    def record_issue(issue: ValidationIssue) -> None:
+        """Record validation issue, raise if strict mode."""
+        validation_issues.append(issue)
+        if validation_mode == "strict" and issue.severity == "error":
+            raise ValueError(f"Validation error: {issue.message}")
+    
+    def reset_state() -> None:
+        """Reset state machine to expect next status or commit."""
+        ctx.state = ParseState.EXPECT_COMMIT_OR_STATUS
+        ctx.pending_status = None
+        ctx.pending_old_path = None
 
     try:
         for token in tokens:
+            ctx.cursor += 1
+            
             if not token:
                 continue
+                
+            # Handle commit marker - always resets state
             if token == _COMMIT_MARKER:
+                # Yield previous commit if exists
                 if current_header is not None:
+                    # Check for incomplete state (missing paths)
+                    if ctx.state != ParseState.EXPECT_COMMIT_OR_STATUS:
+                        record_issue(_create_issue(
+                            "incomplete_change",
+                            ctx.pending_status,
+                            "complete status+path sequence",
+                            f"Commit ended with incomplete change: status={ctx.pending_status}",
+                            current_header,
+                            ctx.cursor,
+                        ))
+                    current_header.validation_issues = validation_issues
                     yield current_header, current_changes
                     current_changes = []
+                    validation_issues = []
+                
+                # Parse commit header
                 commit_oid = next(tokens, "")
+                ctx.cursor += 1
                 parents_raw = next(tokens, "")
+                ctx.cursor += 1
                 author_name = next(tokens, "")
+                ctx.cursor += 1
                 author_email = next(tokens, "")
+                ctx.cursor += 1
                 authored_ts = int(next(tokens, "0") or 0)
+                ctx.cursor += 1
                 committer_ts = int(next(tokens, "0") or 0)
+                ctx.cursor += 1
                 subject = next(tokens, "")
+                ctx.cursor += 1
+                
                 parents = parents_raw.split() if parents_raw else []
+                
                 if not _HEX40_RE.match(commit_oid):
-                    raise RuntimeError(f"Unexpected commit oid token: {commit_oid}")
+                    issue = _create_issue(
+                        "invalid_commit_oid",
+                        commit_oid,
+                        "40-character hex commit hash",
+                        f"Invalid commit OID: {commit_oid!r}",
+                        severity="error",
+                        cursor=ctx.cursor,
+                    )
+                    record_issue(issue)
+                    reset_state()
+                    continue
+                
                 current_header = CommitHeader(
                     commit_oid=commit_oid,
                     parents=parents,
@@ -112,23 +313,128 @@ def iter_log(
                     committer_ts=committer_ts,
                     subject=subject,
                 )
+                reset_state()
                 continue
 
             if current_header is None:
                 continue
 
-            status = token.strip()
-            if not status:
+            token = token.strip()
+            if not token:
                 continue
-            if status.startswith("R") or status.startswith("C"):
-                old_path = next(tokens, "")
-                new_path = next(tokens, "")
-                current_changes.append((status, new_path, old_path))
-            else:
-                path = next(tokens, "")
-                current_changes.append((status, path, None))
+            
+            # State machine transitions
+            if ctx.state == ParseState.EXPECT_COMMIT_OR_STATUS:
+                # Expect a valid git status code
+                if not _is_valid_git_status(token):
+                    record_issue(_create_issue(
+                        "invalid_status",
+                        token,
+                        "A|M|D|T|U|X|B|R###|C###",
+                        f"Invalid git status code: {token!r}",
+                        current_header,
+                        ctx.cursor,
+                    ))
+                    # Stay in same state, try to resync on next token
+                    continue
+                
+                ctx.pending_status = token
+                
+                # Determine next state based on status type
+                if token.startswith("R") or token.startswith("C"):
+                    ctx.state = ParseState.EXPECT_OLD_PATH
+                else:
+                    ctx.state = ParseState.EXPECT_PATH
+            
+            elif ctx.state == ParseState.EXPECT_PATH:
+                # Expect a valid file path after A/M/D status
+                if not _is_valid_path(token, strict=strict_path_check):
+                    record_issue(_create_issue(
+                        "invalid_path",
+                        token,
+                        "valid file path",
+                        f"Invalid file path after {ctx.pending_status}: {token!r}",
+                        current_header,
+                        ctx.cursor,
+                    ))
+                    # Resync: if this looks like a status, process it as such
+                    if _is_valid_git_status(token):
+                        ctx.pending_status = token
+                        if token.startswith("R") or token.startswith("C"):
+                            ctx.state = ParseState.EXPECT_OLD_PATH
+                        else:
+                            ctx.state = ParseState.EXPECT_PATH
+                    else:
+                        reset_state()
+                    continue
+                
+                # Valid path - record change
+                current_changes.append((ctx.pending_status, token, None))
+                reset_state()
+            
+            elif ctx.state == ParseState.EXPECT_OLD_PATH:
+                # Expect old path in rename/copy
+                if not _is_valid_path(token, strict=strict_path_check):
+                    record_issue(_create_issue(
+                        "invalid_path",
+                        token,
+                        "valid old path for rename",
+                        f"Invalid old path after {ctx.pending_status}: {token!r}",
+                        current_header,
+                        ctx.cursor,
+                    ))
+                    # Resync
+                    if _is_valid_git_status(token):
+                        ctx.pending_status = token
+                        if token.startswith("R") or token.startswith("C"):
+                            ctx.state = ParseState.EXPECT_OLD_PATH
+                        else:
+                            ctx.state = ParseState.EXPECT_PATH
+                    else:
+                        reset_state()
+                    continue
+                
+                ctx.pending_old_path = token
+                ctx.state = ParseState.EXPECT_NEW_PATH
+            
+            elif ctx.state == ParseState.EXPECT_NEW_PATH:
+                # Expect new path in rename/copy
+                if not _is_valid_path(token, strict=strict_path_check):
+                    record_issue(_create_issue(
+                        "invalid_path",
+                        token,
+                        "valid new path for rename",
+                        f"Invalid new path after {ctx.pending_old_path}: {token!r}",
+                        current_header,
+                        ctx.cursor,
+                    ))
+                    # Resync
+                    if _is_valid_git_status(token):
+                        ctx.pending_status = token
+                        if token.startswith("R") or token.startswith("C"):
+                            ctx.state = ParseState.EXPECT_OLD_PATH
+                        else:
+                            ctx.state = ParseState.EXPECT_PATH
+                    else:
+                        reset_state()
+                    continue
+                
+                # Valid rename - record change with both paths
+                current_changes.append((ctx.pending_status, token, ctx.pending_old_path))
+                reset_state()
 
+        # Yield final commit
         if current_header is not None:
+            if ctx.state != ParseState.EXPECT_COMMIT_OR_STATUS:
+                record_issue(_create_issue(
+                    "incomplete_change",
+                    ctx.pending_status,
+                    "complete status+path sequence",
+                    f"Log ended with incomplete change: status={ctx.pending_status}",
+                    current_header,
+                    ctx.cursor,
+                ))
+            current_header.validation_issues = validation_issues
             yield current_header, current_changes
     finally:
         proc.stdout.close()

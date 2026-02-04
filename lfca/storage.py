@@ -221,6 +221,132 @@ class Storage:
         
         return files
     
+    # === Validation Log Operations ===
+    
+    def record_validation_issue(
+        self,
+        run_id: str,
+        issue_type: str,
+        severity: str,
+        message: str,
+        commit_oid: str | None = None,
+        token_value: str | None = None,
+        expected_value: str | None = None,
+        author: str | None = None,
+        committed_at: int | None = None,
+        subject: str | None = None,
+        cursor_position: int | None = None,
+    ) -> int:
+        """Record a validation issue to the log."""
+        cursor = self.conn.execute("""
+            INSERT INTO validation_log 
+            (run_id, commit_oid, issue_type, severity, token_value, expected_value, 
+             message, author, committed_at, subject, cursor_position)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (run_id, commit_oid, issue_type, severity, token_value, expected_value,
+              message, author, committed_at, subject, cursor_position))
+        return cursor.lastrowid
+    
+    def record_validation_issues_batch(
+        self,
+        run_id: str,
+        issues: list,
+    ) -> int:
+        """Record multiple validation issues efficiently."""
+        if not issues:
+            return 0
+        
+        data = [
+            (run_id, i.commit_oid, i.issue_type, i.severity, i.token_value,
+             i.expected_value, i.message, i.author, i.committed_at, i.subject,
+             i.cursor_position)
+            for i in issues
+        ]
+        
+        self.conn.executemany("""
+            INSERT INTO validation_log 
+            (run_id, commit_oid, issue_type, severity, token_value, expected_value,
+             message, author, committed_at, subject, cursor_position)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, data)
+        return len(data)
+    
+    def get_validation_stats(self, run_id: str) -> dict:
+        """Get validation statistics for a run."""
+        row = self.conn.execute("""
+            SELECT 
+                COUNT(*) as total_issues,
+                SUM(CASE WHEN severity = 'warning' THEN 1 ELSE 0 END) as warnings,
+                SUM(CASE WHEN severity = 'error' THEN 1 ELSE 0 END) as errors,
+                SUM(CASE WHEN issue_type = 'invalid_status' THEN 1 ELSE 0 END) as invalid_status,
+                SUM(CASE WHEN issue_type = 'invalid_path' THEN 1 ELSE 0 END) as invalid_path,
+                SUM(CASE WHEN issue_type = 'incomplete_change' THEN 1 ELSE 0 END) as incomplete_change
+            FROM validation_log
+            WHERE run_id = ?
+        """, (run_id,)).fetchone()
+        
+        return {
+            "total_issues": row[0] or 0,
+            "warnings": row[1] or 0,
+            "errors": row[2] or 0,
+            "invalid_status": row[3] or 0,
+            "invalid_path": row[4] or 0,
+            "incomplete_change": row[5] or 0,
+        }
+    
+    def query_validation_log(
+        self,
+        run_id: str,
+        issue_type: str | None = None,
+        severity: str | None = None,
+        limit: int = 100,
+        offset: int = 0
+    ) -> list[dict]:
+        """Query validation log with filters."""
+        conditions = ["run_id = ?"]
+        params = [run_id]
+        
+        if issue_type:
+            conditions.append("issue_type = ?")
+            params.append(issue_type)
+        
+        if severity:
+            conditions.append("severity = ?")
+            params.append(severity)
+        
+        where_clause = " AND ".join(conditions)
+        params.extend([limit, offset])
+        
+        rows = self.conn.execute(f"""
+            SELECT 
+                id, commit_oid, issue_type, severity,
+                token_value, expected_value, message,
+                author, committed_at, subject, cursor_position,
+                created_at
+            FROM validation_log
+            WHERE {where_clause}
+            ORDER BY id DESC
+            LIMIT ? OFFSET ?
+        """, params).fetchall()
+        
+        return [
+            {
+                "id": r[0],
+                "commit_oid": r[1],
+                "issue_type": r[2],
+                "severity": r[3],
+                "token_value": r[4],
+                "expected_value": r[5],
+                "message": r[6],
+                "author": r[7],
+                "committed_at": r[8],
+                "subject": r[9],
+                "cursor_position": r[10],
+                "created_at": r[11],
+            }
+            for r in rows
+        ]
+    
     def update_head_status(self, current_paths: set[str]):
         """Mark which files exist at HEAD."""
         with self.transaction():
