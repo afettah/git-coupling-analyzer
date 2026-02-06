@@ -1,10 +1,15 @@
 /**
- * ProjectCity Component
+ * ProjectCity Component (Advanced)
  * 
- * A 3D city visualization where:
+ * A full-featured 3D city visualization where:
  * - Buildings represent files (height = LOC/complexity)
  * - Districts represent folders (treemap layout)
  * - Colors indicate clusters or coupling strength
+ * - Multiple view modes: Standard, Glass, Neon, Minimal
+ * - Feature toggles: Grid, Beams, Heatmap, Particles
+ * - Minimap navigator for large projects
+ * - Camera presets for different perspectives
+ * - Collapsible control panel
  * 
  * Now receives filtered clusters from parent and shares filter bar.
  */
@@ -13,8 +18,8 @@ import { useState, useMemo, useCallback, memo, useRef, useEffect } from 'react';
 import type { ClusterResult } from '../../../api';
 import type { BuildingData, DistrictData, FileData, ClusterData } from '../types/index';
 import { CITY_CONFIG } from '../constants';
-import { CityScene } from './city/CityScene';
-import { CityControls, CityStats, CityLegend, BuildingInfoPanel } from './city/CityOverlays';
+import { CityScene, type CityViewMode, type CameraPreset } from './city/CityScene';
+import { CityControls, CityStats, CityLegend, BuildingInfoPanel, Minimap } from './city/CityOverlays';
 import { CitySettingsModal } from './city/CitySettingsModal';
 import { buildFolderTree, layoutTreemap, collectBuildings, collectDistricts } from './city/treemap';
 import { useCitySettings } from '../hooks';
@@ -116,6 +121,15 @@ export const ProjectCity = memo(function ProjectCity({
     const [autoRotate, setAutoRotate] = useState(false);
     const [heightScale, setHeightScale] = useState<number>(CITY_CONFIG.heightScaleFactor);
     const [maxDepth, setMaxDepth] = useState<number>(CITY_CONFIG.maxDepth);
+
+    // Advanced view features
+    const [viewMode, setViewMode] = useState<CityViewMode>('standard');
+    const [showGrid, setShowGrid] = useState(false);
+    const [showBeams, setShowBeams] = useState(false);
+    const [showHeatmap, setShowHeatmap] = useState(false);
+    const [showParticles, setShowParticles] = useState(true);
+    const [showMinimap, setShowMinimap] = useState(true);
+    const [cameraPreset, setCameraPreset] = useState<CameraPreset>('overview');
 
     // UI state
     const [selectedBuilding, setSelectedBuilding] = useState<BuildingData | null>(null);
@@ -225,6 +239,12 @@ export const ProjectCity = memo(function ProjectCity({
         setHeightScale(CITY_CONFIG.heightScaleFactor);
         setMaxDepth(CITY_CONFIG.maxDepth);
         setSelectedBuilding(null);
+        setViewMode('standard');
+        setShowGrid(false);
+        setShowBeams(false);
+        setShowHeatmap(false);
+        setShowParticles(true);
+        setCameraPreset('overview');
     }, []);
 
     const handleOpenSettings = useCallback(() => {
@@ -252,7 +272,7 @@ export const ProjectCity = memo(function ProjectCity({
             {/* 3D Canvas Container with proper layout */}
             <div
                 ref={containerRef}
-                className={`relative h-[70vh] min-h-[500px] border border-slate-800 rounded-2xl overflow-hidden ${isFullscreen ? 'bg-slate-900' : 'bg-slate-950'}`}
+                className={`relative h-[75vh] min-h-[550px] border border-slate-800 rounded-2xl overflow-hidden ${isFullscreen ? 'bg-slate-900' : 'bg-slate-950'}`}
             >
                 {/* 3D Scene */}
                 <CityScene
@@ -265,6 +285,12 @@ export const ProjectCity = memo(function ProjectCity({
                     showLabels={showLabels}
                     autoRotate={autoRotate}
                     colorSettings={settings.colors}
+                    viewMode={viewMode}
+                    showGrid={showGrid}
+                    showBeams={showBeams}
+                    showHeatmap={showHeatmap}
+                    showParticles={showParticles}
+                    cameraPreset={cameraPreset}
                 />
 
                 {/* Controls Panel */}
@@ -282,6 +308,18 @@ export const ProjectCity = memo(function ProjectCity({
                     isFullscreen={isFullscreen}
                     onToggleFullscreen={handleToggleFullscreen}
                     onOpenSettings={handleOpenSettings}
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                    showGrid={showGrid}
+                    onShowGridChange={setShowGrid}
+                    showBeams={showBeams}
+                    onShowBeamsChange={setShowBeams}
+                    showHeatmap={showHeatmap}
+                    onShowHeatmapChange={setShowHeatmap}
+                    showParticles={showParticles}
+                    onShowParticlesChange={setShowParticles}
+                    cameraPreset={cameraPreset}
+                    onCameraPresetChange={setCameraPreset}
                 />
 
                 {/* Building Info Panel */}
@@ -290,18 +328,32 @@ export const ProjectCity = memo(function ProjectCity({
                     onClose={handleClearSelection}
                 />
 
+                {/* Minimap */}
+                {showMinimap && buildings.length > 20 && (
+                    <Minimap
+                        buildings={buildings}
+                        districts={districts}
+                        cityWidth={cityWidth}
+                        cityHeight={cityHeight}
+                        selectedPath={selectedBuilding?.fullPath}
+                    />
+                )}
+
                 {/* Stats */}
                 <CityStats
                     buildingCount={buildings.length}
                     districtCount={districts.length}
                     clusterCount={filteredClusters.length}
+                    viewMode={viewMode}
                 />
 
                 {/* Legend */}
-                <CityLegend
-                    colorBy={colorBy}
-                    clusterColors={clusterColors}
-                />
+                {!showMinimap || buildings.length <= 20 ? (
+                    <CityLegend
+                        colorBy={colorBy}
+                        clusterColors={clusterColors}
+                    />
+                ) : null}
 
                 {/* Settings Modal */}
                 <CitySettingsModal
@@ -314,9 +366,19 @@ export const ProjectCity = memo(function ProjectCity({
                 />
             </div>
 
-            {/* Instructions */}
-            <div className="text-xs text-slate-500 text-center">
-                Drag to rotate • Scroll to zoom • Click buildings to select • Use controls to customize view
+            {/* Instructions & quick info */}
+            <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>
+                    Drag to rotate • Scroll to zoom • Click buildings to inspect • Use controls to customize
+                </span>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowMinimap(!showMinimap)}
+                        className={`transition-colors ${showMinimap ? 'text-blue-400' : 'text-slate-600 hover:text-slate-400'}`}
+                    >
+                        {showMinimap ? 'Hide Minimap' : 'Show Minimap'}
+                    </button>
+                </div>
             </div>
         </div>
     );

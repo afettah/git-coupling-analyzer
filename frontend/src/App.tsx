@@ -68,7 +68,7 @@ function App() {
           </div>
         } />
 
-        <Route path="/repos/:repoId" element={<Navigate to="graph" replace />} />
+        <Route path="/repos/:repoId" element={<Navigate to="dashboard" replace />} />
         <Route path="/repos/:repoId/clustering/*" element={<ClusteringWorkspaceWrapper repos={repos} />} />
         <Route path="/repos/:repoId/file-details/*" element={<AnalysisDashboardWrapper repos={repos} />} />
         <Route path="/repos/:repoId/folder-details/*" element={<AnalysisDashboardWrapper repos={repos} />} />
@@ -90,10 +90,10 @@ function App() {
   );
 }
 
-type DashboardTab = 'graph' | 'tree' | 'clustering' | 'settings' | 'file-details' | 'folder-details';
+type DashboardTab = 'dashboard' | 'graph' | 'tree' | 'clustering' | 'hotspots' | 'time-machine' | 'settings' | 'file-details' | 'folder-details';
 
 function AnalysisDashboardWrapper({ repos }: { repos: RepoInfo[] }) {
-  const { repoId, tab, '*': wildcard } = useParams<{ repoId: string; tab: string; '*': string }>();
+  const { repoId, tab } = useParams<{ repoId: string; tab: string; '*': string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const repo = repos.find(r => r.id === repoId);
@@ -107,7 +107,9 @@ function AnalysisDashboardWrapper({ repos }: { repos: RepoInfo[] }) {
     if (pathname.includes('/folder-details/') || pathname.match(/\/folder-details$/)) {
       return 'folder-details';
     }
-    return (tab as DashboardTab) || 'graph';
+    // Map URL paths to tab names
+    if (tab === 'time-machine') return 'time-machine';
+    return (tab as DashboardTab) || 'dashboard';
   };
 
   if (!repo) {
