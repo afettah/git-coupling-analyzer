@@ -1,10 +1,7 @@
 [project]
 name = "project-intelligence"
 version = "0.1.0"
-dependencies = [
-    "networkx>=3.0",
-    "code-intel-interfaces",
-]
+dependencies = ["networkx>=3.0", "code-intel-interfaces"]
 
 [tool.setuptools.packages.find]
 include = ["project_intel*"]

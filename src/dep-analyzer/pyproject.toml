@@ -1,9 +1,7 @@
 [project]
 name = "dep-analyzer"
 version = "0.1.0"
-dependencies = [
-    "code-intel-interfaces",
-]
+dependencies = ["code-intel-interfaces"]
 
 [tool.setuptools.packages.find]
 include = ["dep_analyzer*"]
