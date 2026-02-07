@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as d3 from 'd3';
 import { getDomains, type Domain } from '@/api/semantic';
-import Card from '@/shared/Card';
+import { Card } from '@/shared';
 import { Loader } from 'lucide-react';
 
 interface DomainMapProps {
@@ -72,9 +72,9 @@ export default function DomainMap({ repoId }: DomainMapProps) {
 
         nodes.append('circle')
             .attr('r', (d: any) => d.r)
-            .attr('fill', (d: any, i: number) => colors(i.toString()))
+            .attr('fill', (_: any, i: number) => colors(i.toString()))
             .attr('fill-opacity', 0.2)
-            .attr('stroke', (d: any, i: number) => colors(i.toString()))
+            .attr('stroke', (_: any, i: number) => colors(i.toString()))
             .attr('stroke-width', 2)
             .on('mouseenter', function () {
                 d3.select(this)

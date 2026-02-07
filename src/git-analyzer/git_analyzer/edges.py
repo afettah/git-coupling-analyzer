@@ -90,8 +90,8 @@ class EdgeBuilder:
             p_src_given_dst = pair_count / dst_count if dst_count > 0 else 0
             
             edges.append({
-                "src_file_id": src,
-                "dst_file_id": dst,
+                "src_entity_id": src,
+                "dst_entity_id": dst,
                 "pair_count": pair_count,
                 "src_count": src_count,
                 "dst_count": dst_count,
@@ -107,27 +107,32 @@ class EdgeBuilder:
         if self.config.topk_edges_per_file:
             edges = self._apply_topk(edges)
         
-        # Prepare unified relationships
+        # Prepare unified relationships and git_edges
+        import json
         unified_rels = []
         for e in edges:
             unified_rels.append({
                 "source_type": "git",
                 "rel_kind": "CO_CHANGED",
-                "src_entity_id": e["src_file_id"],
-                "dst_entity_id": e["dst_file_id"],
+                "src_entity_id": e["src_entity_id"],
+                "dst_entity_id": e["dst_entity_id"],
                 "weight": e["jaccard"],
-                "properties": {
+                "properties_json": json.dumps({
                     "pair_count": e["pair_count"],
                     "src_count": e["src_count"],
                     "dst_count": e["dst_count"],
                     "jaccard_weighted": e["jaccard_weighted"],
                     "p_dst_given_src": e["p_dst_given_src"],
                     "p_src_given_dst": e["p_src_given_dst"]
-                }
+                }),
+                "run_id": None
             })
             
-        # Store in SQLite
+        # Store in unified relationships table
         self.storage.upsert_relationships(unified_rels)
+        
+        # Also store in git_edges table with full metrics
+        self._store_git_edges(edges)
         
         # Build component-level edges
         self._build_component_edges(edges)
@@ -142,17 +147,17 @@ class EdgeBuilder:
         # Group by source and dest
         by_file: dict[int, list[dict]] = defaultdict(list)
         for e in edges:
-            by_file[e["src_file_id"]].append(e)
-            by_file[e["dst_file_id"]].append(e)
+            by_file[e["src_entity_id"]].append(e)
+            by_file[e["dst_entity_id"]].append(e)
         
         # Keep top-K per file
         kept = set()
         for file_id, file_edges in by_file.items():
             sorted_edges = sorted(file_edges, key=lambda x: x["jaccard"], reverse=True)
             for e in sorted_edges[:k]:
-                kept.add((e["src_file_id"], e["dst_file_id"]))
+                kept.add((e["src_entity_id"], e["dst_entity_id"]))
         
-        return [e for e in edges if (e["src_file_id"], e["dst_file_id"]) in kept]
+        return [e for e in edges if (e["src_entity_id"], e["dst_entity_id"]) in kept]
     
     def _build_component_edges(self, edges: list[dict]):
         """Aggregate edges at component/folder level."""
@@ -161,8 +166,8 @@ class EdgeBuilder:
         # Get file paths
         file_ids = set()
         for e in edges:
-            file_ids.add(e["src_file_id"])
-            file_ids.add(e["dst_file_id"])
+            file_ids.add(e["src_entity_id"])
+            file_ids.add(e["dst_entity_id"])
         
         if not file_ids:
             return
@@ -186,8 +191,8 @@ class EdgeBuilder:
         )
         
         for e in edges:
-            src_comp = file_to_comp.get(e["src_file_id"])
-            dst_comp = file_to_comp.get(e["dst_file_id"])
+            src_comp = file_to_comp.get(e["src_entity_id"])
+            dst_comp = file_to_comp.get(e["dst_entity_id"])
             
             if src_comp and dst_comp and src_comp != dst_comp:
                 key = tuple(sorted([src_comp, dst_comp]))
@@ -199,11 +204,26 @@ class EdgeBuilder:
         for (src, dst), data in comp_edges.items():
             avg_jaccard = data["jaccard_sum"] / data["file_pairs"] if data["file_pairs"] else 0
             self.storage.conn.execute("""
-                INSERT OR REPLACE INTO component_edges
+                INSERT OR REPLACE INTO git_component_edges
                 (src_component, dst_component, depth, pair_count, jaccard, file_pair_count)
                 VALUES (?, ?, ?, ?, ?, ?)
             """, (src, dst, depth, data["pair_count"], avg_jaccard, data["file_pairs"]))
         
+        self.storage.conn.commit()
+    
+    def _store_git_edges(self, edges: list[dict]):
+        """Store edges in git_edges table with full metrics."""
+        self.storage.conn.executemany("""
+            INSERT OR REPLACE INTO git_edges (
+                src_entity_id, dst_entity_id, pair_count,
+                src_count, dst_count, src_weight, dst_weight,
+                jaccard, jaccard_weighted, p_dst_given_src, p_src_given_dst
+            ) VALUES (
+                :src_entity_id, :dst_entity_id, :pair_count,
+                :src_count, :dst_count, :src_weight, :dst_weight,
+                :jaccard, :jaccard_weighted, :p_dst_given_src, :p_src_given_dst
+            )
+        """, edges)
         self.storage.conn.commit()
     
     def close(self):

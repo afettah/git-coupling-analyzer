@@ -15,7 +15,7 @@ async def get_import_graph(repo_id: str, language: str | None = None, min_import
     api = registry.get_dep_api()
     return api.get_import_graph(paths.db_path, language=language, min_imports=min_imports)
 
-@router.get("/files/{path:path}")
+@router.get("/files/{path:path}/imports")
 async def get_file_imports(repo_id: str, path: str, data_dir: str = "data"):
     paths = _paths(repo_id, data_dir)
     api = registry.get_dep_api()

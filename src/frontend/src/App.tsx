@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { type RepoInfo, getRepos } from './api/repos';
 import RepoList from './features/repos/RepoList';
 import AnalysisDashboard from './features/dashboard/AnalysisDashboard';
 import CreateRepoModal from './features/repos/CreateRepoModal';
 import ErrorNotification from './shared/ErrorNotification';
-import ClusteringWorkspace from './features/git/ClusteringView'; // Check this path - likely needs adjustment
 import { Plus } from 'lucide-react';
-import { NAVIGATION_TABS } from './config/navigation';
 
 function App() {
   const [repos, setRepos] = useState<RepoInfo[]>([]);

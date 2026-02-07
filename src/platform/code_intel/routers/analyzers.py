@@ -16,8 +16,12 @@ router = APIRouter(prefix="/repos/{repo_id}/analyzers", tags=["analyzers"])
 
 class AnalyzerInfo(BaseModel):
     type: str
-    display_name: str
-    config_schema: dict
+    name: str
+    description: str = ""
+    available: bool = True
+    last_run: str | None = None
+    status: str | None = None
+    config_schema: dict = {}
 
 class AnalysisRequest(BaseModel):
     analyzer_type: str
@@ -25,13 +29,48 @@ class AnalysisRequest(BaseModel):
     data_dir: str = "data"
 
 @router.get("", response_model=List[AnalyzerInfo])
-def list_analyzers(repo_id: str) -> List[AnalyzerInfo]:
+def list_analyzers(repo_id: str, data_dir: str = "data") -> List[AnalyzerInfo]:
     """List available analyzers."""
+    # Get last run info for each analyzer
+    last_runs: dict[str, dict] = {}
+    try:
+        paths = RepoPaths(Path(data_dir), repo_id)
+        storage = Storage(paths.db_path, paths.parquet_dir)
+        try:
+            rows = storage.conn.execute(
+                """
+                SELECT analyzer_type, state, finished_at
+                FROM analysis_tasks
+                ORDER BY created_at DESC
+                """
+            ).fetchall()
+            for r in rows:
+                atype = r[0]
+                if atype not in last_runs:
+                    last_runs[atype] = {"state": r[1], "finished_at": r[2]}
+        except Exception:
+            pass
+        finally:
+            storage.close()
+    except Exception:
+        pass
+
+    descriptions = {
+        "git": "Analyzes git history for co-change coupling, hotspots, and authorship patterns",
+        "deps": "Analyzes import/dependency relationships between source files",
+        "semantic": "Analyzes code semantics and identifies domain boundaries",
+        "intelligence": "Cross-analyzer intelligence combining git, deps, and semantic signals",
+    }
+
     return [
         AnalyzerInfo(
             type=a["type"],
-            display_name=a["display_name"],
-            config_schema=a["config_schema"]
+            name=a["display_name"],
+            description=descriptions.get(a["type"], ""),
+            available=True,
+            last_run=last_runs.get(a["type"], {}).get("finished_at"),
+            status=last_runs.get(a["type"], {}).get("state"),
+            config_schema=a["config_schema"],
         )
         for a in registry.list_all()
     ]

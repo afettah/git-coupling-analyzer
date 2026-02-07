@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, AlertCircle, TrendingUp } from 'lucide-react';
 import { getRiskFiles, type RiskScore } from '@/api/risk';
-import Card from '@/shared/Card';
-import Badge from '@/shared/Badge';
+import { Card, Badge } from '@/shared';
 import { getRiskColor, formatRiskScore } from '@/types/risk';
 
 interface RiskSignalsWidgetProps {

@@ -4,7 +4,6 @@ from typing import Any
 
 from code_intel_interfaces.analyzer import BaseAnalyzer, AnalysisTask, TaskResult, TaskStatus
 from git_analyzer.api import GitAPI
-# from git_analyzer.runner import analyze_repo  # Assuming this exists or will be adapted
 
 class GitPlugin(BaseAnalyzer):
     """Git coupling analyzer plugin."""

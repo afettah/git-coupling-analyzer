@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,15 +9,19 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from code_intel.logging_utils import get_logger
-from code_intel.routers import repos, git, analyzers, deps, semantic, intelligence
+from code_intel.routers import repos, git, analyzers, deps, semantic, intelligence, risk, graph
 
 logger = get_logger(__name__)
 
 app = FastAPI(title="Code Intelligence Platform", version="2.0")
 
+# CORS configuration from environment
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:4173").split(",")
+logger.info(f"CORS allowed origins: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -68,6 +73,8 @@ app.include_router(analyzers.router)
 app.include_router(deps.router)
 app.include_router(semantic.router)
 app.include_router(intelligence.router)
+app.include_router(risk.router)
+app.include_router(graph.router)
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
@@ -95,11 +102,52 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         },
     )
 
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled error occurred")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "code": "INTERNAL_SERVER_ERROR",
+                "message": "An unexpected error occurred",
+                "details": str(exc) if app.debug else None
+            }
+        },
+    )
+
 @app.get("/health")
 def health():
     return {"status": "ok", "analyzers": list(registry._analyzers.keys())}
 
-# Static files if needed
-_STATIC_DIR = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+# Static files for the frontend application
+# Use environment variable for flexibility, fallback to relative path
+_STATIC_DIR_ENV = os.getenv("STATIC_DIR")
+if _STATIC_DIR_ENV:
+    _STATIC_DIR = Path(_STATIC_DIR_ENV)
+else:
+    # Default: src/platform/../../frontend/dist
+    _STATIC_DIR = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+
 if _STATIC_DIR.exists():
-    app.mount("/", StaticFiles(directory=_STATIC_DIR, html=True), name="frontend")
+    logger.info(f"Serving static files from: {_STATIC_DIR}")
+    # Mount at /assets for frontend assets (vite uses /assets)
+    assets_dir = _STATIC_DIR / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+    
+    # Catch-all for SPA: serve index.html for non-API routes
+    from fastapi.responses import FileResponse
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        # Don't intercept API routes
+        api_prefixes = ("repos/", "health", "docs", "openapi", "redoc")
+        if any(full_path.startswith(p) for p in api_prefixes):
+            raise HTTPException(status_code=404, detail="Not found")
+        
+        index_file = _STATIC_DIR / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+        raise HTTPException(status_code=404, detail="Static files not found")
+else:
+    logger.warning(f"Static directory not found: {_STATIC_DIR}")

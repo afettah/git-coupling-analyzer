@@ -25,20 +25,17 @@ def sync_head_files(paths: RepoPaths, storage: Storage) -> int:
     Returns count of current files.
     """
     current_paths = get_files_at_head(paths.mirror_path)
-    storage.update_head_status(current_paths)
+    storage.update_head_status_bulk(kind="file", current_qualified_names=current_paths)
     return len(current_paths)
 
 
 def build_file_tree(storage: Storage, include_stats: bool = True) -> dict:
     """Build hierarchical tree of current files with optional stats."""
-    if include_stats:
-        files = storage.get_current_files_with_stats()
-    else:
-        files = storage.get_current_files()
+    files = storage.get_entities_at_head(kind="file")
     
     tree = {}
     for f in files:
-        path = f["path"]
+        path = f["qualified_name"]
         parts = path.split("/")
         
         node = tree
@@ -47,27 +44,14 @@ def build_file_tree(storage: Storage, include_stats: bool = True) -> dict:
                 node[part] = {"__type": "dir", "__children": {}}
             node = node[part]["__children"]
         
-        # Leaf file with extended stats
+        # Leaf file 
         filename = parts[-1]
+        metadata = f.get("metadata", {})
         file_node = {
             "__type": "file",
-            "file_id": f["file_id"],
-            "commits": f["total_commits"] or 0,
+            "entity_id": f["entity_id"],
+            "commits": metadata.get("total_commits", 0),
         }
-        
-        # Add extended stats if available
-        if include_stats:
-            file_node.update({
-                "coupled_count": f.get("coupled_count", 0),
-                "max_coupling": f.get("max_coupling", 0),
-                "avg_coupling": f.get("avg_coupling", 0),
-                "strong_coupling_count": f.get("strong_coupling_count", 0),
-                "lines_added": f.get("lines_added", 0),
-                "lines_deleted": f.get("lines_deleted", 0),
-                "last_modified": f.get("last_modified"),
-                "last_author": f.get("last_author"),
-                "authors": f.get("authors", 0),
-            })
         
         node[filename] = file_node
     
@@ -76,11 +60,12 @@ def build_file_tree(storage: Storage, include_stats: bool = True) -> dict:
 
 def get_folder_list(storage: Storage, depth: int = 2) -> list[str]:
     """Get unique folder paths at given depth."""
-    files = storage.get_current_files()
+    files = storage.get_entities_at_head(kind="file")
     
     folders = set()
     for f in files:
-        parts = f["path"].split("/")
+        path = f["qualified_name"]
+        parts = path.split("/")
         if len(parts) > depth:
             folder = "/".join(parts[:depth])
             folders.add(folder)

@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Play, CheckCircle, XCircle, Loader, Clock, AlertCircle } from 'lucide-react';
 import { listAnalyzers, runAnalyzer, type AnalyzerInfo } from '@/api/analyzers';
-import Button from '@/shared/Button';
-import Card from '@/shared/Card';
-import Badge from '@/shared/Badge';
+import { Button, Card, Badge } from '@/shared';
 
 interface AnalyzerStatusPanelProps {
     repoId: string;

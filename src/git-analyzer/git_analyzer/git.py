@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Iterable, Iterator, List
 
 
-_COMMIT_MARKER = "__LFCA_COMMIT__"
+_COMMIT_MARKER = "__CI_COMMIT__"
 _HEX40_RE = re.compile(r"^[0-9a-f]{40}$")
 _VALID_STATUS_RE = re.compile(r"^([AMDTUXB]|[RC]\d{2,3})$")
 
@@ -19,31 +19,6 @@ class ParseState(Enum):
     EXPECT_PATH = auto()              # After A/M/D status, expect file path
     EXPECT_OLD_PATH = auto()          # After R/C status, expect old path
     EXPECT_NEW_PATH = auto()          # After old path in rename, expect new path
-
-
-@dataclass
-class ValidationIssue:
-    """Record of a validation issue during parsing."""
-    commit_oid: str | None
-    issue_type: str
-    severity: str  # 'warning' | 'error'
-    token_value: str | None
-    expected_value: str | None
-    message: str
-    # Extended context for debugging
-    author: str | None = None
-    committed_at: int | None = None
-    subject: str | None = None
-    cursor_position: int | None = None
-
-
-@dataclass
-class ParseContext:
-    """Mutable context for the state machine parser."""
-    state: ParseState = ParseState.EXPECT_COMMIT_OR_STATUS
-    cursor: int = 0
-    pending_status: str | None = None
-    pending_old_path: str | None = None
 
 
 @dataclass

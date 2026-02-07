@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getRiskOverview, type RiskOverview as RiskOverviewType } from '@/api/risk';
-import Card from '@/shared/Card';
+import { Card } from '@/shared';
 import { Shield, AlertTriangle, AlertCircle, TrendingDown, TrendingUp } from 'lucide-react';
 import { getRiskColor, formatRiskScore } from '@/types/risk';
 

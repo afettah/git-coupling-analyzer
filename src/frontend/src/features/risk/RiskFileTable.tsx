@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getRiskFiles, type RiskScore } from '@/api/risk';
-import Card from '@/shared/Card';
-import Badge from '@/shared/Badge';
+import { Card, Badge } from '@/shared';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { getRiskColor, formatRiskScore, getRiskSeverity, getSeverityBadgeColor } from '@/types/risk';
 

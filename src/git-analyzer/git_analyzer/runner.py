@@ -33,7 +33,8 @@ def run_analysis(
     storage = Storage(paths.db_path, paths.parquet_dir)
     
     try:
-        storage.update_task(run_id, TaskStatus.RUNNING, started_at=datetime.utcnow().isoformat())
+        # Task status is already set to RUNNING by orchestrator
+        # Just update progress as we go
         
         # 1. Mirror
         logger.info("Mirroring repository...")

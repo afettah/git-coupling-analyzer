@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { type RepoInfo } from '../../api/repos';
 import { type AnalysisStatus, type GitRemoteInfo, getAnalysisStatus, startAnalysis, getGitInfo } from '../../api/git';
 import { useFilters } from '../../stores/filterStore';
@@ -53,7 +53,6 @@ interface AnalysisDashboardProps {
 }
 
 export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange }: AnalysisDashboardProps) {
-    const [searchParams] = useSearchParams();
     const location = useLocation();
     const navigate = useNavigate();
     const { isFiltering, activeFilterCount } = useFilters();
@@ -77,7 +76,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
     const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const sidebarCollapsed = false;
     const [expandedTabs, setExpandedTabs] = useState<Record<string, boolean>>({ git: true });
 
     const breadcrumbs = useBreadcrumbs(repo.name, repo.id);
@@ -150,7 +149,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
         }
     };
 
-    const isComplete = status?.state === 'complete';
+    const isComplete = status?.state === 'completed';
     const isRunning = status?.state === 'running';
     const isFailed = status?.state === 'failed';
 
@@ -160,8 +159,12 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
 
     // Render content based on active tab
     const renderContent = () => {
+        // Show "Ready to analyze" or "Failed" screens only for analysis-dependent tabs
+        // Dashboard and settings should always be accessible
+        const requiresAnalysis = mainTabId !== 'dashboard' && mainTabId !== 'settings';
+
         // Handle "not run" state
-        if (isFailed) {
+        if (isFailed && requiresAnalysis) {
             return (
                 <div className="min-h-screen flex flex-col items-center justify-center text-center p-8">
                     <div className="bg-red-500/10 p-6 rounded-2xl text-red-400 mb-6 border border-red-500/20">
@@ -184,7 +187,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
             );
         }
 
-        if (!isComplete && !isRunning) {
+        if (!isComplete && !isRunning && requiresAnalysis) {
             return (
                 <div className="min-h-screen flex flex-col items-center justify-center text-center p-8 bg-gradient-to-br from-slate-950 to-slate-900">
                     <div className="bg-sky-500/10 p-8 rounded-full text-sky-400 mb-8 blur-sm animate-pulse absolute" />
@@ -266,13 +269,13 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                 }
 
             case 'deps':
-                return <DepsLayout />;
+                return <DepsLayout repoId={repo.id} />;
             case 'semantic':
-                return <SemanticLayout />;
+                return <SemanticLayout repoId={repo.id} />;
             case 'graph':
-                return <KnowledgeGraph />;
+                return <KnowledgeGraph repoId={repo.id} />;
             case 'risk':
-                return <RiskLayout />;
+                return <RiskLayout repoId={repo.id} />;
             case 'settings':
                 return <SettingsView repo={repo} />;
             default:
@@ -313,6 +316,9 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                         const isActive = mainTabId === tab.id;
                         const hasSubTabs = tab.subTabs && tab.subTabs.length > 0;
                         const isExpanded = expandedTabs[tab.id];
+                        // Dashboard and settings are always accessible
+                        const requiresAnalysis = tab.id !== 'dashboard' && tab.id !== 'settings';
+                        const isDisabled = !isComplete && requiresAnalysis;
 
                         return (
                             <div key={tab.id}>
@@ -329,12 +335,12 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                                                 onTabChange(tab.id);
                                             }
                                         }}
-                                        disabled={!isComplete && tab.id !== 'settings'}
+                                        disabled={isDisabled}
                                         title={sidebarCollapsed ? tab.label : undefined}
                                         className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all font-medium ${isActive
-                                                ? 'bg-gradient-to-r from-sky-500/20 to-indigo-500/20 text-sky-400 border border-sky-500/20 shadow-lg shadow-sky-500/5'
-                                                : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 hover:translate-x-1'
-                                            } ${(!isComplete && tab.id !== 'settings') ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                            ? 'bg-gradient-to-r from-sky-500/20 to-indigo-500/20 text-sky-400 border border-sky-500/20 shadow-lg shadow-sky-500/5'
+                                            : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200 hover:translate-x-1'
+                                            } ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
                                     >
                                         <div className="flex items-center gap-3">
                                             <Icon size={20} className={isActive ? 'text-sky-400' : 'text-slate-500 group-hover:text-slate-300'} />
@@ -358,8 +364,8 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                                                     key={sub.id}
                                                     onClick={() => onTabChange(`${tab.id}/${sub.id}`)}
                                                     className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${isSubActive
-                                                            ? 'text-sky-400 bg-sky-500/10 font-medium'
-                                                            : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
+                                                        ? 'text-sky-400 bg-sky-500/10 font-medium'
+                                                        : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30'
                                                         }`}
                                                 >
                                                     {sub.label}

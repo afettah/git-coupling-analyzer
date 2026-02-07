@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getExternalPackages, type ExternalPackage } from '@/api/deps';
-import Card from '@/shared/Card';
+import { Card } from '@/shared';
 import { Package, TrendingUp, Users } from 'lucide-react';
 
 interface ExternalPackagesProps {
@@ -63,8 +63,8 @@ export default function ExternalPackages({ repoId }: ExternalPackagesProps) {
                     <button
                         onClick={() => setSortBy('name')}
                         className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${sortBy === 'name'
-                                ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
-                                : 'bg-slate-800/50 text-slate-400 border border-slate-700 hover:border-slate-600'
+                            ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+                            : 'bg-slate-800/50 text-slate-400 border border-slate-700 hover:border-slate-600'
                             }`}
                     >
                         Name
@@ -72,8 +72,8 @@ export default function ExternalPackages({ repoId }: ExternalPackagesProps) {
                     <button
                         onClick={() => setSortBy('usage')}
                         className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${sortBy === 'usage'
-                                ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
-                                : 'bg-slate-800/50 text-slate-400 border border-slate-700 hover:border-slate-600'
+                            ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+                            : 'bg-slate-800/50 text-slate-400 border border-slate-700 hover:border-slate-600'
                             }`}
                     >
                         Usage
@@ -81,8 +81,8 @@ export default function ExternalPackages({ repoId }: ExternalPackagesProps) {
                     <button
                         onClick={() => setSortBy('files')}
                         className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${sortBy === 'files'
-                                ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
-                                : 'bg-slate-800/50 text-slate-400 border border-slate-700 hover:border-slate-600'
+                            ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+                            : 'bg-slate-800/50 text-slate-400 border border-slate-700 hover:border-slate-600'
                             }`}
                     >
                         Files

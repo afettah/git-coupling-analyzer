@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCircularDeps, type CircularDep } from '@/api/deps';
-import Card from '@/shared/Card';
+import { Card, Badge } from '@/shared';
 import { AlertTriangle, ChevronRight } from 'lucide-react';
 import { getCycleSeverity, getSeverityColor } from '@/types/deps';
-import Badge from '@/shared/Badge';
 
 interface CircularDepsProps {
     repoId: string;

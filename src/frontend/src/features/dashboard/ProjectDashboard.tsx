@@ -80,10 +80,12 @@ export function ProjectDashboard({ repo }: ProjectDashboardProps) {
     const [authors, setAuthors] = useState<AuthorStats[]>([]);
     const [clusters, setClusters] = useState<CouplingCluster[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
+            setError(null);
             try {
                 const [summaryData, trendsData, hotspotsData, authorsData, snapshotsData] = await Promise.all([
                     getDashboardSummary(repo.id),
@@ -147,13 +149,23 @@ export function ProjectDashboard({ repo }: ProjectDashboardProps) {
                 } else {
                     setClusters([]);
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error('Failed to load dashboard data:', error);
+                // If it's a 404 or similar, analysis hasn't been run yet
+                if (error?.response?.status === 404 || error?.response?.status === 400) {
+                    setError('no_data');
+                } else {
+                    setError('unknown');
+                }
             } finally {
                 setLoading(false);
             }
         };
         loadData();
+
+        // Poll for updates every 5 seconds
+        const interval = setInterval(loadData, 5000);
+        return () => clearInterval(interval);
     }, [repo.id]);
 
     const riskColor = useMemo(() => {
@@ -163,7 +175,7 @@ export function ProjectDashboard({ repo }: ProjectDashboardProps) {
         return 'text-emerald-400';
     }, [stats]);
 
-    if (loading) {
+    if (loading && !stats) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
@@ -174,7 +186,40 @@ export function ProjectDashboard({ repo }: ProjectDashboardProps) {
         );
     }
 
-    if (!stats) return null;
+    // Show waiting state if no data available
+    if (error === 'no_data' || !stats) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4 text-center max-w-md">
+                    <div className="p-6 rounded-2xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                        <Activity size={48} />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-200">
+                        Waiting for Analysis Results
+                    </h3>
+                    <p className="text-slate-400">
+                        The analysis is currently running. The dashboard will automatically update when data becomes available.
+                    </p>
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-sky-500"></div>
+                        Checking for updates...
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error && error !== 'no_data') {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4 text-center">
+                    <AlertTriangle size={48} className="text-red-400" />
+                    <h3 className="text-xl font-bold text-slate-200">Failed to Load Dashboard</h3>
+                    <p className="text-slate-400">An error occurred while loading the dashboard data.</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto">

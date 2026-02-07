@@ -1,7 +1,7 @@
 """Coupling analysis configuration."""
 
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
 from code_intel.config import ValidationMode
 
@@ -41,22 +41,11 @@ class CouplingConfig:
     max_validation_issues: int = 200  # Cap logged issues per run for performance
     
     def to_dict(self) -> dict:
-        return {
-            "min_revisions": self.min_revisions,
-            "max_changeset_size": self.max_changeset_size,
-            "changeset_mode": self.changeset_mode,
-            "author_time_window_hours": self.author_time_window_hours,
-            "ticket_id_pattern": self.ticket_id_pattern,
-            "max_logical_changeset_size": self.max_logical_changeset_size,
-            "min_cooccurrence": self.min_cooccurrence,
-            "component_depth": self.component_depth,
-            "min_component_cooccurrence": self.min_component_cooccurrence,
-            "window_days": self.window_days,
-            "decay_half_life_days": self.decay_half_life_days,
-            "topk_edges_per_file": self.topk_edges_per_file,
-            "validation_mode": self.validation_mode.value,
-            "max_validation_issues": self.max_validation_issues,
-        }
+        """Convert config to dict with proper serialization."""
+        data = asdict(self)
+        # Convert ValidationMode enum to value
+        data["validation_mode"] = self.validation_mode.value
+        return data
     
     @classmethod
     def from_dict(cls, data: dict) -> "CouplingConfig":

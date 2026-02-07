@@ -1,9 +1,14 @@
 """Configuration and path management."""
 
 from __future__ import annotations
+import os
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+
+
+# Global configuration - can be set from environment or config file
+DEFAULT_DATA_DIR = Path(os.getenv("CODE_INTEL_DATA_DIR", "data"))
 
 
 class ValidationMode(str, Enum):

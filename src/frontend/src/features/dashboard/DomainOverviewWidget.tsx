@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Brain, Users, TrendingUp } from 'lucide-react';
 import { getDomains, type Domain } from '@/api/semantic';
-import Card from '@/shared/Card';
+import { Card } from '@/shared';
 
 interface DomainOverviewWidgetProps {
     repoId: string;

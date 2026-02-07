@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import * as d3 from 'd3';
 import { getImportGraph, type ImportGraph as ImportGraphType, type ImportGraphNode } from '@/api/deps';
-import Card from '@/shared/Card';
+import { Card } from '@/shared';
 import { Loader } from 'lucide-react';
 
 interface ImportGraphProps {

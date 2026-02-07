@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { RepoInfo } from '../../api/repos';
 import { deleteRepo } from '../../api/repos';
-import { FolderGit, Clock, ExternalLink, Trash2, AlertCircle, X, ArrowRight } from 'lucide-react';
+import { FolderGit, Clock, Trash2, AlertCircle, X, ArrowRight } from 'lucide-react';
 
 interface RepoListProps {
     repos: RepoInfo[];
@@ -90,15 +90,15 @@ export default function RepoList({ repos, onSelect, onDeleted }: RepoListProps) 
 
                     <div className="flex justify-between items-start mb-6 relative">
                         <div className={`p-4 rounded-2xl transition-transform duration-300 group-hover:scale-110 shadow-lg ${repo.state === 'failed'
-                                ? 'bg-gradient-to-br from-red-500/20 to-red-600/5 text-red-400 shadow-red-500/10'
-                                : 'bg-gradient-to-br from-sky-500/20 to-indigo-600/5 text-sky-400 shadow-sky-500/10'
+                            ? 'bg-gradient-to-br from-red-500/20 to-red-600/5 text-red-400 shadow-red-500/10'
+                            : 'bg-gradient-to-br from-sky-500/20 to-indigo-600/5 text-sky-400 shadow-sky-500/10'
                             }`}>
                             {repo.state === 'failed' ? <AlertCircle size={28} /> : <FolderGit size={28} />}
                         </div>
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${repo.state === 'complete' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                                repo.state === 'running' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse' :
-                                    repo.state === 'failed' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                                        'bg-slate-800 text-slate-400 border-slate-700'
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${repo.state === 'completed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                            repo.state === 'running' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse' :
+                                repo.state === 'failed' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                    'bg-slate-800 text-slate-400 border-slate-700'
                             }`}>
                             {repo.state.replace('_', ' ')}
                         </span>

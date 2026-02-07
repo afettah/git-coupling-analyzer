@@ -1,6 +1,7 @@
 """Cluster insights generation."""
 
 from __future__ import annotations
+import json
 import pyarrow as pa
 import pyarrow.compute as pc
 import pandas as pd
@@ -49,9 +50,13 @@ def calculate_cluster_insights(storage: Storage, result: ClusterResult, edges: l
     file_ids = list(set(file_ids))
     placeholders = ",".join("?" * len(file_ids))
     rows = storage.conn.execute(f"""
-        SELECT file_id, path_current, total_commits FROM files WHERE file_id IN ({placeholders})
+        SELECT entity_id, qualified_name, metadata_json FROM entities WHERE entity_id IN ({placeholders})
     """, file_ids).fetchall()
-    file_info = {r[0]: {"path": r[1], "churn": r[2]} for r in rows}
+    
+    file_info = {}
+    for r in rows:
+        meta = json.loads(r[2]) if r[2] else {}
+        file_info[r[0]] = {"path": r[1], "churn": meta.get("total_commits", 0)}
 
     # Internal edges for coupling calculation
     # We might want to pass all edges to this function to avoid re-querying
@@ -81,8 +86,9 @@ def calculate_cluster_insights(storage: Storage, result: ClusterResult, edges: l
                 # Fallback to DB query
                 placeholders = ",".join("?" * len(c_fids))
                 internal_edges = storage.conn.execute(f"""
-                    SELECT jaccard FROM edges 
-                    WHERE src_file_id IN ({placeholders}) AND dst_file_id IN ({placeholders})
+                    SELECT weight FROM relationships 
+                    WHERE src_entity_id IN ({placeholders}) AND dst_entity_id IN ({placeholders})
+                      AND source_type = 'git'
                 """, list(c_fids) + list(c_fids)).fetchall()
                 
                 if internal_edges:

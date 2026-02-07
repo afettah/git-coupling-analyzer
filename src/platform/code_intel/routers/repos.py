@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import json
 import shutil
 from pathlib import Path
 from typing import List
@@ -19,9 +20,11 @@ router = APIRouter(prefix="/repos", tags=["repos"])
 class RepoInfo(BaseModel):
     id: str
     name: str
+    path: str = ""
     state: str
     file_count: int = 0
     commit_count: int = 0
+    last_analyzed: str | None = None
     validation_issues: int = 0
     has_errors: bool = False
 
@@ -83,12 +86,30 @@ def list_repositories(data_dir: str = "data") -> List[RepoInfo]:
                     commit_count = metrics.get("commit_count", 0)
                     validation_issues = metrics.get("validation_issues", 0)
                 
+                # Get source path from repo_meta
+                source_path = ""
+                path_row = storage.conn.execute(
+                    "SELECT value FROM repo_meta WHERE key = 'source_path'"
+                ).fetchone()
+                if path_row:
+                    source_path = path_row[0]
+
+                # Get last_analyzed from latest completed task
+                last_analyzed = None
+                la_row = storage.conn.execute(
+                    "SELECT finished_at FROM analysis_tasks WHERE state = 'completed' ORDER BY finished_at DESC LIMIT 1"
+                ).fetchone()
+                if la_row and la_row[0]:
+                    last_analyzed = la_row[0]
+
                 results.append(RepoInfo(
                     id=repo_id,
                     name=repo_id,
+                    path=source_path,
                     state=state,
                     commit_count=commit_count,
                     file_count=file_count,
+                    last_analyzed=last_analyzed,
                     validation_issues=validation_issues,
                     has_errors=has_errors
                 ))

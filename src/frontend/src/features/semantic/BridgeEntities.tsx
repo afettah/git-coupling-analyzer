@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getBridgeEntities, type BridgeEntity } from '@/api/semantic';
-import Card from '@/shared/Card';
-import Badge from '@/shared/Badge';
-import { GitBranch, TrendingUp } from 'lucide-react';
+import { Card, Badge } from '@/shared';
+import { GitBranch } from 'lucide-react';
 
 interface BridgeEntitiesProps {
     repoId: string;

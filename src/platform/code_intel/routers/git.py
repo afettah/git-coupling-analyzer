@@ -6,7 +6,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from code_intel.config import RepoPaths
+from code_intel.config import RepoPaths, DEFAULT_DATA_DIR
 from code_intel.registry import registry
 from code_intel.storage import Storage
 from code_intel.logging_utils import get_logger
@@ -15,11 +15,13 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/repos/{repo_id}/git", tags=["git"])
 
 
-def _paths(repo_id: str, data_dir: str) -> RepoPaths:
-    return RepoPaths(Path(data_dir), repo_id)
+def _paths(repo_id: str, data_dir: str | None = None) -> RepoPaths:
+    """Get repository paths using global or provided data_dir."""
+    return RepoPaths(Path(data_dir) if data_dir else DEFAULT_DATA_DIR, repo_id)
 
 
-def _storage(repo_id: str, data_dir: str) -> Storage:
+def _storage(repo_id: str, data_dir: str | None = None) -> Storage:
+    """Get storage instance for repository."""
     paths = _paths(repo_id, data_dir)
     return Storage(paths.db_path, paths.parquet_dir)
 
@@ -80,33 +82,172 @@ async def get_coupling_edges(
     data_dir: str = "data",
 ):
     """Return raw coupling edges for export / table views."""
+    # Validate metric to prevent SQL injection
+    allowed_metrics = {"jaccard", "jaccard_weighted", "p_dst_given_src", "p_src_given_dst", "pair_count"}
+    if metric not in allowed_metrics:
+        raise HTTPException(400, f"Invalid metric: {metric}")
+    
     paths = _paths(repo_id, data_dir)
     storage = _storage(repo_id, data_dir)
     try:
         rows = storage.conn.execute(
             f"""
             SELECT e1.qualified_name AS source, e2.qualified_name AS target,
-                   r.weight AS coupling, r.properties_json
-            FROM relationships r
-            JOIN entities e1 ON r.src_entity_id = e1.entity_id
-            JOIN entities e2 ON r.dst_entity_id = e2.entity_id
-            WHERE r.weight >= ? AND r.source_type = 'git'
-            ORDER BY r.weight DESC
+                   g.{metric} AS coupling, g.pair_count
+            FROM git_edges g
+            JOIN entities e1 ON g.src_entity_id = e1.entity_id
+            JOIN entities e2 ON g.dst_entity_id = e2.entity_id
+            WHERE g.{metric} >= ?
+            ORDER BY g.{metric} DESC
             LIMIT ? OFFSET ?
             """,
             (min_weight, limit, offset),
         ).fetchall()
-        
-        results = []
+        return [
+            {"source": r[0], "target": r[1], "coupling": r[2], "pair_count": r[3]}
+            for r in rows
+        ]
+    finally:
+        storage.close()
+
+
+# ── Impact & Lineage ─────────────────────────────────────────────────────────
+
+@router.get("/impact")
+async def get_file_impact(
+    repo_id: str,
+    path: str,
+    top: int = 20,
+    data_dir: str = "data",
+):
+    """Get the top coupled files for a given file path."""
+    storage = _storage(repo_id, data_dir)
+    try:
+        row = storage.conn.execute(
+            "SELECT entity_id FROM entities WHERE qualified_name = ? AND kind = 'file'",
+            (path,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(404, "File not found")
+        file_id = row[0]
+
+        rows = storage.conn.execute(
+            """
+            SELECT e.entity_id, e.qualified_name AS path,
+                   g.pair_count, g.jaccard, g.jaccard_weighted,
+                   g.p_dst_given_src, g.p_src_given_dst
+            FROM git_edges g
+            JOIN entities e ON g.dst_entity_id = e.entity_id
+            WHERE g.src_entity_id = ?
+            UNION
+            SELECT e.entity_id, e.qualified_name AS path,
+                   g.pair_count, g.jaccard, g.jaccard_weighted,
+                   g.p_src_given_dst, g.p_dst_given_src
+            FROM git_edges g
+            JOIN entities e ON g.src_entity_id = e.entity_id
+            WHERE g.dst_entity_id = ?
+            ORDER BY jaccard DESC
+            LIMIT ?
+            """,
+            (file_id, file_id, top),
+        ).fetchall()
+        return [
+            {
+                "file_id": r[0],
+                "path": r[1],
+                "pair_count": r[2],
+                "jaccard": r[3],
+                "jaccard_weighted": r[4],
+                "p_dst_given_src": r[5],
+                "p_src_given_dst": r[6],
+            }
+            for r in rows
+        ]
+    finally:
+        storage.close()
+
+
+@router.get("/impact/graph")
+async def get_impact_graph(
+    repo_id: str,
+    path: str,
+    top: int = 25,
+    data_dir: str = "data",
+):
+    """Get a graph visualization centered on a single file's coupling."""
+    storage = _storage(repo_id, data_dir)
+    try:
+        row = storage.conn.execute(
+            "SELECT entity_id, qualified_name FROM entities WHERE qualified_name = ? AND kind = 'file'",
+            (path,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(404, "File not found")
+        focus_id = row[0]
+        focus_path = row[1]
+
+        # Get top coupled edges for this file (both directions)
+        rows = storage.conn.execute(
+            """
+            SELECT g.src_entity_id, g.dst_entity_id, g.jaccard
+            FROM git_edges g
+            WHERE g.src_entity_id = ? OR g.dst_entity_id = ?
+            ORDER BY g.jaccard DESC
+            LIMIT ?
+            """,
+            (focus_id, focus_id, top),
+        ).fetchall()
+
+        node_ids = {focus_id}
+        edges = []
         for r in rows:
-            props = json.loads(r[3]) if r[3] else {}
-            results.append({
-                "source": r[0],
-                "target": r[1],
-                "coupling": r[2],
-                "pair_count": props.get("pair_count", 0)
-            })
-        return results
+            node_ids.add(r[0])
+            node_ids.add(r[1])
+            edges.append({"source": r[0], "target": r[1], "weight": r[2]})
+
+        # Get node details
+        placeholders = ",".join("?" for _ in node_ids)
+        node_rows = storage.conn.execute(
+            f"SELECT entity_id, qualified_name FROM entities WHERE entity_id IN ({placeholders})",
+            list(node_ids),
+        ).fetchall()
+
+        nodes = [{"id": r[0], "path": r[1]} for r in node_rows]
+        return {"nodes": nodes, "edges": edges, "focus_id": focus_id}
+    finally:
+        storage.close()
+
+
+@router.get("/files/{path:path}/lineage")
+async def get_file_lineage(repo_id: str, path: str, data_dir: str = "data"):
+    """Get file rename/move history (lineage)."""
+    storage = _storage(repo_id, data_dir)
+    try:
+        # Try git_file_lineage table if it exists
+        try:
+            rows = storage.conn.execute(
+                """
+                SELECT path, start_commit_oid, end_commit_oid
+                FROM git_file_lineage
+                WHERE path = ? OR path IN (
+                    SELECT path FROM git_file_lineage
+                    WHERE path = ?
+                )
+                ORDER BY rowid
+                """,
+                (path, path),
+            ).fetchall()
+            return [
+                {
+                    "path": r[0],
+                    "start_commit_oid": r[1],
+                    "end_commit_oid": r[2],
+                }
+                for r in rows
+            ]
+        except Exception:
+            # Table may not exist — return empty lineage
+            return []
     finally:
         storage.close()
 
@@ -125,39 +266,37 @@ async def list_files(
 ):
     storage = _storage(repo_id, data_dir)
     try:
-        where = "WHERE 1=1"
+        where = "WHERE e.kind = 'file'"
         params: list = []
         if current_only:
-            where += " AND f.exists_at_head = 1"
+            where += " AND e.exists_at_head = 1"
         if q:
-            where += " AND f.path_current LIKE ?"
+            where += " AND e.qualified_name LIKE ?"
             params.append(f"%{q}%")
 
-        order = "f.path_current" if sort_by == "path" else "f.total_commits"
+        order = "e.qualified_name" if sort_by == "path" else "CAST(json_extract(e.metadata_json, '$.total_commits') AS INTEGER)"
         direction = "ASC" if sort_dir == "asc" else "DESC"
 
         rows = storage.conn.execute(
             f"""
             SELECT e.entity_id, e.qualified_name AS path,
-                   e.exists_at_head, e.metadata_json
+                   e.exists_at_head, json_extract(e.metadata_json, '$.total_commits') as total_commits
             FROM entities e
-            {where.replace('f.', 'e.')}
-            ORDER BY e.qualified_name {direction}
+            {where}
+            ORDER BY {order} {direction}
             LIMIT ?
             """,
             params + [limit],
         ).fetchall()
-        
-        results = []
-        for r in rows:
-            meta = json.loads(r[3]) if r[3] else {}
-            results.append({
+        return [
+            {
                 "file_id": r[0],
                 "path": r[1],
                 "exists_at_head": bool(r[2]),
-                "total_commits": meta.get("total_commits", 0),
-            })
-        return results
+                "total_commits": r[3] or 0,
+            }
+            for r in rows
+        ]
     finally:
         storage.close()
 
@@ -395,15 +534,25 @@ async def get_folder_details(repo_id: str, path: str, data_dir: str = "data"):
         pattern = f"{path}/%"
         rows = storage.conn.execute(
             """
-            SELECT COUNT(*), metadata_json
+            SELECT 
+                COUNT(*), 
+                SUM(CAST(json_extract(metadata_json, '$.total_commits') AS INTEGER)),
+                SUM(CAST(json_extract(metadata_json, '$.authors_count') AS INTEGER)),
+                SUM(CAST(json_extract(metadata_json, '$.total_lines_added') AS INTEGER)),
+                SUM(CAST(json_extract(metadata_json, '$.total_lines_deleted') AS INTEGER))
             FROM entities
-            WHERE exists_at_head = 1 AND qualified_name LIKE ? AND kind = 'file'
+            WHERE exists_at_head = 1 AND kind = 'file' AND qualified_name LIKE ?
             """,
             (pattern,),
-        ).fetchall()
-        
-        file_count = len(rows)
-        total_commits = sum(json.loads(r[1]).get("total_commits", 0) if r[1] else 0 for r in rows)
+        ).fetchone()
+        file_count = rows[0] if rows else 0
+        total_commits = rows[1] or 0 if rows else 0
+        authors_count = rows[2] or 0 if rows else 0
+        lines_added = rows[3] or 0 if rows else 0
+        lines_deleted = rows[4] or 0 if rows else 0
+
+        # Calculate health score
+        health_score = min(100, max(0, 100 - (total_commits / max(file_count, 1))))
 
         subfolders = storage.conn.execute(
             """
@@ -412,7 +561,7 @@ async def get_folder_details(repo_id: str, path: str, data_dir: str = "data"):
                        INSTR(SUBSTR(qualified_name, LENGTH(?) + 1), '/') - 1
                 ) AS sub
             FROM entities
-            WHERE exists_at_head = 1 AND qualified_name LIKE ? AND kind = 'file'
+            WHERE exists_at_head = 1 AND kind = 'file' AND qualified_name LIKE ?
               AND INSTR(SUBSTR(qualified_name, LENGTH(?) + 1), '/') > 0
             """,
             (path + "/", path + "/", pattern, path + "/"),
@@ -499,7 +648,7 @@ async def save_clustering_snapshot(repo_id: str, body: dict, data_dir: str = "da
         snap_id = uuid.uuid4().hex[:12]
         storage.conn.execute(
             """
-            INSERT INTO clustering_snapshots (id, name, algorithm, result_json, tags_json, created_at)
+            INSERT INTO git_clustering_snapshots (id, name, algorithm, result_json, tags_json, created_at)
             VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             """,
             (
@@ -512,9 +661,9 @@ async def save_clustering_snapshot(repo_id: str, body: dict, data_dir: str = "da
         )
         storage.conn.commit()
         return {"id": snap_id, "status": "saved"}
-    except Exception:
-        # Table may not exist – that's OK, return empty
-        return {"id": None, "status": "snapshot_table_not_available"}
+    except Exception as e:
+        logger.error(f"Failed to save clustering snapshot: {e}")
+        return {"id": None, "status": "snapshot_table_not_available", "error": str(e)}
     finally:
         storage.close()
 
@@ -525,7 +674,7 @@ async def list_clustering_snapshots(repo_id: str, data_dir: str = "data"):
     storage = _storage(repo_id, data_dir)
     try:
         rows = storage.conn.execute(
-            "SELECT id, name, algorithm, created_at, result_json, tags_json FROM clustering_snapshots ORDER BY created_at DESC"
+            "SELECT id, name, algorithm, created_at, result_json, tags_json FROM git_clustering_snapshots ORDER BY created_at DESC"
         ).fetchall()
         results = []
         for r in rows:
@@ -551,7 +700,7 @@ async def get_clustering_snapshot(repo_id: str, snapshot_id: str, data_dir: str 
     storage = _storage(repo_id, data_dir)
     try:
         row = storage.conn.execute(
-            "SELECT name, result_json FROM clustering_snapshots WHERE id = ?",
+            "SELECT name, result_json FROM git_clustering_snapshots WHERE id = ?",
             (snapshot_id,),
         ).fetchone()
         if not row:
@@ -580,7 +729,7 @@ async def update_clustering_snapshot(
             return {"status": "no_changes"}
         params.append(snapshot_id)
         storage.conn.execute(
-            f"UPDATE clustering_snapshots SET {', '.join(updates)} WHERE id = ?",
+            f"UPDATE git_clustering_snapshots SET {', '.join(updates)} WHERE id = ?",
             params,
         )
         storage.conn.commit()
@@ -596,7 +745,7 @@ async def delete_clustering_snapshot(
     storage = _storage(repo_id, data_dir)
     try:
         storage.conn.execute(
-            "DELETE FROM clustering_snapshots WHERE id = ?", (snapshot_id,)
+            "DELETE FROM git_clustering_snapshots WHERE id = ?", (snapshot_id,)
         )
         storage.conn.commit()
         return {"status": "deleted"}

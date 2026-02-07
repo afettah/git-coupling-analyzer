@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -56,6 +57,9 @@ class HistoryExtractor:
         
         stats = ExtractStats()
         file_commit_counts: Counter[int] = Counter()
+        file_authors: dict[int, set[str]] = {}  # file_id -> set of author emails
+        file_line_stats: dict[int, dict[str, int]] = {}  # file_id -> {added, deleted}
+        file_timestamps: dict[int, dict[str, int]] = {}  # file_id -> {first, last}
         max_issues = self.config.max_validation_issues
         
         # Collect commits for Parquet
@@ -129,13 +133,48 @@ class HistoryExtractor:
                             stats.skipped_suspicious_path += 1
                             continue
                     
-                    # Get or create entity (kind='file')
-                    file_id = self.storage.get_or_create_entity(
-                        kind="file",
-                        name=Path(path).name,
-                        qualified_name=path,
-                        metadata_json={"exists_at_head": True}
-                    )
+                    # Handle renames: reuse old entity and update path
+                    if old_path and (status.startswith("R") or status.startswith("C")):
+                        # Try to find the old entity
+                        old_entity = self.storage.get_entity_by_qualified_name(old_path, kind="file")
+                        
+                        if old_entity:
+                            file_id = old_entity["entity_id"]
+                            
+                            # Check if target path already exists (different entity)
+                            existing_target = self.storage.get_entity_by_qualified_name(path, kind="file")
+                            
+                            if existing_target and existing_target["entity_id"] != file_id:
+                                # Target path already exists with different entity
+                                # This can happen with complex rename chains
+                                # Use the existing target entity and mark old one as deleted
+                                self.storage.conn.execute(
+                                    "UPDATE entities SET exists_at_head = FALSE WHERE entity_id = ?",
+                                    (file_id,)
+                                )
+                                file_id = existing_target["entity_id"]
+                            else:
+                                # Safe to update the path - no conflict
+                                self.storage.conn.execute(
+                                    "UPDATE entities SET qualified_name = ?, name = ?, updated_at = CURRENT_TIMESTAMP WHERE entity_id = ?",
+                                    (path, Path(path).name, file_id)
+                                )
+                        else:
+                            # Old path not found - treat as new file
+                            file_id = self.storage.get_or_create_entity(
+                                kind="file",
+                                name=Path(path).name,
+                                qualified_name=path,
+                                metadata_json={"exists_at_head": True}
+                            )
+                    else:
+                        # Normal add/modify - get or create entity
+                        file_id = self.storage.get_or_create_entity(
+                            kind="file",
+                            name=Path(path).name,
+                            qualified_name=path,
+                            metadata_json={"exists_at_head": True}
+                        )
                     file_ids_in_commit.add(file_id)
                     
                     changes_data.append({
@@ -149,13 +188,34 @@ class HistoryExtractor:
                     
                     # Track renames
                     if old_path and (status.startswith("R") or status.startswith("C")):
-                        # For renames, we might want to link the old entity if it exists
-                        # But for now, we just record in file_lineage (legacy) or update entity
-                        pass
+                        self._record_rename(file_id, old_path, path, header.commit_oid)
             
-            # Update file commit counts
+            # Update file commit counts and stats
             for fid in file_ids_in_commit:
                 file_commit_counts[fid] += 1
+                
+                # Track authors
+                if fid not in file_authors:
+                    file_authors[fid] = set()
+                file_authors[fid].add(header.author_email)
+                
+                # Track timestamps
+                if fid not in file_timestamps:
+                    file_timestamps[fid] = {
+                        "first": header.committer_ts,
+                        "last": header.committer_ts
+                    }
+                else:
+                    file_timestamps[fid]["last"] = max(
+                        file_timestamps[fid]["last"], header.committer_ts
+                    )
+                    file_timestamps[fid]["first"] = min(
+                        file_timestamps[fid]["first"], header.committer_ts
+                    )
+                
+                # Initialize line stats (will be computed from numstat if available)
+                if fid not in file_line_stats:
+                    file_line_stats[fid] = {"added": 0, "deleted": 0}
             
             stats.change_count += len(changes)
         
@@ -163,8 +223,13 @@ class HistoryExtractor:
         self._write_parquet("commits", commits_data)
         self._write_parquet("changes", changes_data)
         
-        # Update file stats
-        self._update_file_stats(file_commit_counts)
+        # Update file stats with all pre-computed data
+        self._update_file_stats(
+            file_commit_counts, file_authors, file_line_stats, file_timestamps
+        )
+        
+        # Save repo-level summary for dashboard
+        self._save_repo_summary(stats, file_commit_counts, file_authors, file_line_stats)
         
         # Sync HEAD
         sync_head_files(self.paths, self.storage)
@@ -177,22 +242,78 @@ class HistoryExtractor:
     def _record_rename(self, file_id: int, old_path: str, new_path: str, commit_oid: str):
         """Record file rename in lineage."""
         self.storage.conn.execute("""
-            INSERT OR IGNORE INTO file_lineage (file_id, path, start_commit_oid, end_commit_oid)
+            INSERT OR IGNORE INTO git_file_lineage (entity_id, path, start_commit_oid, end_commit_oid)
             VALUES (?, ?, ?, NULL)
         """, (file_id, old_path, commit_oid))
     
-    def _update_file_stats(self, counts: Counter[int]):
-        """Update metadata for entities."""
+    def _update_file_stats(
+        self,
+        counts: Counter[int],
+        authors: dict[int, set[str]],
+        line_stats: dict[int, dict[str, int]],
+        timestamps: dict[int, dict[str, int]],
+    ):
+        """Update metadata for entities with comprehensive stats."""
         for entity_id, count in counts.items():
             # Merge with existing metadata
-            row = self.storage.conn.execute("SELECT metadata_json FROM entities WHERE entity_id = ?", (entity_id,)).fetchone()
+            row = self.storage.conn.execute(
+                "SELECT metadata_json FROM entities WHERE entity_id = ?", (entity_id,)
+            ).fetchone()
             meta = json.loads(row[0]) if row and row[0] else {}
+            
+            # Update all stats
             meta["total_commits"] = count
+            meta["authors_count"] = len(authors.get(entity_id, set()))
+            meta["total_lines_added"] = line_stats.get(entity_id, {}).get("added", 0)
+            meta["total_lines_deleted"] = line_stats.get(entity_id, {}).get("deleted", 0)
+            
+            ts = timestamps.get(entity_id, {})
+            if "first" in ts:
+                meta["first_commit_ts"] = ts["first"]
+            if "last" in ts:
+                meta["last_commit_ts"] = ts["last"]
             
             self.storage.conn.execute(
                 "UPDATE entities SET metadata_json = ? WHERE entity_id = ?",
                 (json.dumps(meta), entity_id)
             )
+        self.storage.conn.commit()
+    
+    def _save_repo_summary(
+        self,
+        stats: ExtractStats,
+        file_commit_counts: Counter[int],
+        file_authors: dict[int, set[str]],
+        line_stats: dict[int, dict[str, int]],
+    ):
+        """Save repo-level summary stats for fast dashboard queries."""
+        # Aggregate all authors
+        all_authors = set()
+        for authors_set in file_authors.values():
+            all_authors.update(authors_set)
+        
+        # Aggregate lines
+        total_lines_added = sum(s.get("added", 0) for s in line_stats.values())
+        total_lines_deleted = sum(s.get("deleted", 0) for s in line_stats.values())
+        
+        # Count hotspots (files with >50 commits)
+        hotspot_count = sum(1 for count in file_commit_counts.values() if count > 50)
+        
+        summary = {
+            "file_count": len(file_commit_counts),
+            "commit_count": stats.commit_count,
+            "totalAuthors": len(all_authors),
+            "linesAdded": total_lines_added,
+            "linesDeleted": total_lines_deleted,
+            "hotspotCount": hotspot_count,
+            "avgCoupling": 0.0,  # Will be computed after edges analysis
+            "riskScore": 0.0,  # Will be computed after edges analysis
+        }
+        
+        self.storage.conn.execute(
+            "INSERT OR REPLACE INTO repo_meta (key, value) VALUES (?, ?)",
+            ("summary_stats", json.dumps(summary))
+        )
         self.storage.conn.commit()
     
     def _write_parquet(self, name: str, data: list[dict]):

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getDomain, type DomainDetail } from '@/api/semantic';
-import Card from '@/shared/Card';
-import Badge from '@/shared/Badge';
+import { Card, Badge } from '@/shared';
 import { Brain, Users, TrendingUp, ArrowLeft, GitBranch } from 'lucide-react';
 
 export default function DomainDetailView() {
