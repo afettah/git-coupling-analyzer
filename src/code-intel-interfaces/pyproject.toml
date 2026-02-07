@@ -1,0 +1,13 @@
+[project]
+name = "code-intel-interfaces"
+version = "0.1.0"
+description = "Shared interface contracts for the Code Intelligence Platform"
+requires-python = ">=3.11"
+dependencies = []
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["code_intel_interfaces*"]

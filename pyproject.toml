@@ -1,40 +1,22 @@
 [project]
-name = "lfca"
-version = "0.1.0"
-description = "Logical File Coupling Analyzer (LFCA)"
-readme = "README.md"
+name = "git-coupling-analyzer-workspace"
+version = "2.0.0"
+description = "Monorepo for Code Intelligence Platform"
 requires-python = ">=3.10"
-license = {text = "MIT"}
-authors = [{name = "LFCA"}]
 
 dependencies = [
-  "pyarrow>=14.0.0",
+    # Install projects in editable mode
+    "code-intel-platform @ file:///home/afettah/workspace/git-coupling-analyzer/src/platform",
+    "git-analyzer @ file:///home/afettah/workspace/git-coupling-analyzer/src/git-analyzer",
+    "dep-analyzer @ file:///home/afettah/workspace/git-coupling-analyzer/src/dep-analyzer",
+    "semantic-analyzer @ file:///home/afettah/workspace/git-coupling-analyzer/src/semantic-analyzer",
+    "project-intelligence @ file:///home/afettah/workspace/git-coupling-analyzer/src/project-intelligence",
+    "code-intel-interfaces @ file:///home/afettah/workspace/git-coupling-analyzer/src/code-intel-interfaces",
 ]
 
-[project.optional-dependencies]
-api = [
-  "fastapi>=0.110.0",
-  "uvicorn>=0.27.0",
-  "pydantic>=2.6.0",
-]
-clustering = [
-  "networkx>=3.0",
-  "python-louvain>=0.16",
-  "scipy>=1.10.0",
-  "scikit-learn>=1.3.0",
-  "numpy>=1.24.0",
-  "pandas>=2.0.0",
-]
-all = [
-  "lfca[api,clustering]",
-]
-
-[project.scripts]
-lfca = "lfca.cli:main"
+[tool.setuptools]
+package-dir = {"" = "."}
+packages = []
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
-
-[tool.setuptools.packages.find]
-include = ["lfca*"]
-exclude = ["frontend*", "tests*", "docs*"]
+pythonpath = ["platform", "git-analyzer", "dep-analyzer", "semantic-analyzer", "project-intelligence"]

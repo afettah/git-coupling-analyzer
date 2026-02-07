@@ -1,0 +1,10 @@
+[project]
+name = "semantic-analyzer"
+version = "0.1.0"
+dependencies = [
+    "scikit-learn>=1.3.0",
+    "code-intel-interfaces",
+]
+
+[tool.setuptools.packages.find]
+include = ["semantic_analyzer*"]

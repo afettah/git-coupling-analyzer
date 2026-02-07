@@ -1,8 +1,10 @@
 """Tests for clustering algorithms."""
 
 import pytest
-from lfca.clustering.louvain import Louvain
-from lfca.clustering.base import ClusterResult
+from code_intel.storage import Storage
+from git_analyzer.clustering.louvain import Louvain
+from git_analyzer.clustering.registry import registry
+from git_analyzer.clustering.base import ClusterResult
 
 
 class TestLouvain:
