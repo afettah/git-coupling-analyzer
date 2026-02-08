@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { type RepoInfo } from '../../api/repos';
 import { type AnalysisStatus, type GitRemoteInfo, getAnalysisStatus, startAnalysis, getGitInfo } from '../../api/git';
-import { useFilters } from '../../stores/filterStore';
+import { useFilters } from '../../shared/filters/useFilters';
 import {
     ArrowLeft, Play, Loader2, GitCommit,
     AlertTriangle, Filter, Keyboard, Command, ChevronDown, ChevronRight
@@ -22,7 +22,7 @@ import { NAVIGATION_TABS } from '../../config/navigation';
 // Views
 import ImpactGraph from '../git/ImpactGraph';
 import ClusteringView from '../git/ClusteringView';
-import FolderTree from '../git/FolderTree';
+import FilesPage from '../git/FilesPage';
 import FileDetailsPanel from '../git/FileDetailsPanel';
 import FolderDetailsPanel from '../git/FolderDetailsPanel';
 import ProjectDashboard from './ProjectDashboard';
@@ -249,7 +249,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                         return <ImpactGraph repoId={repo.id} />;
                     case 'files':
                         return (
-                            <FolderTree
+                            <FilesPage
                                 repoId={repo.id}
                                 onOpenDetails={handleOpenDetails}
                                 gitWebUrl={gitInfo?.git_web_url ?? undefined}
@@ -450,7 +450,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                 )}
 
                 {/* Content Area */}
-                <div className="min-h-[calc(100vh-60px)]">
+                <div className="h-[calc(100vh-60px)] overflow-hidden flex flex-col">
                     {renderContent()}
                 </div>
             </main>

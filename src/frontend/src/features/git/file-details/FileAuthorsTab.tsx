@@ -7,6 +7,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getFileAuthors, type FileAuthorsResponse, type FileAuthor } from '../../../api/git';
 import { Spinner } from '@/shared';
+import { TimelineChart } from '@/shared/charts';
 import { cn } from '@/lib/utils';
 import { Crown, ArrowUpDown } from 'lucide-react';
 
@@ -209,6 +210,41 @@ export function FileAuthorsTab({ repoId, filePath }: FileAuthorsTabProps) {
                 </div>
 
                 <DonutChart authors={data.authors} />
+
+                {/* Bus Factor Indicator */}
+                {(() => {
+                    const total = data.authors.reduce((sum, a) => sum + a.commits, 0);
+                    let cumulative = 0;
+                    let busFactor = 0;
+                    for (const author of data.authors) {
+                        cumulative += author.commits;
+                        busFactor++;
+                        if (cumulative / total >= 0.5) break;
+                    }
+                    const level = busFactor === 1 ? 'high' : busFactor <= 2 ? 'medium' : 'low';
+                    const config = {
+                        high: { color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30', label: 'High Risk' },
+                        medium: { color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30', label: 'Moderate' },
+                        low: { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', label: 'Healthy' },
+                    }[level];
+
+                    return (
+                        <div className={cn('mt-4 p-3 rounded-lg border', config.bg, config.border)}>
+                            <div className="flex items-center justify-between">
+                                <div className="text-xs text-slate-400">Bus Factor</div>
+                                <div className={cn('text-sm font-bold', config.color)}>
+                                    {busFactor} {busFactor === 1 ? 'person' : 'people'}
+                                </div>
+                            </div>
+                            <div className="text-[10px] text-slate-500 mt-1">
+                                {busFactor === 1
+                                    ? '⚠️ Only 1 person owns 50%+ of commits — knowledge silo risk'
+                                    : `${busFactor} people account for 50%+ of commits`
+                                }
+                            </div>
+                        </div>
+                    );
+                })()}
             </div>
 
             {/* Author list */}
@@ -287,42 +323,31 @@ export function FileAuthorsTab({ repoId, filePath }: FileAuthorsTabProps) {
                 </table>
             </div>
 
-            {/* Author timeline */}
-            {data.ownership_timeline.length > 0 && (
+            {/* Author activity timeline using TimelineChart */}
+            {(data.ownership_timeline?.length ?? 0) > 0 && (
                 <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
                     <h3 className="text-sm font-semibold text-slate-300 mb-4">📈 Author Activity Over Time</h3>
 
-                    <div className="space-y-2">
-                        {data.authors.slice(0, 5).map((author, authorIndex) => {
-                            const colors = ['bg-sky-500', 'bg-purple-500', 'bg-emerald-500', 'bg-amber-500', 'bg-pink-500'];
-                            const maxCommits = Math.max(...data.ownership_timeline.flatMap(m => m.authors.map(a => a.commits)));
+                    {data.authors.slice(0, 3).map((author, authorIndex) => {
+                        const authorColors = ['#0ea5e9', '#a78bfa', '#34d399'];
+                        const timelineData = (data.ownership_timeline ?? []).map((point) => {
+                            const value = point.contributions[author.name] ?? 0;
+                            return { date: point.date, value };
+                        });
 
-                            return (
-                                <div key={author.name} className="flex items-center gap-2">
-                                    <span className="w-24 text-xs text-slate-400 truncate">{author.name.split(' ')[0]}</span>
-                                    <div className="flex-1 flex gap-px h-4">
-                                        {data.ownership_timeline.map((month, monthIndex) => {
-                                            const authorData = month.authors.find(a => a.name === author.name);
-                                            const commits = authorData?.commits || 0;
-                                            const intensity = commits / maxCommits;
-
-                                            return (
-                                                <div
-                                                    key={monthIndex}
-                                                    className={cn(
-                                                        'flex-1 rounded-sm transition-opacity',
-                                                        commits > 0 ? colors[authorIndex] : 'bg-slate-800/50'
-                                                    )}
-                                                    style={{ opacity: commits > 0 ? Math.max(0.2, intensity) : 0.1 }}
-                                                    title={`${month.month}: ${commits} commits`}
-                                                />
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                        return (
+                            <div key={author.name} className="mb-3">
+                                <div className="text-xs text-slate-400 mb-1">{author.name}</div>
+                                <TimelineChart
+                                    data={timelineData}
+                                    chartType="area"
+                                    height={80}
+                                    zoomEnabled={false}
+                                    colorScheme={[authorColors[authorIndex]]}
+                                />
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>

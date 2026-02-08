@@ -14,7 +14,7 @@ import {
     ChevronRight, LayoutGrid, List, Maximize2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useFilters } from '@/stores/filterStore';
+import { useFilters } from '@/shared/filters/useFilters';
 import { getHotspots } from '../../api/git';
 
 interface HotspotFile {
@@ -93,17 +93,26 @@ export function HotspotsView({ repoId }: HotspotsViewProps) {
         }
 
         // Apply global filters
-        if (filters.churn.minCommits > 0) {
-            result = result.filter(h => h.commits >= filters.churn.minCommits);
+        if (filters.commitsRange?.min !== null && filters.commitsRange?.min !== undefined) {
+            result = result.filter(h => h.commits >= filters.commitsRange!.min!);
         }
-        if (filters.coupling.minStrength > 0) {
-            result = result.filter(h => h.coupling >= filters.coupling.minStrength);
+        if (filters.commitsRange?.max !== null && filters.commitsRange?.max !== undefined) {
+            result = result.filter(h => h.commits <= filters.commitsRange!.max!);
         }
-        if (filters.risk.minRiskScore > 0) {
-            result = result.filter(h => h.riskScore >= filters.risk.minRiskScore);
+        if (filters.couplingRange?.min !== null && filters.couplingRange?.min !== undefined) {
+            result = result.filter(h => h.coupling >= filters.couplingRange!.min!);
         }
-        if (filters.files.extensions.length > 0) {
-            result = result.filter(h => filters.files.extensions.includes(h.extension));
+        if (filters.couplingRange?.max !== null && filters.couplingRange?.max !== undefined) {
+            result = result.filter(h => h.coupling <= filters.couplingRange!.max!);
+        }
+        if (filters.riskRange?.min !== null && filters.riskRange?.min !== undefined) {
+            result = result.filter(h => h.riskScore >= filters.riskRange!.min!);
+        }
+        if (filters.riskRange?.max !== null && filters.riskRange?.max !== undefined) {
+            result = result.filter(h => h.riskScore <= filters.riskRange!.max!);
+        }
+        if (filters.extensions.length > 0) {
+            result = result.filter(h => filters.extensions.includes(h.extension));
         }
 
         // Sort

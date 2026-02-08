@@ -12,7 +12,6 @@ import {
     Sliders, Monitor, Moon, Sun
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useFilters } from '../../stores/filterStore';
 import { type RepoInfo } from '../../api/repos';
 import { updateGitInfo, type GitRemoteInfo, getGitInfo } from '../../api/git';
 
@@ -46,6 +45,14 @@ interface NotificationSettings {
     couplingAlertThreshold: number;
 }
 
+interface PerformanceSettings {
+    virtualScrolling: boolean;
+    graphSampling: boolean;
+    maxNodesInGraph: number;
+    lazyLoadThreshold: number;
+    enableAnimations: boolean;
+}
+
 const DEFAULT_ANALYSIS_SETTINGS: AnalysisSettings = {
     minRevisions: 5,
     maxChangesetSize: 50,
@@ -72,12 +79,20 @@ const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
     couplingAlertThreshold: 70,
 };
 
+const DEFAULT_PERFORMANCE_SETTINGS: PerformanceSettings = {
+    virtualScrolling: true,
+    graphSampling: true,
+    maxNodesInGraph: 100,
+    lazyLoadThreshold: 500,
+    enableAnimations: true,
+};
+
 export function SettingsView({ repo }: SettingsViewProps) {
-    const { filters, setPerformanceSettings } = useFilters();
     const [activeSection, setActiveSection] = useState<string>('analysis');
     const [analysisSettings, setAnalysisSettings] = useState<AnalysisSettings>(DEFAULT_ANALYSIS_SETTINGS);
     const [displaySettings, setDisplaySettings] = useState<DisplaySettings>(DEFAULT_DISPLAY_SETTINGS);
     const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
+    const [performanceSettings, setPerformanceSettings] = useState<PerformanceSettings>(DEFAULT_PERFORMANCE_SETTINGS);
     const [gitInfo, setGitInfo] = useState<GitRemoteInfo | null>(null);
     const [gitWebUrl, setGitWebUrl] = useState('');
     const [gitDefaultBranch, setGitDefaultBranch] = useState('main');
@@ -100,10 +115,12 @@ export function SettingsView({ repo }: SettingsViewProps) {
             const savedAnalysis = localStorage.getItem(`settings-analysis-${repo.id}`);
             const savedDisplay = localStorage.getItem('settings-display');
             const savedNotifications = localStorage.getItem('settings-notifications');
+            const savedPerformance = localStorage.getItem('settings-performance');
 
             if (savedAnalysis) setAnalysisSettings(JSON.parse(savedAnalysis));
             if (savedDisplay) setDisplaySettings(JSON.parse(savedDisplay));
             if (savedNotifications) setNotificationSettings(JSON.parse(savedNotifications));
+            if (savedPerformance) setPerformanceSettings(JSON.parse(savedPerformance));
         };
         loadSettings();
     }, [repo.id]);
@@ -121,6 +138,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
             localStorage.setItem(`settings-analysis-${repo.id}`, JSON.stringify(analysisSettings));
             localStorage.setItem('settings-display', JSON.stringify(displaySettings));
             localStorage.setItem('settings-notifications', JSON.stringify(notificationSettings));
+            localStorage.setItem('settings-performance', JSON.stringify(performanceSettings));
 
             setSaved(true);
             setTimeout(() => setSaved(false), 3000);
@@ -386,22 +404,22 @@ export function SettingsView({ repo }: SettingsViewProps) {
                                 <ToggleSetting
                                     label="Virtual Scrolling"
                                     description="Use virtual scrolling for large file lists"
-                                    checked={filters.performance.virtualScrolling}
-                                    onChange={(checked) => setPerformanceSettings({ virtualScrolling: checked })}
+                                    checked={performanceSettings.virtualScrolling}
+                                    onChange={(checked) => setPerformanceSettings(prev => ({ ...prev, virtualScrolling: checked }))}
                                 />
 
                                 <ToggleSetting
                                     label="Graph Sampling"
                                     description="Sample large graphs for better performance"
-                                    checked={filters.performance.graphSampling}
-                                    onChange={(checked) => setPerformanceSettings({ graphSampling: checked })}
+                                    checked={performanceSettings.graphSampling}
+                                    onChange={(checked) => setPerformanceSettings(prev => ({ ...prev, graphSampling: checked }))}
                                 />
 
                                 <ToggleSetting
                                     label="Enable Animations"
                                     description="Show smooth transitions and animations"
-                                    checked={filters.performance.enableAnimations}
-                                    onChange={(checked) => setPerformanceSettings({ enableAnimations: checked })}
+                                    checked={performanceSettings.enableAnimations}
+                                    onChange={(checked) => setPerformanceSettings(prev => ({ ...prev, enableAnimations: checked }))}
                                 />
 
                                 <SettingField label="Max Graph Nodes" description="Limit nodes displayed in graph view">
@@ -411,12 +429,12 @@ export function SettingsView({ repo }: SettingsViewProps) {
                                             min={25}
                                             max={500}
                                             step={25}
-                                            value={filters.performance.maxNodesInGraph}
-                                            onChange={(e) => setPerformanceSettings({ maxNodesInGraph: parseInt(e.target.value) })}
+                                            value={performanceSettings.maxNodesInGraph}
+                                            onChange={(e) => setPerformanceSettings(prev => ({ ...prev, maxNodesInGraph: parseInt(e.target.value) }))}
                                             className="flex-1 accent-sky-500"
                                         />
                                         <span className="w-12 text-right text-sm text-sky-400 font-semibold">
-                                            {filters.performance.maxNodesInGraph}
+                                            {performanceSettings.maxNodesInGraph}
                                         </span>
                                     </div>
                                 </SettingField>
@@ -428,12 +446,12 @@ export function SettingsView({ repo }: SettingsViewProps) {
                                             min={100}
                                             max={2000}
                                             step={100}
-                                            value={filters.performance.lazyLoadThreshold}
-                                            onChange={(e) => setPerformanceSettings({ lazyLoadThreshold: parseInt(e.target.value) })}
+                                            value={performanceSettings.lazyLoadThreshold}
+                                            onChange={(e) => setPerformanceSettings(prev => ({ ...prev, lazyLoadThreshold: parseInt(e.target.value) }))}
                                             className="flex-1 accent-sky-500"
                                         />
                                         <span className="w-16 text-right text-sm text-sky-400 font-semibold">
-                                            {filters.performance.lazyLoadThreshold}
+                                            {performanceSettings.lazyLoadThreshold}
                                         </span>
                                     </div>
                                 </SettingField>

@@ -1,105 +1,94 @@
-"""Risk analysis router — BUG #4 fix."""
 from __future__ import annotations
+
 import json
 from pathlib import Path
-from fastapi import APIRouter, HTTPException
 
-from code_intel.config import RepoPaths
+from fastapi import APIRouter
+from code_intel.config import RepoPaths, DEFAULT_DATA_DIR
 from code_intel.storage import Storage
+from code_intel.logging_utils import get_logger
 
+logger = get_logger(__name__)
 router = APIRouter(prefix="/repos/{repo_id}/risk", tags=["risk"])
 
 
-def _storage(repo_id: str, data_dir: str = "data") -> Storage:
-    paths = RepoPaths(Path(data_dir), repo_id)
+def _storage(repo_id: str, data_dir: str | None = None) -> Storage:
+    paths = RepoPaths(Path(data_dir) if data_dir else DEFAULT_DATA_DIR, repo_id)
     return Storage(paths.db_path, paths.parquet_dir)
+
+
+def _compute_file_risk(row) -> dict:
+    metadata = json.loads(row["metadata_json"]) if row["metadata_json"] else {}
+    total_commits = metadata.get("total_commits", 0) or 0
+    lines_added = metadata.get("total_lines_added", 0) or 0
+    lines_deleted = metadata.get("total_lines_deleted", 0) or 0
+    churn = lines_added + lines_deleted
+
+    churn_risk = min(total_commits / 100, 1.0) * 0.5 + min(churn / 10000, 1.0) * 0.5
+    coupling_risk = 0.0
+    dependency_risk = 0.0
+    semantic_risk = 0.0
+    overall_risk = round(churn_risk * 0.4 + coupling_risk * 0.3 + dependency_risk * 0.2 + semantic_risk * 0.1, 3)
+
+    return {
+        "entity_id": row["entity_id"],
+        "path": row["qualified_name"],
+        "overall_risk": overall_risk,
+        "coupling_risk": round(coupling_risk, 3),
+        "dependency_risk": round(dependency_risk, 3),
+        "churn_risk": round(churn_risk, 3),
+        "semantic_risk": round(semantic_risk, 3),
+        "signals": [],
+    }
 
 
 @router.get("/overview")
 async def get_risk_overview(repo_id: str, data_dir: str = "data"):
-    """Aggregate risk scores from entities metadata."""
     storage = _storage(repo_id, data_dir)
     try:
-        # Calculate overall risk based on churn metrics
-        row = storage.conn.execute(
-            """
-            SELECT 
-                AVG(CAST(json_extract(metadata_json, '$.total_commits') AS REAL)),
-                MAX(CAST(json_extract(metadata_json, '$.total_commits') AS REAL))
-            FROM entities 
-            WHERE exists_at_head = 1 AND kind = 'file'
-            """
-        ).fetchone()
-
-        overall_score = 0.0
-        if row and row[1]:
-            overall_score = round(min((row[0] or 0) / max(row[1], 1) * 100, 100), 1)
-
-        # Count files by risk buckets
         rows = storage.conn.execute(
-            """
-            SELECT 
-                CAST(json_extract(metadata_json, '$.total_commits') AS INTEGER) as commits
-            FROM entities 
-            WHERE exists_at_head = 1 AND kind = 'file'
-            """
+            "SELECT entity_id, qualified_name, metadata_json FROM entities WHERE exists_at_head = 1 AND kind = 'file'"
         ).fetchall()
 
-        high_risk = 0
-        medium_risk = 0
-        low_risk = 0
-        distribution = {"0-20": 0, "20-40": 0, "40-60": 0, "60-80": 0, "80-100": 0}
+        scores = [_compute_file_risk(r) for r in rows]
+        high = sum(1 for s in scores if s["overall_risk"] >= 0.7)
+        medium = sum(1 for s in scores if 0.4 <= s["overall_risk"] < 0.7)
+        low = sum(1 for s in scores if s["overall_risk"] < 0.4)
+        overall = round(sum(s["overall_risk"] for s in scores) / max(len(scores), 1), 3)
 
-        max_commits = max((r[0] or 0 for r in rows), default=1) or 1
-        for (commits_val,) in rows:
-            c = commits_val or 0
-            score = min(c / max_commits * 100, 100)
-            if score >= 70:
-                high_risk += 1
-            elif score >= 40:
-                medium_risk += 1
+        buckets = {"0-0.2": 0, "0.2-0.4": 0, "0.4-0.6": 0, "0.6-0.8": 0, "0.8-1.0": 0}
+        for s in scores:
+            r = s["overall_risk"]
+            if r < 0.2:
+                buckets["0-0.2"] += 1
+            elif r < 0.4:
+                buckets["0.2-0.4"] += 1
+            elif r < 0.6:
+                buckets["0.4-0.6"] += 1
+            elif r < 0.8:
+                buckets["0.6-0.8"] += 1
             else:
-                low_risk += 1
-
-            if score < 20:
-                distribution["0-20"] += 1
-            elif score < 40:
-                distribution["20-40"] += 1
-            elif score < 60:
-                distribution["40-60"] += 1
-            elif score < 80:
-                distribution["60-80"] += 1
-            else:
-                distribution["80-100"] += 1
-
-        # Get coupling risk
-        coupling_row = storage.conn.execute(
-            "SELECT AVG(jaccard) FROM git_edges"
-        ).fetchone()
-        coupling_score = round((coupling_row[0] or 0) * 100, 1) if coupling_row else 0.0
+                buckets["0.8-1.0"] += 1
 
         return {
-            "overall_score": overall_score,
+            "overall_score": overall,
             "category_scores": {
-                "coupling": coupling_score,
-                "dependency": 0.0,
-                "churn": overall_score,
-                "semantic": 0.0,
+                "coupling": round(sum(s["coupling_risk"] for s in scores) / max(len(scores), 1), 3),
+                "dependency": round(sum(s["dependency_risk"] for s in scores) / max(len(scores), 1), 3),
+                "churn": round(sum(s["churn_risk"] for s in scores) / max(len(scores), 1), 3),
+                "semantic": round(sum(s["semantic_risk"] for s in scores) / max(len(scores), 1), 3),
             },
-            "high_risk_count": high_risk,
-            "medium_risk_count": medium_risk,
-            "low_risk_count": low_risk,
-            "distribution": [
-                {"bucket": k, "count": v} for k, v in distribution.items()
-            ],
+            "high_risk_count": high,
+            "medium_risk_count": medium,
+            "low_risk_count": low,
+            "distribution": [{"bucket": k, "count": v} for k, v in buckets.items()],
         }
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Risk overview failed: {e}")
         return {
             "overall_score": 0,
             "category_scores": {"coupling": 0, "dependency": 0, "churn": 0, "semantic": 0},
-            "high_risk_count": 0,
-            "medium_risk_count": 0,
-            "low_risk_count": 0,
+            "high_risk_count": 0, "medium_risk_count": 0, "low_risk_count": 0,
             "distribution": [],
         }
     finally:
@@ -110,7 +99,7 @@ async def get_risk_overview(repo_id: str, data_dir: str = "data"):
 async def get_risk_files(
     repo_id: str,
     min_risk: float = 0.0,
-    max_risk: float = 100.0,
+    max_risk: float = 1.0,
     folder: str | None = None,
     sort_by: str = "overall_risk",
     order: str = "desc",
@@ -118,65 +107,29 @@ async def get_risk_files(
     offset: int = 0,
     data_dir: str = "data",
 ):
-    """List files with risk scores, support filtering/sorting."""
     storage = _storage(repo_id, data_dir)
     try:
-        where = "WHERE e.exists_at_head = 1 AND e.kind = 'file'"
+        where = "WHERE exists_at_head = 1 AND kind = 'file'"
         params: list = []
         if folder:
-            where += " AND e.qualified_name LIKE ?"
+            where += " AND qualified_name LIKE ?"
             params.append(f"{folder}/%")
 
         rows = storage.conn.execute(
-            f"""
-            SELECT e.entity_id, e.qualified_name,
-                   CAST(json_extract(e.metadata_json, '$.total_commits') AS INTEGER) as commits,
-                   CAST(json_extract(e.metadata_json, '$.total_lines_added') AS INTEGER) as lines_added,
-                   CAST(json_extract(e.metadata_json, '$.total_lines_deleted') AS INTEGER) as lines_deleted,
-                   CAST(json_extract(e.metadata_json, '$.authors_count') AS INTEGER) as authors
-            FROM entities e
-            {where}
-            """,
+            f"SELECT entity_id, qualified_name, metadata_json FROM entities {where}",
             params,
         ).fetchall()
 
-        # Calculate max commits for normalization
-        max_commits = max((r[2] or 0 for r in rows), default=1) or 1
+        scores = [_compute_file_risk(r) for r in rows]
+        scores = [s for s in scores if min_risk <= s["overall_risk"] <= max_risk]
 
-        results = []
-        for r in rows:
-            commits = r[2] or 0
-            churn_risk = round(min(commits / max_commits * 100, 100), 1)
-            overall_risk = churn_risk  # Simplified — extend with coupling/dep/semantic
+        allowed_sort = {"overall_risk", "coupling_risk", "dependency_risk", "churn_risk"}
+        key = sort_by if sort_by in allowed_sort else "overall_risk"
+        scores.sort(key=lambda s: s[key], reverse=(order == "desc"))
 
-            if overall_risk < min_risk or overall_risk > max_risk:
-                continue
-
-            # Get coupling risk for this file
-            coupling_row = storage.conn.execute(
-                "SELECT AVG(jaccard) FROM git_edges WHERE src_entity_id = ? OR dst_entity_id = ?",
-                (r[0], r[0]),
-            ).fetchone()
-            coupling_risk = round((coupling_row[0] or 0) * 100, 1) if coupling_row else 0.0
-
-            results.append({
-                "entity_id": r[0],
-                "path": r[1],
-                "overall_risk": overall_risk,
-                "coupling_risk": coupling_risk,
-                "dependency_risk": 0.0,
-                "churn_risk": churn_risk,
-                "semantic_risk": 0.0,
-                "signals": [],
-            })
-
-        # Sort
-        reverse = order == "desc"
-        sort_key = sort_by if sort_by in ("overall_risk", "coupling_risk", "dependency_risk", "churn_risk") else "overall_risk"
-        results.sort(key=lambda x: x.get(sort_key, 0), reverse=reverse)
-
-        return results[offset: offset + limit]
-    except Exception:
+        return scores[offset:offset + limit]
+    except Exception as e:
+        logger.warning(f"Risk files failed: {e}")
         return []
     finally:
         storage.close()
@@ -184,58 +137,31 @@ async def get_risk_files(
 
 @router.get("/folders")
 async def get_risk_folders(repo_id: str, data_dir: str = "data"):
-    """Aggregate risk by folder."""
     storage = _storage(repo_id, data_dir)
     try:
         rows = storage.conn.execute(
-            """
-            SELECT e.qualified_name,
-                   CAST(json_extract(e.metadata_json, '$.total_commits') AS INTEGER) as commits
-            FROM entities e
-            WHERE e.exists_at_head = 1 AND e.kind = 'file'
-            """
+            "SELECT entity_id, qualified_name, metadata_json FROM entities WHERE exists_at_head = 1 AND kind = 'file'"
         ).fetchall()
 
-        max_commits = max((r[1] or 0 for r in rows), default=1) or 1
-        folder_data: dict[str, dict] = {}
-
-        for r in rows:
-            path = r[0] or ""
-            commits = r[1] or 0
-            risk = min(commits / max_commits * 100, 100)
-
-            # Get parent folder
-            parts = path.rsplit("/", 1)
+        scores = [_compute_file_risk(r) for r in rows]
+        folders: dict[str, list] = {}
+        for s in scores:
+            parts = s["path"].rsplit("/", 1)
             folder = parts[0] if len(parts) > 1 else "."
+            folders.setdefault(folder, []).append(s)
 
-            if folder not in folder_data:
-                folder_data[folder] = {
-                    "folder_path": folder,
-                    "file_count": 0,
-                    "total_risk": 0.0,
-                    "max_risk": 0.0,
-                    "high_risk_files": 0,
-                }
-            folder_data[folder]["file_count"] += 1
-            folder_data[folder]["total_risk"] += risk
-            folder_data[folder]["max_risk"] = max(folder_data[folder]["max_risk"], risk)
-            if risk >= 70:
-                folder_data[folder]["high_risk_files"] += 1
-
-        results = []
-        for fd in folder_data.values():
-            avg_risk = round(fd["total_risk"] / max(fd["file_count"], 1), 1)
-            results.append({
-                "folder_path": fd["folder_path"],
-                "file_count": fd["file_count"],
-                "avg_risk": avg_risk,
-                "max_risk": round(fd["max_risk"], 1),
-                "high_risk_files": fd["high_risk_files"],
-            })
-
-        results.sort(key=lambda x: x["avg_risk"], reverse=True)
-        return results
-    except Exception:
+        return [
+            {
+                "folder_path": folder,
+                "file_count": len(files),
+                "avg_risk": round(sum(f["overall_risk"] for f in files) / len(files), 3),
+                "max_risk": round(max(f["overall_risk"] for f in files), 3),
+                "high_risk_files": sum(1 for f in files if f["overall_risk"] >= 0.7),
+            }
+            for folder, files in sorted(folders.items())
+        ]
+    except Exception as e:
+        logger.warning(f"Risk folders failed: {e}")
         return []
     finally:
         storage.close()

@@ -73,3 +73,45 @@ class GitAnalyzerAPI(ABC):
                      points: int = 12, granularity: str = "monthly") -> list[dict]:
         """Get temporal evolution data."""
         ...
+
+    @abstractmethod
+    def get_file_details_enhanced(self, db_path: Path, parquet_dir: Path,
+                                   file_path: str) -> dict:
+        """Get enhanced file details with risk factors, bus factor, knowledge silos."""
+        ...
+
+    @abstractmethod
+    def get_file_activity_filtered(self, db_path: Path, parquet_dir: Path,
+                                    file_path: str, *,
+                                    from_ts: int | None = None,
+                                    to_ts: int | None = None,
+                                    granularity: str = "monthly") -> dict:
+        """Get file activity with time-range filtering."""
+        ...
+
+    @abstractmethod
+    def get_file_coupling_timeline(self, db_path: Path, parquet_dir: Path,
+                                    file_path: str, *,
+                                    from_ts: int | None = None,
+                                    to_ts: int | None = None,
+                                    granularity: str = "monthly") -> list[dict]:
+        """Get coupling evolution timeline for a file."""
+        ...
+
+    @abstractmethod
+    def get_file_risk_timeline(self, db_path: Path, parquet_dir: Path,
+                                file_path: str, *,
+                                from_ts: int | None = None,
+                                to_ts: int | None = None,
+                                granularity: str = "monthly") -> list[dict]:
+        """Get risk score evolution timeline for a file."""
+        ...
+
+    @abstractmethod
+    def get_file_authors_enhanced(self, db_path: Path, parquet_dir: Path,
+                                   file_path: str, *,
+                                   from_ts: int | None = None,
+                                   to_ts: int | None = None,
+                                   granularity: str = "monthly") -> dict:
+        """Get enhanced file authors with bus factor and ownership timeline."""
+        ...

@@ -4,9 +4,11 @@
  * Commit history browser with search and filtering.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getFileCommits, type FileCommitsResponse, type FileCommit } from '../../../api/git';
 import { Spinner } from '@/shared';
+import { TimelineChart } from '@/shared/charts';
+import type { TimeSeriesPoint } from '@/shared/charts';
 import { Search, ExternalLink, GitCommit, X, Calendar, User } from 'lucide-react';
 
 interface FileCommitsTabProps {
@@ -281,6 +283,22 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
     const filteredCommits = data?.commits.filter(c => !excludeBots || !isBot(c.author)) || [];
     const hasMore = data && filteredCommits.length < data.total_count;
 
+    // Commit density timeline data
+    const commitDensityData: TimeSeriesPoint[] = useMemo(() => {
+        if (!filteredCommits.length) return [];
+        // Group commits by date
+        const dateMap = new Map<string, number>();
+        filteredCommits.forEach(c => {
+            if (c.date) {
+                const day = c.date.split('T')[0];
+                dateMap.set(day, (dateMap.get(day) || 0) + 1);
+            }
+        });
+        return Array.from(dateMap.entries())
+            .map(([date, value]) => ({ date, value }))
+            .sort((a, b) => (a.date as string).localeCompare(b.date as string));
+    }, [filteredCommits]);
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
@@ -338,6 +356,20 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
                     </div>
                 )}
             </div>
+
+            {/* Commit density timeline */}
+            {commitDensityData.length > 0 && (
+                <div className="p-3 border-b border-slate-800 flex-shrink-0">
+                    <div className="text-xs text-slate-500 mb-1">Commit Density</div>
+                    <TimelineChart
+                        data={commitDensityData}
+                        chartType="bar"
+                        height={60}
+                        zoomEnabled={false}
+                        colorScheme={['#0ea5e9']}
+                    />
+                </div>
+            )}
 
             {/* Commit list */}
             <div className="flex-1 overflow-auto">

@@ -340,130 +340,81 @@ async def get_file_history(repo_id: str, path: str, data_dir: str = "data"):
 async def get_file_details(repo_id: str, path: str, data_dir: str = "data"):
     paths = _paths(repo_id, data_dir)
     api = registry.get_git_api()
-    return api.get_file_details(paths.db_path, paths.parquet_dir, path)
+    return api.get_file_details_enhanced(paths.db_path, paths.parquet_dir, path)
 
 
 @router.get("/files/{path:path}/activity")
 async def get_file_activity(
-    repo_id: str, path: str, granularity: str = "monthly", data_dir: str = "data"
+    repo_id: str,
+    path: str,
+    granularity: str = "monthly",
+    from_date: str | None = None,
+    to_date: str | None = None,
+    data_dir: str = "data",
 ):
-    """Per-file activity breakdown (commits, lines, authors over time)."""
-    import pyarrow.dataset as ds
+    """Per-file activity breakdown with optional time-range filtering."""
+    from datetime import datetime, timezone
 
     paths = _paths(repo_id, data_dir)
-    storage = _storage(repo_id, data_dir)
-    try:
-        row = storage.conn.execute(
-            "SELECT entity_id FROM entities WHERE qualified_name = ? AND kind = 'file'", (path,)
-        ).fetchone()
-        if not row:
-            raise HTTPException(404, "File not found")
-        file_id = row[0]
+    api = registry.get_git_api()
 
-        changes_path = paths.parquet_dir / "changes.parquet"
-        commits_path = paths.parquet_dir / "commits.parquet"
-        if not changes_path.exists() or not commits_path.exists():
-            return {"commits_by_period": [], "lines_by_period": [], "authors_by_period": [], "heatmap_data": [], "day_hour_matrix": []}
+    from_ts = None
+    to_ts = None
+    if from_date:
+        try:
+            from_ts = int(datetime.fromisoformat(from_date).replace(tzinfo=timezone.utc).timestamp())
+        except ValueError:
+            raise HTTPException(400, f"Invalid from_date: {from_date}")
+    if to_date:
+        try:
+            to_ts = int(datetime.fromisoformat(to_date).replace(tzinfo=timezone.utc).timestamp())
+        except ValueError:
+            raise HTTPException(400, f"Invalid to_date: {to_date}")
 
-        changes = ds.dataset(changes_path).to_table(
-            filter=ds.field("file_id") == file_id
-        ).to_pylist()
-        commits_map = {
-            c["commit_oid"]: c
-            for c in ds.dataset(commits_path).to_table().to_pylist()
-        }
+    if granularity not in ("daily", "weekly", "monthly", "quarterly"):
+        raise HTTPException(400, f"Invalid granularity: {granularity}")
 
-        # Simple aggregation by month
-        from collections import defaultdict
-        from datetime import datetime
-
-        by_period: dict[str, dict] = defaultdict(
-            lambda: {"commits": 0, "added": 0, "deleted": 0, "authors": set()}
-        )
-        for ch in changes:
-            ci = commits_map.get(ch.get("commit_oid"), {})
-            ts = ch.get("commit_ts") or ci.get("authored_ts")
-            if ts is None:
-                continue
-            dt = ts.as_py() if hasattr(ts, "as_py") else datetime.fromtimestamp(ts) if isinstance(ts, (int, float)) else ts
-            period = dt.strftime("%Y-%m") if hasattr(dt, "strftime") else str(dt)[:7]
-            by_period[period]["commits"] += 1
-            by_period[period]["added"] += ch.get("lines_added", 0) or 0
-            by_period[period]["deleted"] += ch.get("lines_deleted", 0) or 0
-            author = ci.get("author_name", "Unknown")
-            by_period[period]["authors"].add(author)
-
-        sorted_periods = sorted(by_period.keys())
-        return {
-            "commits_by_period": [{"period": p, "count": by_period[p]["commits"]} for p in sorted_periods],
-            "lines_by_period": [{"period": p, "added": by_period[p]["added"], "deleted": by_period[p]["deleted"]} for p in sorted_periods],
-            "authors_by_period": [{"period": p, "count": len(by_period[p]["authors"])} for p in sorted_periods],
-            "heatmap_data": [],
-            "day_hour_matrix": [],
-        }
-    finally:
-        storage.close()
+    return api.get_file_activity_filtered(
+        paths.db_path, paths.parquet_dir, path,
+        from_ts=from_ts, to_ts=to_ts, granularity=granularity,
+    )
 
 
 @router.get("/files/{path:path}/authors")
-async def get_file_authors(repo_id: str, path: str, data_dir: str = "data"):
-    """Per-file author breakdown."""
-    import pyarrow.dataset as ds
+async def get_file_authors(
+    repo_id: str,
+    path: str,
+    from_date: str | None = None,
+    to_date: str | None = None,
+    granularity: str = "monthly",
+    data_dir: str = "data",
+):
+    """Per-file author breakdown with bus factor and ownership timeline."""
+    from datetime import datetime, timezone
 
     paths = _paths(repo_id, data_dir)
-    storage = _storage(repo_id, data_dir)
-    try:
-        row = storage.conn.execute(
-            "SELECT entity_id FROM entities WHERE qualified_name = ? AND kind = 'file'", (path,)
-        ).fetchone()
-        if not row:
-            raise HTTPException(404, "File not found")
-        file_id = row[0]
+    api = registry.get_git_api()
 
-        changes_path = paths.parquet_dir / "changes.parquet"
-        commits_path = paths.parquet_dir / "commits.parquet"
-        if not changes_path.exists() or not commits_path.exists():
-            return {"authors": [], "ownership_timeline": []}
+    from_ts = None
+    to_ts = None
+    if from_date:
+        try:
+            from_ts = int(datetime.fromisoformat(from_date).replace(tzinfo=timezone.utc).timestamp())
+        except ValueError:
+            raise HTTPException(400, f"Invalid from_date: {from_date}")
+    if to_date:
+        try:
+            to_ts = int(datetime.fromisoformat(to_date).replace(tzinfo=timezone.utc).timestamp())
+        except ValueError:
+            raise HTTPException(400, f"Invalid to_date: {to_date}")
 
-        changes = ds.dataset(changes_path).to_table(
-            filter=ds.field("file_id") == file_id
-        ).to_pylist()
-        commits_map = {
-            c["commit_oid"]: c
-            for c in ds.dataset(commits_path).to_table().to_pylist()
-        }
+    if granularity not in ("daily", "weekly", "monthly", "quarterly"):
+        raise HTTPException(400, f"Invalid granularity: {granularity}")
 
-        from collections import defaultdict
-
-        author_stats: dict[str, dict] = defaultdict(
-            lambda: {"commits": 0, "lines_added": 0, "lines_deleted": 0, "first": None, "last": None}
-        )
-        total = len(changes)
-        for ch in changes:
-            ci = commits_map.get(ch.get("commit_oid"), {})
-            name = ci.get("author_name", "Unknown")
-            author_stats[name]["commits"] += 1
-            author_stats[name]["lines_added"] += ch.get("lines_added", 0) or 0
-            author_stats[name]["lines_deleted"] += ch.get("lines_deleted", 0) or 0
-
-        authors = sorted(author_stats.items(), key=lambda x: -x[1]["commits"])
-        return {
-            "authors": [
-                {
-                    "name": name,
-                    "commits": s["commits"],
-                    "percentage": round(s["commits"] / total * 100, 1) if total else 0,
-                    "lines_added": s["lines_added"],
-                    "lines_deleted": s["lines_deleted"],
-                    "first_commit": None,
-                    "last_commit": None,
-                }
-                for name, s in authors
-            ],
-            "ownership_timeline": [],
-        }
-    finally:
-        storage.close()
+    return api.get_file_authors_enhanced(
+        paths.db_path, paths.parquet_dir, path,
+        from_ts=from_ts, to_ts=to_ts, granularity=granularity,
+    )
 
 
 @router.get("/files/{path:path}/commits")
@@ -505,15 +456,28 @@ async def get_file_commits(
         results = []
         for ch in changes:
             ci = commits_map.get(ch.get("commit_oid"), {})
+            
+            # Issue #6: Handle exclude_merges filter
+            if exclude_merges and ci.get("parent_count", 1) > 1:
+                continue
+                
             msg = ci.get("subject", "") or ""
             if search and search.lower() not in msg.lower():
                 continue
+            
+            # Issue #3: Convert timestamp to ISO date string
+            ts = ci.get("authored_ts") or ci.get("committer_ts")
+            date_str = None
+            if ts:
+                from datetime import datetime, timezone
+                date_str = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+            
             results.append(
                 {
                     "oid": ch.get("commit_oid", ""),
                     "message": msg,
                     "author": ci.get("author_name", "Unknown"),
-                    "date": None,
+                    "date": date_str,
                     "lines_added": ch.get("lines_added", 0) or 0,
                     "lines_deleted": ch.get("lines_deleted", 0) or 0,
                 }
@@ -524,6 +488,80 @@ async def get_file_commits(
         return {"commits": page, "total_count": total}
     finally:
         storage.close()
+
+
+@router.get("/files/{path:path}/coupling/timeline")
+async def get_file_coupling_timeline(
+    repo_id: str,
+    path: str,
+    granularity: str = "monthly",
+    from_date: str | None = None,
+    to_date: str | None = None,
+    data_dir: str = "data",
+):
+    """Coupling evolution timeline for a file."""
+    from datetime import datetime, timezone
+
+    paths = _paths(repo_id, data_dir)
+    api = registry.get_git_api()
+
+    from_ts = None
+    to_ts = None
+    if from_date:
+        try:
+            from_ts = int(datetime.fromisoformat(from_date).replace(tzinfo=timezone.utc).timestamp())
+        except ValueError:
+            raise HTTPException(400, f"Invalid from_date: {from_date}")
+    if to_date:
+        try:
+            to_ts = int(datetime.fromisoformat(to_date).replace(tzinfo=timezone.utc).timestamp())
+        except ValueError:
+            raise HTTPException(400, f"Invalid to_date: {to_date}")
+
+    if granularity not in ("daily", "weekly", "monthly", "quarterly"):
+        raise HTTPException(400, f"Invalid granularity: {granularity}")
+
+    return api.get_file_coupling_timeline(
+        paths.db_path, paths.parquet_dir, path,
+        from_ts=from_ts, to_ts=to_ts, granularity=granularity,
+    )
+
+
+@router.get("/files/{path:path}/risk/timeline")
+async def get_file_risk_timeline(
+    repo_id: str,
+    path: str,
+    granularity: str = "monthly",
+    from_date: str | None = None,
+    to_date: str | None = None,
+    data_dir: str = "data",
+):
+    """Risk score evolution timeline for a file."""
+    from datetime import datetime, timezone
+
+    paths = _paths(repo_id, data_dir)
+    api = registry.get_git_api()
+
+    from_ts = None
+    to_ts = None
+    if from_date:
+        try:
+            from_ts = int(datetime.fromisoformat(from_date).replace(tzinfo=timezone.utc).timestamp())
+        except ValueError:
+            raise HTTPException(400, f"Invalid from_date: {from_date}")
+    if to_date:
+        try:
+            to_ts = int(datetime.fromisoformat(to_date).replace(tzinfo=timezone.utc).timestamp())
+        except ValueError:
+            raise HTTPException(400, f"Invalid to_date: {to_date}")
+
+    if granularity not in ("daily", "weekly", "monthly", "quarterly"):
+        raise HTTPException(400, f"Invalid granularity: {granularity}")
+
+    return api.get_file_risk_timeline(
+        paths.db_path, paths.parquet_dir, path,
+        from_ts=from_ts, to_ts=to_ts, granularity=granularity,
+    )
 
 
 @router.get("/folders/{path:path}/details")
@@ -809,3 +847,114 @@ async def get_timeline(
     return api.get_timeline(
         paths.db_path, paths.parquet_dir, points=points, granularity=granularity
     )
+
+
+# ── Impact & Lineage ─────────────────────────────────────────────────────────
+
+@router.get("/impact")
+async def get_impact(
+    repo_id: str,
+    path: str,
+    top: int = 20,
+    data_dir: str = "data",
+):
+    storage = _storage(repo_id, data_dir)
+    try:
+        row = storage.conn.execute(
+            "SELECT entity_id FROM entities WHERE qualified_name = ? AND kind = 'file'",
+            (path,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(404, "File not found")
+        file_id = row[0]
+
+        rows = storage.conn.execute(
+            """
+            SELECT e.entity_id AS file_id, e.qualified_name AS path,
+                   g.pair_count, g.jaccard, g.jaccard_weighted,
+                   g.p_dst_given_src, g.p_src_given_dst
+            FROM git_edges g
+            JOIN entities e ON g.dst_entity_id = e.entity_id
+            WHERE g.src_entity_id = ?
+            ORDER BY g.jaccard DESC
+            LIMIT ?
+            """,
+            (file_id, top),
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        storage.close()
+
+
+@router.get("/impact/graph")
+async def get_impact_graph(
+    repo_id: str,
+    path: str,
+    top: int = 25,
+    data_dir: str = "data",
+):
+    storage = _storage(repo_id, data_dir)
+    try:
+        row = storage.conn.execute(
+            "SELECT entity_id FROM entities WHERE qualified_name = ? AND kind = 'file'",
+            (path,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(404, "File not found")
+        focus_id = row[0]
+
+        edge_rows = storage.conn.execute(
+            """
+            SELECT g.src_entity_id AS source, g.dst_entity_id AS target,
+                   g.jaccard AS weight
+            FROM git_edges g
+            WHERE g.src_entity_id = ? OR g.dst_entity_id = ?
+            ORDER BY g.jaccard DESC
+            LIMIT ?
+            """,
+            (focus_id, focus_id, top),
+        ).fetchall()
+
+        node_ids = {focus_id}
+        edges = []
+        for r in edge_rows:
+            edges.append({"source": r[0], "target": r[1], "weight": r[2]})
+            node_ids.add(r[0])
+            node_ids.add(r[1])
+
+        placeholders = ",".join("?" * len(node_ids))
+        node_rows = storage.conn.execute(
+            f"SELECT entity_id AS id, qualified_name AS path FROM entities WHERE entity_id IN ({placeholders})",
+            list(node_ids),
+        ).fetchall()
+        nodes = [dict(r) for r in node_rows]
+
+        return {"nodes": nodes, "edges": edges, "focus_id": focus_id}
+    finally:
+        storage.close()
+
+
+@router.get("/files/{path:path}/lineage")
+async def get_file_lineage(repo_id: str, path: str, data_dir: str = "data"):
+    storage = _storage(repo_id, data_dir)
+    try:
+        row = storage.conn.execute(
+            "SELECT entity_id FROM entities WHERE qualified_name = ? AND kind = 'file'",
+            (path,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(404, "File not found")
+        entity_id = row[0]
+
+        rows = storage.conn.execute(
+            """
+            SELECT path, start_commit_oid, end_commit_oid
+            FROM git_file_lineage
+            WHERE entity_id = ?
+            ORDER BY start_commit_oid
+            """,
+            (entity_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        storage.close()

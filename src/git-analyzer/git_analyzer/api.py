@@ -10,6 +10,21 @@ import pyarrow.dataset as ds
 from code_intel.logging_utils import get_logger
 from code_intel.storage import Storage
 from code_intel_interfaces.git_analyzer import GitAnalyzerAPI
+from git_analyzer.file_metrics import (
+    resolve_file_id,
+    load_file_changes,
+    load_commits_for_oids,
+    load_all_commits,
+    bucketize_ts,
+    compute_bus_factor,
+    compute_churn_trend,
+    compute_risk_factors,
+    detect_knowledge_silos,
+    compute_coupling_timeline,
+    compute_risk_timeline,
+    compute_ownership_timeline,
+    get_repo_averages,
+)
 
 logger = get_logger(__name__)
 
@@ -621,3 +636,338 @@ class GitAPI(GitAnalyzerAPI):
         except Exception as e:
             logger.error(f"Failed to get timeline: {e}")
             return []
+
+    def get_file_details_enhanced(
+        self, db_path: Path, parquet_dir: Path, file_path: str
+    ) -> dict:
+        """Enhanced file details with risk factors, bus factor, knowledge silos."""
+        storage = Storage(db_path, parquet_dir)
+        try:
+            file_id = resolve_file_id(storage, file_path)
+            if file_id is None:
+                return {}
+
+            # Get base details from existing method
+            base = self.get_file_details(db_path, parquet_dir, file_path)
+            if not base:
+                return {}
+
+            # Load changes for this file
+            changes_df = load_file_changes(parquet_dir, file_id)
+            commit_oids = changes_df["commit_oid"].unique().tolist() if not changes_df.empty else []
+            commits_df = load_commits_for_oids(parquet_dir, commit_oids)
+            
+            # Build author commit counts
+            commit_author_map = {}
+            if not commits_df.empty:
+                commit_author_map = dict(zip(commits_df["commit_oid"], commits_df["author_name"]))
+            
+            author_commits: dict[str, int] = {}
+            for oid in commit_oids:
+                author = commit_author_map.get(oid, "Unknown")
+                author_commits[author] = author_commits.get(author, 0) + 1
+
+            # Bus factor
+            bf_result = compute_bus_factor(author_commits)
+            
+            # Churn trend
+            churn_trend = compute_churn_trend(changes_df)
+            
+            # Knowledge silos
+            silos = detect_knowledge_silos(
+                author_commits, bf_result["bus_factor"]
+            )
+            
+            # Age in days
+            first_ts = base.get("first_commit_ts")
+            import time
+            now = int(time.time())
+            age_days = (now - first_ts) // 86400 if first_ts else 0
+            
+            # Top author share for risk computation
+            top_author_share = bf_result["distribution"][0]["share"] if bf_result["distribution"] else 0
+            
+            # Repo averages for normalization
+            repo_avgs = get_repo_averages(storage)
+            
+            # Risk factors
+            risk = compute_risk_factors(
+                total_commits=base.get("total_commits", 0),
+                churn_rate=base.get("churn_rate", 0),
+                churn_trend=churn_trend,
+                max_coupling=base.get("max_coupling", 0),
+                avg_coupling=base.get("avg_coupling", 0),
+                coupled_files_count=base.get("coupled_files_count", 0),
+                bus_factor=bf_result["bus_factor"],
+                top_author_share=top_author_share,
+                age_days=age_days,
+                repo_avg_commits=repo_avgs["avg_commits"],
+                repo_avg_churn=repo_avgs["avg_churn"],
+            )
+            
+            # Build enhanced response
+            base["age_days"] = age_days
+            base["bus_factor"] = bf_result["bus_factor"]
+            base["knowledge_silos"] = silos
+            base["churn_trend"] = churn_trend["direction"]
+            base["risk_score"] = risk["risk_score"]
+            base["risk_trend"] = risk["risk_trend"]
+            base["risk_factors"] = risk["risk_factors"]
+            
+            # Issue #2: Add missing fields expected by frontend
+            from datetime import datetime, timezone
+            
+            # Convert timestamps to ISO date strings
+            first_ts = base.get("first_commit_ts")
+            last_ts = base.get("last_commit_ts")
+            base["first_commit_date"] = datetime.fromtimestamp(first_ts, tz=timezone.utc).isoformat() if first_ts else None
+            base["last_commit_date"] = datetime.fromtimestamp(last_ts, tz=timezone.utc).isoformat() if last_ts else None
+            
+            # Add top author from distribution
+            base["top_author"] = bf_result["distribution"][0]["author"] if bf_result["distribution"] else None
+            
+            # Calculate commits_last_30_days from changes_df
+            if not changes_df.empty and not commits_df.empty:
+                commits_with_ts = commits_df.merge(
+                    changes_df[["commit_oid"]].drop_duplicates(),
+                    on="commit_oid"
+                )
+                thirty_days_ago = now - (30 * 86400)
+                recent_commits = commits_with_ts[
+                    commits_with_ts["authored_ts"] >= thirty_days_ago
+                ] if "authored_ts" in commits_with_ts.columns else []
+                base["commits_last_30_days"] = len(recent_commits)
+            else:
+                base["commits_last_30_days"] = 0
+            
+            # Calculate strong_coupling_count (coupling >= 0.5)
+            strong_coupling_row = storage.conn.execute(
+                """
+                SELECT COUNT(*) 
+                FROM git_edges
+                WHERE (src_entity_id = ? OR dst_entity_id = ?)
+                AND jaccard >= 0.5
+                """,
+                (file_id, file_id),
+            ).fetchone()
+            base["strong_coupling_count"] = strong_coupling_row[0] if strong_coupling_row else 0
+            
+            return base
+        finally:
+            storage.close()
+
+    def get_file_activity_filtered(
+        self,
+        db_path: Path,
+        parquet_dir: Path,
+        file_path: str,
+        *,
+        from_ts: int | None = None,
+        to_ts: int | None = None,
+        granularity: str = "monthly",
+    ) -> dict:
+        """File activity with time-range filtering pushed to query level."""
+        storage = Storage(db_path, parquet_dir)
+        try:
+            file_id = resolve_file_id(storage, file_path)
+            if file_id is None:
+                return {"commits_by_period": [], "lines_by_period": [], "authors_by_period": [], "heatmap_data": [], "day_hour_matrix": []}
+
+            changes_df = load_file_changes(parquet_dir, file_id, from_ts=from_ts, to_ts=to_ts)
+            if changes_df.empty:
+                return {"commits_by_period": [], "lines_by_period": [], "authors_by_period": [], "heatmap_data": [], "day_hour_matrix": []}
+
+            # Load commits for author info
+            commit_oids = changes_df["commit_oid"].unique().tolist()
+            commits_df = load_commits_for_oids(parquet_dir, commit_oids)
+            commit_author_map = {}
+            if not commits_df.empty:
+                commit_author_map = dict(zip(commits_df["commit_oid"], commits_df["author_name"]))
+
+            # Bucketize
+            df = bucketize_ts(changes_df, "commit_ts", granularity)
+
+            commits_by_period = []
+            lines_by_period = []
+            authors_by_period = []
+            heatmap_data = []
+            day_hour_matrix_data = []
+
+            for bucket, group in sorted(df.groupby("bucket")):
+                unique_oids = group["commit_oid"].unique()
+                commits_by_period.append({"period": str(bucket), "count": len(unique_oids)})
+                
+                added = int(group["lines_added"].sum()) if "lines_added" in group.columns else 0
+                deleted = int(group["lines_deleted"].sum()) if "lines_deleted" in group.columns else 0
+                lines_by_period.append({"period": str(bucket), "added": added, "deleted": deleted})
+                
+                authors = set()
+                for oid in unique_oids:
+                    authors.add(commit_author_map.get(oid, "Unknown"))
+                authors_by_period.append({"period": str(bucket), "count": len(authors)})
+
+            # Heatmap data (daily counts for calendar view)
+            import pandas as pd
+            if "commit_ts" in changes_df.columns:
+                ts_col = changes_df["commit_ts"]
+                if pd.api.types.is_numeric_dtype(ts_col):
+                    dates = pd.to_datetime(ts_col, unit="s", utc=True)
+                else:
+                    dates = pd.to_datetime(ts_col, utc=True)
+                
+                daily = dates.dt.strftime("%Y-%m-%d").value_counts().to_dict()
+                heatmap_data = [{"date": d, "count": int(c)} for d, c in sorted(daily.items())]
+
+                # Day-hour matrix
+                day_hour_counts = dates.groupby([dates.dt.dayofweek, dates.dt.hour]).size()
+                for (day, hour), count in day_hour_counts.items():
+                    day_hour_matrix_data.append({"day": int(day), "hour": int(hour), "count": int(count)})
+
+            return {
+                "commits_by_period": commits_by_period,
+                "lines_by_period": lines_by_period,
+                "authors_by_period": authors_by_period,
+                "heatmap_data": heatmap_data,
+                "day_hour_matrix": day_hour_matrix_data,
+            }
+        finally:
+            storage.close()
+
+    def get_file_coupling_timeline(
+        self,
+        db_path: Path,
+        parquet_dir: Path,
+        file_path: str,
+        *,
+        from_ts: int | None = None,
+        to_ts: int | None = None,
+        granularity: str = "monthly",
+    ) -> list[dict]:
+        """Coupling evolution timeline for a file."""
+        storage = Storage(db_path, parquet_dir)
+        try:
+            file_id = resolve_file_id(storage, file_path)
+            if file_id is None:
+                return []
+            return compute_coupling_timeline(
+                storage, parquet_dir, file_id,
+                from_ts=from_ts, to_ts=to_ts, granularity=granularity,
+            )
+        finally:
+            storage.close()
+
+    def get_file_risk_timeline(
+        self,
+        db_path: Path,
+        parquet_dir: Path,
+        file_path: str,
+        *,
+        from_ts: int | None = None,
+        to_ts: int | None = None,
+        granularity: str = "monthly",
+    ) -> list[dict]:
+        """Risk score evolution timeline for a file."""
+        storage = Storage(db_path, parquet_dir)
+        try:
+            file_id = resolve_file_id(storage, file_path)
+            if file_id is None:
+                return []
+            return compute_risk_timeline(
+                storage, parquet_dir, file_id,
+                from_ts=from_ts, to_ts=to_ts, granularity=granularity,
+            )
+        finally:
+            storage.close()
+
+    def get_file_authors_enhanced(
+        self,
+        db_path: Path,
+        parquet_dir: Path,
+        file_path: str,
+        *,
+        from_ts: int | None = None,
+        to_ts: int | None = None,
+        granularity: str = "monthly",
+    ) -> dict:
+        """Enhanced file authors with bus factor and ownership timeline."""
+        storage = Storage(db_path, parquet_dir)
+        try:
+            file_id = resolve_file_id(storage, file_path)
+            if file_id is None:
+                return {"authors": [], "bus_factor": 0, "ownership_timeline": []}
+
+            changes_df = load_file_changes(parquet_dir, file_id, from_ts=from_ts, to_ts=to_ts)
+            if changes_df.empty:
+                return {"authors": [], "bus_factor": 0, "ownership_timeline": []}
+
+            commit_oids = changes_df["commit_oid"].unique().tolist()
+            commits_df = load_commits_for_oids(parquet_dir, commit_oids)
+            commit_author_map = {}
+            commit_ts_map = {}  # Track commit timestamps
+            if not commits_df.empty:
+                commit_author_map = dict(zip(commits_df["commit_oid"], commits_df["author_name"]))
+                # Use authored_ts or committer_ts for timestamps
+                commit_ts_map = dict(zip(
+                    commits_df["commit_oid"],
+                    commits_df.get("authored_ts", commits_df.get("committer_ts", [None] * len(commits_df)))
+                ))
+
+            # Build author stats (Issue #4: track first/last commit per author)
+            author_commits: dict[str, dict] = {}
+            total = len(commit_oids)
+            for oid in commit_oids:
+                author = commit_author_map.get(oid, "Unknown")
+                ts = commit_ts_map.get(oid)
+                if author not in author_commits:
+                    author_commits[author] = {
+                        "commits": 0, 
+                        "lines_added": 0, 
+                        "lines_deleted": 0,
+                        "first_ts": ts,
+                        "last_ts": ts,
+                    }
+                author_commits[author]["commits"] += 1
+                # Update first/last timestamps
+                if ts:
+                    if author_commits[author]["first_ts"] is None or ts < author_commits[author]["first_ts"]:
+                        author_commits[author]["first_ts"] = ts
+                    if author_commits[author]["last_ts"] is None or ts > author_commits[author]["last_ts"]:
+                        author_commits[author]["last_ts"] = ts
+
+            # Add line stats per author from changes
+            for _, row in changes_df.iterrows():
+                author = commit_author_map.get(row.get("commit_oid", ""), "Unknown")
+                if author in author_commits:
+                    author_commits[author]["lines_added"] += int(row.get("lines_added", 0) or 0)
+                    author_commits[author]["lines_deleted"] += int(row.get("lines_deleted", 0) or 0)
+
+            # Bus factor
+            author_commit_counts = {a: s["commits"] for a, s in author_commits.items()}
+            bf_result = compute_bus_factor(author_commit_counts)
+
+            # Format authors list (Issue #4: include first/last commit dates)
+            from datetime import datetime, timezone
+            sorted_authors = sorted(author_commits.items(), key=lambda x: -x[1]["commits"])
+            authors_list = [
+                {
+                    "name": name,
+                    "commits": stats["commits"],
+                    "percentage": round(stats["commits"] / total * 100, 1) if total else 0,
+                    "lines_added": stats["lines_added"],
+                    "lines_deleted": stats["lines_deleted"],
+                    "first_commit": datetime.fromtimestamp(stats["first_ts"], tz=timezone.utc).isoformat() if stats["first_ts"] else None,
+                    "last_commit": datetime.fromtimestamp(stats["last_ts"], tz=timezone.utc).isoformat() if stats["last_ts"] else None,
+                }
+                for name, stats in sorted_authors
+            ]
+
+            # Ownership timeline
+            timeline = compute_ownership_timeline(changes_df, commit_author_map, granularity)
+
+            return {
+                "authors": authors_list,
+                "bus_factor": bf_result["bus_factor"],
+                "ownership_timeline": timeline,
+            }
+        finally:
+            storage.close()

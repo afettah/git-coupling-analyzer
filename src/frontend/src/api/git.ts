@@ -105,16 +105,32 @@ export interface FileDetailsResponse {
     total_commits: number;
     first_commit_date: string | null;
     last_commit_date: string | null;
+    first_commit_ts?: number | null;
+    last_commit_ts?: number | null;
     total_lines_added: number;
     total_lines_deleted: number;
     authors_count: number;
     top_author: string | null;
     coupled_files_count: number;
     max_coupling: number;
+    avg_coupling?: number;
     strong_coupling_count: number;
     commits_last_30_days: number;
     churn_rate: number;
     risk_score: number;
+    // Enhanced fields
+    age_days?: number;
+    bus_factor?: number;
+    knowledge_silos?: string[];
+    churn_trend?: 'increasing' | 'decreasing' | 'stable';
+    risk_trend?: number;
+    risk_factors?: Array<{
+        name: string;
+        score: number;
+        weight: number;
+        label: string;
+        description: string;
+    }>;
 }
 
 export interface FileActivityResponse {
@@ -122,7 +138,7 @@ export interface FileActivityResponse {
     lines_by_period: Array<{ period: string; added: number; deleted: number }>;
     authors_by_period: Array<{ period: string; count: number }>;
     heatmap_data: Array<{ date: string; count: number }>;
-    day_hour_matrix: Array<{ day: number; hours: number[] }>;
+    day_hour_matrix: Array<{ day: number; hour: number; count: number }>;
 }
 
 export interface FileAuthor {
@@ -137,9 +153,10 @@ export interface FileAuthor {
 
 export interface FileAuthorsResponse {
     authors: FileAuthor[];
-    ownership_timeline: Array<{
-        month: string;
-        authors: Array<{ name: string; commits: number }>;
+    bus_factor?: number;
+    ownership_timeline?: Array<{
+        date: string;
+        contributions: Record<string, number>;
     }>;
 }
 
@@ -284,13 +301,21 @@ export const getFileHistory = (repoId: string, path: string) =>
 export const getFileDetails = (repoId: string, path: string) =>
     client.get<FileDetailsResponse>(`/repos/${repoId}/git/files/${encodeURIComponent(path)}/details`).then(res => res.data);
 
-export const getFileActivity = (repoId: string, path: string, granularity: string = 'monthly') =>
-    client.get<FileActivityResponse>(`/repos/${repoId}/git/files/${encodeURIComponent(path)}/activity`, {
-        params: { granularity }
-    }).then(res => res.data);
+export const getFileActivity = (repoId: string, path: string, params?: {
+    granularity?: string;
+    from_date?: string;
+    to_date?: string;
+}) => client.get<FileActivityResponse>(`/repos/${repoId}/git/files/${encodeURIComponent(path)}/activity`, {
+    params: { granularity: 'monthly', ...params }
+}).then(res => res.data);
 
-export const getFileAuthors = (repoId: string, path: string) =>
-    client.get<FileAuthorsResponse>(`/repos/${repoId}/git/files/${encodeURIComponent(path)}/authors`).then(res => res.data);
+export const getFileAuthors = (repoId: string, path: string, params?: {
+    granularity?: string;
+    from_date?: string;
+    to_date?: string;
+}) => client.get<FileAuthorsResponse>(`/repos/${repoId}/git/files/${encodeURIComponent(path)}/authors`, {
+    params: { granularity: 'monthly', ...params }
+}).then(res => res.data);
 
 export const getFileCommits = (repoId: string, path: string, params?: {
     search?: string;
@@ -298,6 +323,38 @@ export const getFileCommits = (repoId: string, path: string, params?: {
     limit?: number;
     offset?: number;
 }) => client.get<FileCommitsResponse>(`/repos/${repoId}/git/files/${encodeURIComponent(path)}/commits`, { params }).then(res => res.data);
+
+export const getFileCouplingTimeline = (repoId: string, path: string, params?: {
+    granularity?: string;
+    from_date?: string;
+    to_date?: string;
+}) => client.get<Array<{
+    date: string;
+    coupled_files_count: number;
+    max_coupling_score: number;
+    avg_coupling_score: number;
+    new_couplings: number;
+    removed_couplings: number;
+}>>(`/repos/${repoId}/git/files/${encodeURIComponent(path)}/coupling/timeline`, {
+    params: { granularity: 'monthly', ...params }
+}).then(res => res.data);
+
+export const getFileRiskTimeline = (repoId: string, path: string, params?: {
+    granularity?: string;
+    from_date?: string;
+    to_date?: string;
+}) => client.get<Array<{
+    date: string;
+    risk_score: number;
+    factors: {
+        churn_rate: number;
+        coupling: number;
+        bus_factor: number;
+        activity: number;
+    };
+}>>(`/repos/${repoId}/git/files/${encodeURIComponent(path)}/risk/timeline`, {
+    params: { granularity: 'monthly', ...params }
+}).then(res => res.data);
 
 export const getFolderDetails = (repoId: string, path: string) =>
     client.get<FolderDetailsResponse>(`/repos/${repoId}/git/folders/${encodeURIComponent(path)}/details`).then(res => res.data);
