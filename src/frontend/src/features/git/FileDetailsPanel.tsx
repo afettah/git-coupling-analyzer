@@ -152,6 +152,9 @@ export function FileDetailsPanel({
     const fileIcon = getFileIcon(filePath);
     const fileUrl = buildFileUrl(gitWebUrl, gitProvider, defaultBranch, filePath);
     const blameUrl = buildBlameUrl(gitWebUrl, gitProvider, defaultBranch, filePath);
+    const missingOpenRepoReason = !gitWebUrl
+        ? 'Missing git_web_url. Set a remote URL for this repository to enable this action.'
+        : 'Missing default branch. Set git_default_branch to enable this action.';
 
     const handleCopyPath = useCallback(() => {
         navigator.clipboard.writeText(filePath);
@@ -251,16 +254,27 @@ export function FileDetailsPanel({
 
                 {/* Action buttons */}
                 <div className="flex items-center gap-2 mt-4">
-                    {fileUrl && (
+                    {fileUrl ? (
                         <a
                             href={fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 rounded-lg transition-colors"
+                            title="Open file in repository"
                         >
                             <ExternalLink size={12} />
                             Open in Repo
                         </a>
+                    ) : (
+                        <button
+                            type="button"
+                            disabled
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-500 bg-slate-800/60 rounded-lg cursor-not-allowed"
+                            title={missingOpenRepoReason}
+                        >
+                            <ExternalLink size={12} />
+                            Open in Repo
+                        </button>
                     )}
                     {blameUrl && (
                         <a

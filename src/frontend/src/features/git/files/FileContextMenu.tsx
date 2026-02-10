@@ -4,6 +4,7 @@
 
 import { useEffect, useRef } from 'react';
 import { Eye, ExternalLink, Copy } from 'lucide-react';
+import { buildGitWebUrl } from './gitWebUrl';
 
 interface FileContextMenuProps {
   path: string;
@@ -67,18 +68,14 @@ export default function FileContextMenu({
   };
 
   const openInGit = () => {
-    if (gitWebUrl && defaultBranch) {
-      const isFolder = targetType === 'folder';
-      let url = `${gitWebUrl}/${isFolder ? 'tree' : 'blob'}/${defaultBranch}/${path}`;
-
-      if (gitProvider === 'gitlab') {
-        url = `${gitWebUrl}/-/${isFolder ? 'tree' : 'blob'}/${defaultBranch}/${path}`;
-      } else if (gitProvider === 'azure_devops') {
-        url = `${gitWebUrl}?path=/${path}`;
-      } else if (gitProvider === 'bitbucket') {
-        url = `${gitWebUrl}/src/${defaultBranch}/${path}`;
-      }
-
+    const url = buildGitWebUrl({
+      gitWebUrl,
+      gitProvider,
+      defaultBranch,
+      path,
+      targetType,
+    });
+    if (url) {
       window.open(url, '_blank');
     }
     onOpenInGit?.();

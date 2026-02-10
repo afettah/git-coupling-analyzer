@@ -458,6 +458,20 @@ def get_remote_url(repo_path: Path, remote: str = "origin") -> str | None:
     return None
 
 
+def list_remotes(repo_path: Path) -> list[str]:
+    """List configured remote names for a repository."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repo_path), "remote"],
+            capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    except Exception:
+        pass
+    return []
+
+
 def get_default_branch(repo_path: Path, remote: str = "origin") -> str:
     """Get the default branch name."""
     # Try to get from remote HEAD
@@ -551,10 +565,18 @@ def transform_to_web_url(remote_url: str) -> str | None:
 
 def get_git_remote_info(repo_path: Path, remote: str = "origin") -> GitRemoteInfo:
     """Get comprehensive git remote information."""
-    remote_url = get_remote_url(repo_path, remote)
+    selected_remote = remote
+    remote_url = get_remote_url(repo_path, selected_remote)
+
+    if not remote_url:
+        remotes = list_remotes(repo_path)
+        if remotes:
+            selected_remote = remotes[0]
+            remote_url = get_remote_url(repo_path, selected_remote)
+
     web_url = transform_to_web_url(remote_url) if remote_url else None
     provider = detect_git_provider(remote_url) if remote_url else None
-    default_branch = get_default_branch(repo_path, remote)
+    default_branch = get_default_branch(repo_path, selected_remote)
     
     return GitRemoteInfo(
         remote_url=remote_url,

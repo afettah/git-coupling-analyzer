@@ -3,6 +3,16 @@ export interface TreeNode {
   __children?: Record<string, TreeNode>;
   file_id?: number;
   commits?: number;
+  total_commits?: number;
+  first_commit_ts?: number;
+  last_commit_ts?: number;
+  commits_30d?: number;
+  commits_90d?: number;
+  lifetime_commits_per_month?: number;
+  days_since_last_change?: number;
+  is_hot?: boolean;
+  is_stable?: boolean;
+  is_unknown?: boolean;
   lines_added?: number;
   lines_deleted?: number;
   authors?: number;
@@ -25,6 +35,13 @@ export interface FlatFileNode {
   churn: number;
   coupling: number;
   risk: number;
+  isHot: boolean;
+  isStable: boolean;
+  isUnknown: boolean;
+  commits30d: number;
+  commits90d: number;
+  lifetimeCommitsPerMonth: number;
+  daysSinceLastChange?: number;
   lastChanged?: string;
   node: TreeNode;
 }

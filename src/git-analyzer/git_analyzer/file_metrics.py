@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import math
+import json
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -11,6 +11,184 @@ from typing import Any
 import pandas as pd
 import pyarrow.dataset as ds
 from code_intel.storage import Storage
+
+SECONDS_PER_DAY = 86400
+SECONDS_PER_MONTH = 30 * SECONDS_PER_DAY
+
+
+def _to_int(value: Any) -> int | None:
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _quantile(values: list[float], q: float) -> float:
+    if not values:
+        return 0.0
+    series = pd.Series(values, dtype=float)
+    return float(series.quantile(q))
+
+
+def materialize_hot_stable_metrics(
+    storage: Storage,
+    parquet_dir: Path,
+    *,
+    now_ts: int | None = None,
+) -> dict[str, Any]:
+    """Compute and persist canonical hot/stable file activity metrics."""
+    now_ts = now_ts if now_ts is not None else int(datetime.now(timezone.utc).timestamp())
+    rows = storage.conn.execute(
+        """
+        SELECT entity_id, metadata_json
+        FROM entities
+        WHERE kind = 'file'
+        """
+    ).fetchall()
+    if not rows:
+        return {}
+
+    cutoff_30d = now_ts - (30 * SECONDS_PER_DAY)
+    cutoff_90d = now_ts - (90 * SECONDS_PER_DAY)
+
+    commits_30d_map: dict[int, int] = {}
+    commits_90d_map: dict[int, int] = {}
+    changes_path = parquet_dir / "changes.parquet"
+    if changes_path.exists():
+        changes_dataset = ds.dataset(changes_path)
+        available_columns = set(changes_dataset.schema.names)
+        required_columns = {"file_id", "commit_ts"}
+        if required_columns.issubset(available_columns):
+            requested_columns = ["file_id", "commit_ts"]
+            if "commit_oid" in available_columns:
+                requested_columns.append("commit_oid")
+            changes_df = changes_dataset.to_table(columns=requested_columns).to_pandas()
+        else:
+            changes_df = pd.DataFrame()
+        if not changes_df.empty and "file_id" in changes_df.columns and "commit_ts" in changes_df.columns:
+            if "commit_oid" not in changes_df.columns:
+                changes_df["commit_oid"] = changes_df.index.astype(str)
+
+            recent_30d = changes_df[changes_df["commit_ts"] >= cutoff_30d]
+            recent_90d = changes_df[changes_df["commit_ts"] >= cutoff_90d]
+            commits_30d_map = recent_30d.groupby("file_id")["commit_oid"].nunique().astype(int).to_dict()
+            commits_90d_map = recent_90d.groupby("file_id")["commit_oid"].nunique().astype(int).to_dict()
+
+    staged_metrics: list[dict[str, Any]] = []
+    days_values: list[float] = []
+    commits_30_values: list[float] = []
+    commits_90_values: list[float] = []
+    rate_values: list[float] = []
+
+    for row in rows:
+        entity_id = int(row[0])
+        metadata = json.loads(row[1]) if row[1] else {}
+
+        total_commits = _to_int(metadata.get("total_commits")) or 0
+        first_commit_ts = _to_int(metadata.get("first_commit_ts"))
+        last_commit_ts = _to_int(metadata.get("last_commit_ts"))
+        commits_30d = int(commits_30d_map.get(entity_id, 0))
+        commits_90d = int(commits_90d_map.get(entity_id, 0))
+
+        is_unknown = total_commits == 0 or last_commit_ts is None
+        days_since_last_change: int | None = None
+        lifetime_commits_per_month = 0.0
+        if not is_unknown and last_commit_ts is not None:
+            days_since_last_change = max(0, int((now_ts - last_commit_ts) / SECONDS_PER_DAY))
+
+            if first_commit_ts is None:
+                first_commit_ts = last_commit_ts
+            span_months = max(1.0, (last_commit_ts - first_commit_ts) / SECONDS_PER_MONTH)
+            lifetime_commits_per_month = round(total_commits / span_months, 3)
+
+            days_values.append(float(days_since_last_change))
+            commits_30_values.append(float(commits_30d))
+            commits_90_values.append(float(commits_90d))
+            rate_values.append(float(lifetime_commits_per_month))
+
+        staged_metrics.append({
+            "entity_id": entity_id,
+            "metadata": metadata,
+            "total_commits": total_commits,
+            "first_commit_ts": first_commit_ts,
+            "last_commit_ts": last_commit_ts,
+            "commits_30d": commits_30d,
+            "commits_90d": commits_90d,
+            "days_since_last_change": days_since_last_change,
+            "lifetime_commits_per_month": lifetime_commits_per_month,
+            "is_unknown": is_unknown,
+        })
+
+    thresholds = {
+        "T_hot30": max(3.0, _quantile(commits_30_values, 0.95)),
+        "T_hot90": max(6.0, _quantile(commits_90_values, 0.90)),
+        "T_hotRate": max(3.0, _quantile(rate_values, 0.90)),
+        "T_stableDays": max(180.0, _quantile(days_values, 0.75)),
+        "T_stable90": min(1.0, _quantile(commits_90_values, 0.25)),
+        "T_stableRate": min(1.0, _quantile(rate_values, 0.50)),
+    }
+
+    updates: list[tuple[str, int]] = []
+    for entry in staged_metrics:
+        is_hot = False
+        is_stable = False
+        if not entry["is_unknown"]:
+            days_since_last_change = entry["days_since_last_change"]
+            commits_30d = entry["commits_30d"]
+            commits_90d = entry["commits_90d"]
+            lifetime_rate = entry["lifetime_commits_per_month"]
+            total_commits = entry["total_commits"]
+
+            is_hot = (
+                commits_30d >= thresholds["T_hot30"]
+                or (commits_90d >= thresholds["T_hot90"] and days_since_last_change <= 90)
+                or (lifetime_rate >= thresholds["T_hotRate"] and days_since_last_change <= 30)
+            )
+            is_stable = (
+                (not is_hot)
+                and total_commits >= 3
+                and days_since_last_change >= thresholds["T_stableDays"]
+                and commits_90d <= thresholds["T_stable90"]
+                and lifetime_rate <= thresholds["T_stableRate"]
+            )
+
+        metadata = dict(entry["metadata"])
+        metadata["commits_30d"] = entry["commits_30d"]
+        metadata["commits_90d"] = entry["commits_90d"]
+        metadata["days_since_last_change"] = entry["days_since_last_change"]
+        metadata["lifetime_commits_per_month"] = entry["lifetime_commits_per_month"]
+        metadata["is_hot"] = bool(is_hot)
+        metadata["is_stable"] = bool(is_stable)
+        metadata["is_unknown"] = bool(entry["is_unknown"])
+
+        updates.append((json.dumps(metadata), entry["entity_id"]))
+
+    thresholds_payload = {
+        "computed_at": datetime.now(timezone.utc).isoformat(),
+        "now_ts": now_ts,
+        "files_total": len(staged_metrics),
+        "files_with_history": sum(1 for item in staged_metrics if not item["is_unknown"]),
+        "T_hot30": round(thresholds["T_hot30"], 3),
+        "T_hot90": round(thresholds["T_hot90"], 3),
+        "T_hotRate": round(thresholds["T_hotRate"], 3),
+        "T_stableDays": round(thresholds["T_stableDays"], 3),
+        "T_stable90": round(thresholds["T_stable90"], 3),
+        "T_stableRate": round(thresholds["T_stableRate"], 3),
+    }
+
+    with storage.transaction():
+        storage.conn.executemany(
+            "UPDATE entities SET metadata_json = ?, updated_at = CURRENT_TIMESTAMP WHERE entity_id = ?",
+            updates,
+        )
+        storage.conn.execute(
+            "INSERT OR REPLACE INTO repo_meta (key, value) VALUES (?, ?)",
+            ("hot_stable_thresholds", json.dumps(thresholds_payload)),
+        )
+
+    return thresholds_payload
 
 
 def resolve_file_id(storage: Storage, path: str) -> int | None:

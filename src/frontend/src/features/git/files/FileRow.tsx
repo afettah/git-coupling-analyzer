@@ -3,7 +3,8 @@
  */
 
 import type { MouseEvent } from 'react';
-import { FileIcon, FolderIcon } from 'lucide-react';
+import { Copy, ExternalLink, FileIcon, FolderIcon } from 'lucide-react';
+import { buildGitWebUrl, type GitProvider } from './gitWebUrl';
 
 interface FileRowProps {
   path: string;
@@ -17,6 +18,9 @@ interface FileRowProps {
   onContextMenu?: (e: MouseEvent) => void;
   isSelected?: boolean;
   className?: string;
+  gitWebUrl?: string;
+  gitProvider?: GitProvider | null;
+  defaultBranch?: string;
 }
 
 export default function FileRow({
@@ -31,6 +35,9 @@ export default function FileRow({
   onContextMenu,
   isSelected = false,
   className = '',
+  gitWebUrl,
+  gitProvider,
+  defaultBranch,
 }: FileRowProps) {
   const Icon = type === 'folder' ? FolderIcon : FileIcon;
   const fileName = path.split('/').pop() || path;
@@ -47,6 +54,29 @@ export default function FileRow({
     if (!date) return '';
     const d = typeof date === 'string' ? new Date(date) : date;
     return d.toLocaleDateString();
+  };
+
+  const url = buildGitWebUrl({
+    gitWebUrl,
+    gitProvider,
+    defaultBranch,
+    path,
+    targetType: type,
+  });
+  const missingOpenInGitReason = !gitWebUrl
+    ? 'Missing git_web_url. Set a remote URL for this repository to enable this action.'
+    : 'Missing default branch. Set git_default_branch to enable this action.';
+
+  const handleCopyPath = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    void navigator.clipboard.writeText(path);
+  };
+
+  const handleOpenInGit = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (url) {
+      window.open(url, '_blank');
+    }
   };
 
   return (
@@ -84,6 +114,31 @@ export default function FileRow({
         {lastChanged && (
           <span className="text-slate-500">{formatDate(lastChanged)}</span>
         )}
+        <button
+          onClick={handleCopyPath}
+          className="inline-flex items-center justify-center rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-700/60 hover:text-slate-200"
+          title="Copy path"
+          aria-label="Copy path"
+        >
+          <Copy size={14} />
+        </button>
+        <button
+          onClick={handleOpenInGit}
+          disabled={!url}
+          className={`inline-flex items-center justify-center rounded-md p-1 transition-colors ${
+            url
+              ? 'text-slate-400 hover:bg-slate-700/60 hover:text-slate-200'
+              : 'text-slate-600 cursor-not-allowed'
+          }`}
+          title={
+            url
+              ? 'Open in git provider'
+              : missingOpenInGitReason
+          }
+          aria-label="Open in git provider"
+        >
+          <ExternalLink size={14} />
+        </button>
       </div>
     </div>
   );

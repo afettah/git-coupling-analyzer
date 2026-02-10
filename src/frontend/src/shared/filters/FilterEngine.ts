@@ -17,6 +17,9 @@ export interface FilterableItem {
   coupling?: number;
   risk?: number;
   loc?: number;
+  isHot?: boolean;
+  isStable?: boolean;
+  isUnknown?: boolean;
   [key: string]: any;
 }
 
@@ -59,18 +62,10 @@ function matchesSearch(item: FilterableItem, search: string): boolean {
 export function matchesQuickFilter(item: FilterableItem, filter: string): boolean {
   switch (filter) {
     case 'hot':
-      // High churn rate (> 5) or recent activity (last 30 days)
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      const lastChanged = item.lastChanged ? new Date(item.lastChanged) : null;
-      return (item.churn !== undefined && item.churn > 5) || 
-             (lastChanged !== null && lastChanged > thirtyDaysAgo);
+      return item.isHot === true;
     
     case 'stable':
-      // Low churn (< 2) and old (> 180 days since last change)
-      const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
-      const lastChangedStable = item.lastChanged ? new Date(item.lastChanged) : null;
-      return (item.churn !== undefined && item.churn < 2) &&
-             (lastChangedStable !== null && lastChangedStable < sixMonthsAgo);
+      return item.isStable === true;
     
     case 'recent':
       // Changed in last 7 days

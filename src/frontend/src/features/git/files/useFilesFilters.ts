@@ -3,27 +3,12 @@ import { useFilters } from '@/shared/filters/useFilters';
 import { useFilterContext } from '@/shared/filters/FilterContext';
 import type { FilterState, QuickFilterType } from '@/shared/filters/types';
 import { applyFilters, sortItems, type FilterableItem } from '@/shared/filters/FilterEngine';
+import type { TreeNode } from './types';
 
 export { useFilters } from '@/shared/filters/useFilters';
 export { useFilterContext } from '@/shared/filters/FilterContext';
 export type { FilterState, QuickFilterType } from '@/shared/filters/types';
 export { applyFilters, sortItems, type FilterableItem } from '@/shared/filters/FilterEngine';
-
-interface TreeNode {
-  __type?: 'file' | 'dir';
-  __children?: Record<string, TreeNode>;
-  file_id?: number;
-  commits?: number;
-  lines_added?: number;
-  lines_deleted?: number;
-  authors?: number;
-  last_modified?: string;
-  last_author?: string;
-  coupled_count?: number;
-  max_coupling?: number;
-  avg_coupling?: number;
-  strong_coupling_count?: number;
-}
 
 function treeNodeToFilterableItem(node: TreeNode, path: string): FilterableItem {
   const extension = path.includes('.') ? path.split('.').pop() : undefined;
@@ -47,6 +32,9 @@ function treeNodeToFilterableItem(node: TreeNode, path: string): FilterableItem 
     folder,
     churn,
     risk,
+    isHot: node.is_hot === true,
+    isStable: node.is_stable === true,
+    isUnknown: node.is_unknown === true,
   };
 }
 

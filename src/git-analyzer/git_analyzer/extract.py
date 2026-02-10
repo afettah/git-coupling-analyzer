@@ -13,6 +13,7 @@ import pyarrow as pa
 from code_intel.config import RepoPaths, ValidationMode
 from git_analyzer.config import CouplingConfig
 from git_analyzer.git import iter_log, ValidationIssue
+from git_analyzer.file_metrics import materialize_hot_stable_metrics
 from code_intel.storage import Storage
 from git_analyzer.sync import sync_head_files
 from code_intel.logging_utils import get_logger
@@ -227,6 +228,9 @@ class HistoryExtractor:
         self._update_file_stats(
             file_commit_counts, file_authors, file_line_stats, file_timestamps
         )
+
+        # Canonical hot/stable activity classification for all files.
+        materialize_hot_stable_metrics(self.storage, self.paths.parquet_dir)
         
         # Save repo-level summary for dashboard
         self._save_repo_summary(stats, file_commit_counts, file_authors, file_line_stats)

@@ -53,6 +53,38 @@ def get_storage(repo_id: str, data_dir: str = "data") -> Storage:
     return Storage(paths.db_path, paths.parquet_dir)
 
 
+def _store_git_remote_info(storage: Storage, repo_path: Path) -> None:
+    """Detect and persist git remote metadata for a repository."""
+    try:
+        from git_analyzer.git import get_git_remote_info
+
+        info = get_git_remote_info(repo_path)
+    except Exception as exc:
+        logger.warning(f"Failed to detect git remote info for {repo_path}: {exc}")
+        return
+
+    if info.remote_url is not None:
+        storage.conn.execute(
+            "INSERT OR REPLACE INTO repo_meta (key, value) VALUES ('git_remote_url', ?)",
+            (info.remote_url,),
+        )
+    if info.web_url is not None:
+        storage.conn.execute(
+            "INSERT OR REPLACE INTO repo_meta (key, value) VALUES ('git_web_url', ?)",
+            (info.web_url,),
+        )
+    if info.provider is not None:
+        storage.conn.execute(
+            "INSERT OR REPLACE INTO repo_meta (key, value) VALUES ('git_provider', ?)",
+            (info.provider,),
+        )
+    if info.default_branch:
+        storage.conn.execute(
+            "INSERT OR REPLACE INTO repo_meta (key, value) VALUES ('git_default_branch', ?)",
+            (info.default_branch,),
+        )
+
+
 @router.get("", response_model=List[RepoInfo])
 def list_repositories(data_dir: str = "data") -> List[RepoInfo]:
     repos_base = Path(data_dir) / "repos"
@@ -154,12 +186,8 @@ def create_repository(request: CreateRepoRequest) -> RepoInfo:
         (repo_name,)
     )
     
-    # Detect and store git remote info
-    # Note: We need to import from git_analyzer if it's available, but for now we'll assume it's a separate step or moved
-    # Actually, we can't easily import from git_analyzer here if we want to keep platform independent of analyzers at import time.
-    # However, for repo creation, we might need some git helper.
-    # Let's see if we can move get_git_remote_info to a more shared place or keep it in git_analyzer and call it via registry if needed.
-    # For now, I'll keep it simple.
+    # Detect and store git remote info on project creation.
+    _store_git_remote_info(storage, repo_path.resolve())
     
     storage.conn.commit()
     storage.close()
@@ -204,6 +232,23 @@ def get_git_info(repo_id: str, data_dir: str = "data") -> GitRemoteInfoResponse:
         """).fetchall()
         
         meta = {r[0]: r[1] for r in rows}
+
+        # Backfill metadata for repositories created before remote detection existed.
+        if not meta.get("git_web_url"):
+            source_row = storage.conn.execute(
+                "SELECT value FROM repo_meta WHERE key = 'source_path'"
+            ).fetchone()
+            source_path = source_row[0] if source_row else None
+            if source_path:
+                _store_git_remote_info(storage, Path(source_path))
+                storage.conn.commit()
+                rows = storage.conn.execute(
+                    """
+                    SELECT key, value FROM repo_meta 
+                    WHERE key IN ('git_remote_url', 'git_web_url', 'git_provider', 'git_default_branch')
+                    """
+                ).fetchall()
+                meta = {r[0]: r[1] for r in rows}
         
         return GitRemoteInfoResponse(
             git_remote_url=meta.get('git_remote_url'),

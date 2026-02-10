@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
 
 from code_intel.config import RepoPaths
@@ -47,10 +48,27 @@ def build_file_tree(storage: Storage, include_stats: bool = True) -> dict:
         # Leaf file 
         filename = parts[-1]
         metadata = f.get("metadata", {})
+        last_commit_ts = metadata.get("last_commit_ts")
+        last_modified = None
+        if isinstance(last_commit_ts, (int, float)):
+            last_modified = datetime.fromtimestamp(last_commit_ts, tz=timezone.utc).isoformat()
+
         file_node = {
             "__type": "file",
             "entity_id": f["entity_id"],
-            "commits": metadata.get("total_commits", 0),
+            "file_id": f["entity_id"],
+            "commits": int(metadata.get("total_commits", 0) or 0),
+            "total_commits": int(metadata.get("total_commits", 0) or 0),
+            "first_commit_ts": metadata.get("first_commit_ts"),
+            "last_commit_ts": last_commit_ts,
+            "last_modified": last_modified,
+            "commits_30d": int(metadata.get("commits_30d", 0) or 0),
+            "commits_90d": int(metadata.get("commits_90d", 0) or 0),
+            "lifetime_commits_per_month": float(metadata.get("lifetime_commits_per_month", 0.0) or 0.0),
+            "days_since_last_change": metadata.get("days_since_last_change"),
+            "is_hot": bool(metadata.get("is_hot", False)),
+            "is_stable": bool(metadata.get("is_stable", False)),
+            "is_unknown": bool(metadata.get("is_unknown", True)),
         }
         
         node[filename] = file_node

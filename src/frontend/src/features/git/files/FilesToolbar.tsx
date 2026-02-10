@@ -1,4 +1,4 @@
-import { ListTree, Table2, SlidersHorizontal, RotateCcw } from 'lucide-react';
+import { ListTree, Table2, SlidersHorizontal, RotateCcw, ChevronsUpDown, ChevronsDownUp } from 'lucide-react';
 import { FilterBar, SearchInput, AdvancedFiltersPanel } from '@/shared/filters';
 import { useFilesFilters } from './useFilesFilters';
 
@@ -9,6 +9,8 @@ interface FilesToolbarProps {
   onViewModeChange: (mode: 'tree' | 'table') => void;
   showAdvanced: boolean;
   onToggleAdvanced: () => void;
+  onExpandAll?: () => void;
+  onCollapseAll?: () => void;
 }
 
 export default function FilesToolbar({
@@ -18,6 +20,8 @@ export default function FilesToolbar({
   onViewModeChange,
   showAdvanced,
   onToggleAdvanced,
+  onExpandAll,
+  onCollapseAll,
 }: FilesToolbarProps) {
   const { filters, updateFilter, isFiltering, resetFilters } = useFilesFilters();
 
@@ -63,6 +67,25 @@ export default function FilesToolbar({
           <SlidersHorizontal size={14} />
           Advanced
         </button>
+
+        {viewMode === 'tree' && (
+          <div className="flex items-center rounded-lg border border-slate-700 bg-slate-900 p-1">
+            <button
+              onClick={onExpandAll}
+              className="rounded-md p-1 text-slate-400 transition-colors hover:text-slate-200"
+              title="Expand all folders"
+            >
+              <ChevronsUpDown size={15} />
+            </button>
+            <button
+              onClick={onCollapseAll}
+              className="rounded-md p-1 text-slate-400 transition-colors hover:text-slate-200"
+              title="Collapse all folders"
+            >
+              <ChevronsDownUp size={15} />
+            </button>
+          </div>
+        )}
 
         {isFiltering && (
           <button

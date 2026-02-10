@@ -16,6 +16,26 @@ interface FilesPageProps {
   defaultBranch?: string;
 }
 
+function collectFolderPaths(tree: Record<string, TreeNode>): string[] {
+  const paths: string[] = [];
+
+  const walk = (nodes: Record<string, TreeNode>, currentPath: string) => {
+    Object.entries(nodes).forEach(([name, node]) => {
+      const path = currentPath ? `${currentPath}/${name}` : name;
+      const isDir = node.__type === 'dir' || !!node.__children;
+      if (!isDir) {
+        return;
+      }
+
+      paths.push(path);
+      walk(node.__children ?? {}, path);
+    });
+  };
+
+  walk(tree, '');
+  return paths;
+}
+
 function flattenTree(tree: Record<string, TreeNode>): FlatFileNode[] {
   const files: FlatFileNode[] = [];
 
@@ -49,6 +69,13 @@ function flattenTree(tree: Record<string, TreeNode>): FlatFileNode[] {
         churn,
         coupling,
         risk,
+        isHot: node.is_hot === true,
+        isStable: node.is_stable === true,
+        isUnknown: node.is_unknown === true,
+        commits30d: node.commits_30d ?? 0,
+        commits90d: node.commits_90d ?? 0,
+        lifetimeCommitsPerMonth: node.lifetime_commits_per_month ?? 0,
+        daysSinceLastChange: node.days_since_last_change,
         lastChanged: node.last_modified,
         node,
       });
@@ -95,7 +122,7 @@ export default function FilesPage({
         const data = await getFileTree(repoId);
         if (!cancelled) {
           setTree(data);
-          setExpanded(new Set(Object.keys(data).slice(0, 8)));
+          setExpanded(new Set());
         }
       } catch (error) {
         if (!cancelled) {
@@ -153,6 +180,14 @@ export default function FilesPage({
     });
   }, []);
 
+  const handleExpandAll = useCallback(() => {
+    setExpanded(new Set(collectFolderPaths(tree)));
+  }, [tree]);
+
+  const handleCollapseAll = useCallback(() => {
+    setExpanded(new Set());
+  }, []);
+
   const handleSelectPath = useCallback(
     (path: string) => {
       setSelectedPath(path);
@@ -183,6 +218,8 @@ export default function FilesPage({
         onViewModeChange={setViewMode}
         showAdvanced={showAdvancedFilters}
         onToggleAdvanced={() => setShowAdvancedFilters(current => !current)}
+        onExpandAll={handleExpandAll}
+        onCollapseAll={handleCollapseAll}
       />
 
       <div className="min-h-0 flex-1 overflow-auto">
@@ -197,6 +234,9 @@ export default function FilesPage({
             onContextMenu={handleContextMenu}
             isNodeVisible={isNodeVisible}
             fileMap={fileMap}
+            gitWebUrl={gitWebUrl}
+            gitProvider={gitProvider ?? undefined}
+            defaultBranch={defaultBranch}
           />
         ) : (
           <FilesTable
@@ -205,6 +245,9 @@ export default function FilesPage({
             onSelectPath={handleSelectPath}
             onOpenDetails={onOpenDetails}
             onContextMenu={handleContextMenu}
+            gitWebUrl={gitWebUrl}
+            gitProvider={gitProvider ?? undefined}
+            defaultBranch={defaultBranch}
           />
         )}
       </div>
