@@ -6,6 +6,7 @@ import type { MouseEvent } from 'react';
 import { Copy, ExternalLink, FileIcon, FolderIcon, Flame, Anchor, Link2, AlertTriangle } from 'lucide-react';
 import { buildGitWebUrl, type GitProvider } from './gitWebUrl';
 import { matchesQuickFilter } from '@/shared/filters/FilterEngine';
+import type { FileRowDisplayMode } from './types';
 
 interface FileRowProps {
   path: string;
@@ -23,6 +24,7 @@ interface FileRowProps {
   onContextMenu?: (e: MouseEvent) => void;
   isSelected?: boolean;
   className?: string;
+  displayMode?: FileRowDisplayMode;
   gitWebUrl?: string;
   gitProvider?: GitProvider | null;
   defaultBranch?: string;
@@ -44,6 +46,7 @@ export default function FileRow({
   onContextMenu,
   isSelected = false,
   className = '',
+  displayMode = 'info',
   gitWebUrl,
   gitProvider,
   defaultBranch,
@@ -52,7 +55,7 @@ export default function FileRow({
   const fileName = path.split('/').pop() || path;
 
   const getRiskColor = (score?: number) => {
-    if (!score) return 'text-slate-500';
+    if (score === undefined || score === null) return 'text-slate-500';
     if (score >= 8) return 'text-red-400';
     if (score >= 6) return 'text-orange-400';
     if (score >= 4) return 'text-yellow-400';
@@ -64,6 +67,11 @@ export default function FileRow({
     const d = typeof date === 'string' ? new Date(date) : date;
     return d.toLocaleDateString();
   };
+
+  const formattedRisk = risk !== undefined ? risk.toFixed(1) : 'n/a';
+  const formattedChurn = churn !== undefined ? churn.toLocaleString() : 'n/a';
+  const formattedCoupling = coupling !== undefined ? coupling.toFixed(2) : 'n/a';
+  const formattedLastChanged = lastChanged ? formatDate(lastChanged) : 'n/a';
 
   const url = buildGitWebUrl({
     gitWebUrl,
@@ -126,42 +134,42 @@ export default function FileRow({
       </div>
 
       <div className="flex items-center gap-4 text-xs">
-        {type === 'file' && (
+        {type === 'file' && displayMode === 'icons' && (
           <div className="flex items-center gap-1.5">
             {badgeStates.hot && (
-              <span title="Hot file">
+              <span title={`Hot file • churn: ${formattedChurn} • last changed: ${formattedLastChanged}`}>
                 <Flame size={13} className="text-rose-400" />
               </span>
             )}
             {badgeStates.risky && (
-              <span title="Risky file">
+              <span title={`Risky file • risk: ${formattedRisk} • coupling: ${formattedCoupling}`}>
                 <AlertTriangle size={13} className="text-amber-400" />
               </span>
             )}
             {badgeStates.coupled && (
-              <span title="Highly coupled file">
+              <span title={`Highly coupled file • coupling: ${formattedCoupling} • risk: ${formattedRisk}`}>
                 <Link2 size={13} className="text-cyan-400" />
               </span>
             )}
             {badgeStates.stable && (
-              <span title="Stable file">
+              <span title={`Stable file • churn: ${formattedChurn} • last changed: ${formattedLastChanged}`}>
                 <Anchor size={13} className="text-emerald-400" />
               </span>
             )}
           </div>
         )}
-        {commits !== undefined && (
+        {displayMode === 'info' && commits !== undefined && (
           <span className="text-slate-400">{commits} commits</span>
         )}
-        {authors !== undefined && (
+        {displayMode === 'info' && authors !== undefined && (
           <span className="text-slate-400">{authors} {authors === 1 ? 'author' : 'authors'}</span>
         )}
-        {risk !== undefined && (
+        {displayMode === 'info' && risk !== undefined && (
           <span className={`font-medium ${getRiskColor(risk)}`}>
             risk: {risk.toFixed(1)}
           </span>
         )}
-        {lastChanged && (
+        {displayMode === 'info' && lastChanged && (
           <span className="text-slate-500">{formatDate(lastChanged)}</span>
         )}
         <button data-testid="file-row-btn-copy-path"

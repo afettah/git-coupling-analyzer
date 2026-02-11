@@ -1,6 +1,6 @@
 import type { MouseEvent } from 'react';
 import FileRow from './FileRow';
-import type { FlatFileNode } from './types';
+import type { FlatFileNode, FileRowDisplayMode } from './types';
 import type { GitProvider } from './gitWebUrl';
 
 interface FilesTableProps {
@@ -9,6 +9,7 @@ interface FilesTableProps {
   onSelectPath: (path: string) => void;
   onOpenDetails?: (path: string, type: 'file' | 'folder') => void;
   onContextMenu: (event: MouseEvent, path: string, type: 'file' | 'folder') => void;
+  displayMode: FileRowDisplayMode;
   gitWebUrl?: string;
   gitProvider?: GitProvider | null;
   defaultBranch?: string;
@@ -20,6 +21,7 @@ export default function FilesTable({
   onSelectPath,
   onOpenDetails,
   onContextMenu,
+  displayMode,
   gitWebUrl,
   gitProvider,
   defaultBranch,
@@ -47,6 +49,7 @@ export default function FilesTable({
           onDoubleClick={() => onOpenDetails?.(file.path, 'file')}
           onContextMenu={(event) => onContextMenu(event, file.path, 'file')}
           isSelected={selectedPath === file.path}
+          displayMode={displayMode}
           gitWebUrl={gitWebUrl}
           gitProvider={gitProvider}
           defaultBranch={defaultBranch}

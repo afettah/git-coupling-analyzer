@@ -5,7 +5,7 @@ import FilesTree from './files/FilesTree';
 import FilesTable from './files/FilesTable';
 import FileContextMenu from './files/FileContextMenu';
 import { useFilesFilters } from './files/useFilesFilters';
-import type { TreeNode, FlatFileNode } from './files/types';
+import type { TreeNode, FlatFileNode, FileRowDisplayMode } from './files/types';
 
 interface FilesPageProps {
   repoId: string;
@@ -98,6 +98,7 @@ export default function FilesPage({
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'tree' | 'table'>('tree');
+  const [displayMode, setDisplayMode] = useState<FileRowDisplayMode>('icons');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
@@ -216,6 +217,8 @@ export default function FilesPage({
         visibleFiles={visibleFiles.length}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        displayMode={displayMode}
+        onDisplayModeChange={setDisplayMode}
         showAdvanced={showAdvancedFilters}
         onToggleAdvanced={() => setShowAdvancedFilters(current => !current)}
         onExpandAll={handleExpandAll}
@@ -234,6 +237,7 @@ export default function FilesPage({
             onContextMenu={handleContextMenu}
             isNodeVisible={isNodeVisible}
             fileMap={fileMap}
+            displayMode={displayMode}
             gitWebUrl={gitWebUrl}
             gitProvider={gitProvider ?? undefined}
             defaultBranch={defaultBranch}
@@ -245,6 +249,7 @@ export default function FilesPage({
             onSelectPath={handleSelectPath}
             onOpenDetails={onOpenDetails}
             onContextMenu={handleContextMenu}
+            displayMode={displayMode}
             gitWebUrl={gitWebUrl}
             gitProvider={gitProvider ?? undefined}
             defaultBranch={defaultBranch}

@@ -45,3 +45,5 @@ export interface FlatFileNode {
   lastChanged?: string;
   node: TreeNode;
 }
+
+export type FileRowDisplayMode = 'icons' | 'info';

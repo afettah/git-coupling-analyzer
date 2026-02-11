@@ -1,6 +1,7 @@
-import { ListTree, Table2, SlidersHorizontal, RotateCcw, ChevronsUpDown, ChevronsDownUp, ArrowUpDown } from 'lucide-react';
+import { ListTree, Table2, SlidersHorizontal, RotateCcw, ChevronsUpDown, ChevronsDownUp, ArrowUpDown, Info, Flame } from 'lucide-react';
 import { FilterBar, SearchInput, AdvancedFiltersPanel } from '@/shared/filters';
 import { useFilesFilters } from './useFilesFilters';
+import type { FileRowDisplayMode } from './types';
 
 const SORT_OPTIONS = [
   { value: 'path', label: 'Name' },
@@ -16,6 +17,8 @@ interface FilesToolbarProps {
   visibleFiles: number;
   viewMode: 'tree' | 'table';
   onViewModeChange: (mode: 'tree' | 'table') => void;
+  displayMode: FileRowDisplayMode;
+  onDisplayModeChange: (mode: FileRowDisplayMode) => void;
   showAdvanced: boolean;
   onToggleAdvanced: () => void;
   onExpandAll?: () => void;
@@ -27,6 +30,8 @@ export default function FilesToolbar({
   visibleFiles,
   viewMode,
   onViewModeChange,
+  displayMode,
+  onDisplayModeChange,
   showAdvanced,
   onToggleAdvanced,
   onExpandAll,
@@ -64,6 +69,16 @@ export default function FilesToolbar({
             <Table2 size={15} />
           </button>
         </div>
+
+        <button
+          data-testid="files-toolbar-btn-display-info"
+          onClick={() => onDisplayModeChange(displayMode === 'info' ? 'icons' : 'info')}
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300 transition-colors hover:bg-slate-800 hover:text-slate-100"
+          title={displayMode === 'info' ? 'Switch to icons-only mode' : 'Switch to info mode'}
+        >
+          {displayMode === 'info' ? <Info size={14} /> : <Flame size={14} />}
+          {displayMode === 'info' ? 'Info' : 'Icons'}
+        </button>
 
         <button data-testid="files-toolbar-btn-btn-3"
           onClick={onToggleAdvanced}

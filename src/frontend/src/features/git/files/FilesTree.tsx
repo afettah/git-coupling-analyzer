@@ -1,6 +1,6 @@
 import { useMemo, type MouseEvent, type ReactNode } from 'react';
 import FileRow from './FileRow';
-import type { TreeNode, FlatFileNode } from './types';
+import type { TreeNode, FlatFileNode, FileRowDisplayMode } from './types';
 import type { GitProvider } from './gitWebUrl';
 
 interface FilesTreeProps {
@@ -13,6 +13,7 @@ interface FilesTreeProps {
   onContextMenu: (event: MouseEvent, path: string, type: 'file' | 'folder') => void;
   isNodeVisible: (node: TreeNode, path: string) => boolean;
   fileMap: Map<string, FlatFileNode>;
+  displayMode: FileRowDisplayMode;
   gitWebUrl?: string;
   gitProvider?: GitProvider | null;
   defaultBranch?: string;
@@ -31,6 +32,7 @@ interface RenderNodeArgs {
   onContextMenu: (event: MouseEvent, path: string, type: 'file' | 'folder') => void;
   isNodeVisible: (node: TreeNode, path: string) => boolean;
   fileMap: Map<string, FlatFileNode>;
+  displayMode: FileRowDisplayMode;
   gitWebUrl?: string;
   gitProvider?: GitProvider | null;
   defaultBranch?: string;
@@ -49,6 +51,7 @@ function renderNode({
   onContextMenu,
   isNodeVisible,
   fileMap,
+  displayMode,
   gitWebUrl,
   gitProvider,
   defaultBranch,
@@ -92,6 +95,7 @@ function renderNode({
               onDoubleClick={() => onOpenDetails?.(fullPath, 'folder')}
               isSelected={selectedPath === fullPath}
               className="py-1"
+              displayMode={displayMode}
               gitWebUrl={gitWebUrl}
               gitProvider={gitProvider}
               defaultBranch={defaultBranch}
@@ -115,6 +119,7 @@ function renderNode({
                 onContextMenu,
                 isNodeVisible,
                 fileMap,
+                displayMode,
                 gitWebUrl,
                 gitProvider,
                 defaultBranch,
@@ -146,6 +151,7 @@ function renderNode({
         onContextMenu={(event) => onContextMenu(event, fullPath, 'file')}
         isSelected={selectedPath === fullPath}
         className="py-1"
+        displayMode={displayMode}
         gitWebUrl={gitWebUrl}
         gitProvider={gitProvider}
         defaultBranch={defaultBranch}
@@ -183,6 +189,7 @@ export default function FilesTree(props: FilesTreeProps) {
           onContextMenu: props.onContextMenu,
           isNodeVisible: props.isNodeVisible,
           fileMap: props.fileMap,
+          displayMode: props.displayMode,
           gitWebUrl: props.gitWebUrl,
           gitProvider: props.gitProvider,
           defaultBranch: props.defaultBranch,
