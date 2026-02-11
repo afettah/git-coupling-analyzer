@@ -90,7 +90,8 @@ export default function DayHourMatrix({
           .attr('rx', 3)
           .attr('fill', value > 0 ? colorScale(value) : '#1e293b')
           .attr('opacity', value > 0 ? 1 : 0.3)
-          .style('cursor', onCellClick ? 'pointer' : 'default');
+          .style('cursor', onCellClick ? 'pointer' : 'default')
+          .attr('title', onCellClick ? 'Click to drill down to commits for this slot' : null);
 
         if (onCellClick) {
           cell.on('click', () => onCellClick(dayIdx, hour));
@@ -118,6 +119,7 @@ export default function DayHourMatrix({
             .html(`
               <div><strong>${day} ${hour.toString().padStart(2, '0')}:00</strong></div>
               <div>${value} ${value === 1 ? 'commit' : 'commits'}</div>
+              ${onCellClick ? '<div style="margin-top:4px;color:#7dd3fc;">Click to view related commits</div>' : ''}
             `)
             .style('left', `${event.pageX + 10}px`)
             .style('top', `${event.pageY - 10}px`);

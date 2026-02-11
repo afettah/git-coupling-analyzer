@@ -10,12 +10,17 @@ import { Spinner } from '@/shared';
 import { TimelineChart } from '@/shared/charts';
 import type { TimeSeriesPoint } from '@/shared/charts';
 import { Search, ExternalLink, GitCommit, X, Calendar, User } from 'lucide-react';
+import { buildCommitUrl, type CommitDrilldown } from './useDataNavigation';
 
 interface FileCommitsTabProps {
     repoId: string;
     filePath: string;
     gitWebUrl?: string;
     gitProvider?: string;
+    initialSearch?: string;
+    drilldown?: CommitDrilldown | null;
+    onClearDrilldown?: () => void;
+    onAuthorFilter?: (author: string) => void;
 }
 
 // Common bot patterns
@@ -49,22 +54,45 @@ function formatRelativeTime(dateStr: string | null): string {
     return `${Math.floor(diffDays / 365)}y ago`;
 }
 
-// Build commit URL
-function buildCommitUrl(gitWebUrl: string | undefined, provider: string | undefined, sha: string): string | null {
-    if (!gitWebUrl) return null;
+function toDateOnly(isoDate: string): string {
+    return isoDate.split('T')[0];
+}
 
-    switch (provider) {
-        case 'github':
-            return `${gitWebUrl}/commit/${sha}`;
-        case 'gitlab':
-            return `${gitWebUrl}/-/commit/${sha}`;
-        case 'azure_devops':
-            return `${gitWebUrl}/commit/${sha}`;
-        case 'bitbucket':
-            return `${gitWebUrl}/commits/${sha}`;
-        default:
-            return `${gitWebUrl}/commit/${sha}`;
+function getWeekStart(date: Date): string {
+    const utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    const day = utcDate.getUTCDay();
+    const diffToMonday = (day + 6) % 7;
+    utcDate.setUTCDate(utcDate.getUTCDate() - diffToMonday);
+    return utcDate.toISOString().split('T')[0];
+}
+
+function getPeriodKey(dateStr: string, granularity: 'daily' | 'weekly' | 'monthly' | 'quarterly'): string {
+    const d = new Date(dateStr);
+    if (granularity === 'daily') return toDateOnly(d.toISOString());
+    if (granularity === 'weekly') return getWeekStart(d);
+    if (granularity === 'monthly') return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-01`;
+    const quarterStartMonth = Math.floor(d.getUTCMonth() / 3) * 3;
+    return `${d.getUTCFullYear()}-${String(quarterStartMonth + 1).padStart(2, '0')}-01`;
+}
+
+function matchesDrilldown(commit: FileCommit, drilldown: CommitDrilldown): boolean {
+    if (!commit.date) return false;
+    const commitDate = new Date(commit.date);
+
+    if (drilldown.mode === 'date' && drilldown.date) {
+        return toDateOnly(commit.date) === drilldown.date;
     }
+
+    if (drilldown.mode === 'period' && drilldown.period && drilldown.granularity) {
+        return getPeriodKey(commit.date, drilldown.granularity) === drilldown.period;
+    }
+
+    if (drilldown.mode === 'weekday-hour' && drilldown.weekday !== undefined && drilldown.hour !== undefined) {
+        const normalizedWeekday = (commitDate.getUTCDay() + 6) % 7; // convert Sun=0 to Mon=0
+        return normalizedWeekday === drilldown.weekday && commitDate.getUTCHours() === drilldown.hour;
+    }
+
+    return true;
 }
 
 // Commit detail modal
@@ -165,12 +193,14 @@ function CommitItem({
     commit,
     gitWebUrl,
     gitProvider,
-    onShowDetail
+    onShowDetail,
+    onAuthorClick,
 }: {
     commit: FileCommit;
     gitWebUrl?: string;
     gitProvider?: string;
     onShowDetail: () => void;
+    onAuthorClick?: (author: string) => void;
 }) {
     const commitUrl = buildCommitUrl(gitWebUrl, gitProvider, commit.oid);
     const shortOid = commit.oid.slice(0, 7);
@@ -188,7 +218,7 @@ function CommitItem({
 
                 <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm text-slate-200 line-clamp-2">{commit.message || 'No message'}</p>
+                        <p className="text-sm text-slate-200 line-clamp-2 hover:text-sky-300">{commit.message || 'No message'}</p>
                         {commitUrl && (
                             <a data-testid="file-commits-link-link-3"
                                 href={commitUrl}
@@ -203,11 +233,32 @@ function CommitItem({
                     </div>
 
                     <div className="flex items-center gap-3 mt-1.5 text-xs">
-                        <span className="font-mono text-slate-500">{shortOid}</span>
-                        <span className={`${botCommit ? 'text-purple-400' : 'text-slate-500'}`}>
+                        {commitUrl ? (
+                            <a
+                                href={commitUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="font-mono text-sky-400 hover:underline"
+                                title="Open commit in repository"
+                            >
+                                {shortOid}
+                            </a>
+                        ) : (
+                            <span className="font-mono text-slate-500">{shortOid}</span>
+                        )}
+                        <button
+                            type="button"
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                onAuthorClick?.(commit.author);
+                            }}
+                            className={`${botCommit ? 'text-purple-400' : 'text-sky-400'} hover:underline`}
+                            title="Filter commits by this author"
+                        >
                             @{commit.author}
                             {botCommit && <span className="ml-1 text-[10px] bg-purple-500/20 px-1 rounded">bot</span>}
-                        </span>
+                        </button>
                         <span className="text-slate-600">{formatRelativeTime(commit.date)}</span>
                         <span className="flex items-center gap-1">
                             <span className="text-emerald-500">+{commit.lines_added}</span>
@@ -221,11 +272,20 @@ function CommitItem({
     );
 }
 
-export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: FileCommitsTabProps) {
+export function FileCommitsTab({
+    repoId,
+    filePath,
+    gitWebUrl,
+    gitProvider,
+    initialSearch,
+    drilldown,
+    onClearDrilldown,
+    onAuthorFilter,
+}: FileCommitsTabProps) {
     const [data, setData] = useState<FileCommitsResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
-    const [search, setSearch] = useState('');
+    const [search, setSearch] = useState(initialSearch ?? '');
     const [excludeMerges, setExcludeMerges] = useState(false);
     const [excludeBots, setExcludeBots] = useState(false);
     const [selectedCommit, setSelectedCommit] = useState<FileCommit | null>(null);
@@ -276,7 +336,12 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
     }, [repoId, filePath, search, excludeMerges, excludeBots]);
 
     // Debounced search
-    const [searchInput, setSearchInput] = useState('');
+    const [searchInput, setSearchInput] = useState(initialSearch ?? '');
+
+    useEffect(() => {
+        setSearch(initialSearch ?? '');
+        setSearchInput(initialSearch ?? '');
+    }, [initialSearch]);
     useEffect(() => {
         const timer = setTimeout(() => {
             setSearch(searchInput);
@@ -285,22 +350,36 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
     }, [searchInput]);
 
     // Filter out bots if needed
-    const filteredCommits = data?.commits.filter(c => !excludeBots || !isBot(c.author)) || [];
+    const filteredCommits = data?.commits.filter((c) => {
+        if (excludeBots && isBot(c.author)) return false;
+        if (!drilldown) return true;
+        return matchesDrilldown(c, drilldown);
+    }) || [];
     const hasMore = data && filteredCommits.length < data.total_count;
 
     // Commit density timeline data
     const commitDensityData: TimeSeriesPoint[] = useMemo(() => {
         if (!filteredCommits.length) return [];
         // Group commits by date
-        const dateMap = new Map<string, number>();
+        const dateMap = new Map<string, { count: number; authors: Set<string> }>();
         filteredCommits.forEach(c => {
             if (c.date) {
                 const day = c.date.split('T')[0];
-                dateMap.set(day, (dateMap.get(day) || 0) + 1);
+                const previous = dateMap.get(day) ?? { count: 0, authors: new Set<string>() };
+                previous.count += 1;
+                previous.authors.add(c.author);
+                dateMap.set(day, previous);
             }
         });
         return Array.from(dateMap.entries())
-            .map(([date, value]) => ({ date, value }))
+            .map(([date, aggregate]) => ({
+                date,
+                value: aggregate.count,
+                metadata: {
+                    commits: aggregate.count,
+                    authors: aggregate.authors.size,
+                },
+            }))
             .sort((a, b) => (a.date as string).localeCompare(b.date as string));
     }, [filteredCommits]);
 
@@ -360,6 +439,24 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
                         )}
                     </div>
                 )}
+
+                {drilldown && (
+                    <div className="mt-2 inline-flex items-center gap-2 rounded-md border border-sky-500/40 bg-sky-500/10 px-2 py-1 text-xs text-sky-300">
+                        <span>
+                            Drill-down active:
+                            {drilldown.mode === 'date' && drilldown.date && ` ${drilldown.date}`}
+                            {drilldown.mode === 'period' && drilldown.period && ` ${drilldown.period} (${drilldown.granularity})`}
+                            {drilldown.mode === 'weekday-hour' && ` weekday ${drilldown.weekday}, hour ${drilldown.hour}:00`}
+                        </span>
+                        <button
+                            type="button"
+                            className="text-sky-400 hover:text-sky-300 hover:underline"
+                            onClick={onClearDrilldown}
+                        >
+                            Clear
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Commit density timeline */}
@@ -375,6 +472,13 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
                         zoomEnabled={true}
                         onRangeChange={setDensityRange}
                         colorScheme={['#0ea5e9']}
+                        onPointClick={(point) => {
+                            const date = point.date instanceof Date
+                                ? point.date.toISOString().split('T')[0]
+                                : String(point.date);
+                            setSearchInput(date);
+                            setSearch(date);
+                        }}
                     />
                 </div>
             )}
@@ -401,6 +505,11 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
                                 gitWebUrl={gitWebUrl}
                                 gitProvider={gitProvider}
                                 onShowDetail={() => setSelectedCommit(commit)}
+                                onAuthorClick={(author) => {
+                                    setSearchInput(author);
+                                    setSearch(author);
+                                    onAuthorFilter?.(author);
+                                }}
                             />
                         ))}
 

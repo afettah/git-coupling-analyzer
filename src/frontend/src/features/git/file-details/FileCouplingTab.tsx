@@ -41,7 +41,15 @@ function CouplingBar({ value, max = 1 }: { value: number; max?: number }) {
 }
 
 // Mini network visualization
-function MiniNetwork({ files, centerPath }: { files: CoupledFile[]; centerPath: string }) {
+function MiniNetwork({
+    files,
+    centerPath,
+    onFileSelect,
+}: {
+    files: CoupledFile[];
+    centerPath: string;
+    onFileSelect?: (path: string) => void;
+}) {
     const centerName = centerPath.split('/').pop() || centerPath;
     const topFiles = files.slice(0, 6);
 
@@ -97,7 +105,16 @@ function MiniNetwork({ files, centerPath }: { files: CoupledFile[]; centerPath: 
 
                     return (
                         <g key={file.file_id}>
-                            <circle cx={x} cy={y} r={nodeRadius} fill="#7c3aed" className="drop-shadow" />
+                            <circle
+                                cx={x}
+                                cy={y}
+                                r={nodeRadius}
+                                fill="#7c3aed"
+                                className="drop-shadow cursor-pointer hover:opacity-80"
+                                onClick={() => onFileSelect?.(file.path)}
+                            >
+                                <title>Open {file.path} details</title>
+                            </circle>
                             <text
                                 x={x}
                                 y={y + nodeRadius + 10}
@@ -225,13 +242,14 @@ export function FileCouplingTab({ filePath, coupling, onFileSelect }: FileCoupli
             {/* Mini network visualization */}
             <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50">
                 <h3 className="text-sm font-semibold text-slate-300 mb-4">🔗 Coupling Network</h3>
-                <MiniNetwork files={coupling} centerPath={filePath} />
+                <MiniNetwork files={coupling} centerPath={filePath} onFileSelect={onFileSelect} />
             </div>
 
             {/* Coupled files list */}
             <div className="bg-slate-800/30 rounded-lg border border-slate-700/50 overflow-hidden">
                 <div className="p-3 border-b border-slate-700/50 flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-slate-300">Coupled Files ({coupling.length})</h3>
+                    <span className="text-xs text-slate-500">Click file path to open details</span>
                 </div>
 
                 <table className="w-full text-sm">
@@ -275,7 +293,7 @@ export function FileCouplingTab({ filePath, coupling, onFileSelect }: FileCoupli
                             >
                                 <td className="p-3">
                                     <div
-                                        className="text-slate-300 truncate max-w-[200px] cursor-pointer hover:text-sky-400"
+                                        className="text-slate-300 truncate max-w-[200px] cursor-pointer hover:text-sky-400 hover:underline"
                                         onClick={() => onFileSelect?.(file.path)}
                                         title={file.path}
                                     >

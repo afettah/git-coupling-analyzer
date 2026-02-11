@@ -11,16 +11,18 @@ import { Spinner } from '@/shared';
 import { TimelineChart, HeatmapCalendar, DayHourMatrix } from '@/shared/charts';
 import type { TimeSeriesPoint } from '@/shared/charts';
 import { cn } from '@/lib/utils';
+import type { CommitDrilldown } from './useDataNavigation';
 
 interface FileActivityTabProps {
     repoId: string;
     filePath: string;
+    onDrilldown?: (drilldown: CommitDrilldown) => void;
 }
 
 type Granularity = 'daily' | 'weekly' | 'monthly' | 'quarterly';
 type MetricType = 'commits' | 'lines' | 'authors';
 
-export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
+export function FileActivityTab({ repoId, filePath, onDrilldown }: FileActivityTabProps) {
     const [data, setData] = useState<FileActivityResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [granularity, setGranularity] = useState<Granularity>('monthly');
@@ -53,13 +55,38 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
     // Transform data for TimelineChart based on selected metric
     const timelineData: TimeSeriesPoint[] = useMemo(() => {
         if (!data) return [];
+        const linesMap = new Map(data.lines_by_period.map((entry) => [entry.period, entry.added + entry.deleted]));
+        const authorsMap = new Map(data.authors_by_period.map((entry) => [entry.period, entry.count]));
         switch (metricType) {
             case 'commits':
-                return data.commits_by_period.map(d => ({ date: d.period, value: d.count }));
+                return data.commits_by_period.map(d => ({
+                    date: d.period,
+                    value: d.count,
+                    metadata: {
+                        commits: d.count,
+                        authors: authorsMap.get(d.period) ?? 0,
+                        lines: linesMap.get(d.period) ?? 0,
+                    },
+                }));
             case 'lines':
-                return data.lines_by_period.map(d => ({ date: d.period, value: d.added + d.deleted }));
+                return data.lines_by_period.map(d => ({
+                    date: d.period,
+                    value: d.added + d.deleted,
+                    metadata: {
+                        added: d.added,
+                        deleted: d.deleted,
+                        authors: authorsMap.get(d.period) ?? 0,
+                    },
+                }));
             case 'authors':
-                return data.authors_by_period.map(d => ({ date: d.period, value: d.count }));
+                return data.authors_by_period.map(d => ({
+                    date: d.period,
+                    value: d.count,
+                    metadata: {
+                        authors: d.count,
+                        commits: data.commits_by_period.find((entry) => entry.period === d.period)?.count ?? 0,
+                    },
+                }));
         }
     }, [data, metricType]);
 
@@ -134,21 +161,24 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
             <div className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50 overflow-hidden">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-semibold text-slate-300">📈 Activity Timeline</h3>
-                    <div className="flex gap-1">
-                        {(['daily', 'weekly', 'monthly', 'quarterly'] as Granularity[]).map(g => (
-                            <button data-testid="file-activity-btn-btn-1"
-                                key={g}
-                                onClick={() => setGranularity(g)}
-                                className={cn(
-                                    'px-2 py-1 text-xs rounded transition-colors capitalize',
-                                    granularity === g
-                                        ? 'bg-sky-500/20 text-sky-400 border border-sky-500/50'
-                                        : 'bg-slate-700/50 text-slate-400 hover:text-slate-300'
-                                )}
-                            >
-                                {g}
-                            </button>
-                        ))}
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs text-slate-500">Click a point to drill into commits</span>
+                        <div className="flex gap-1">
+                            {(['daily', 'weekly', 'monthly', 'quarterly'] as Granularity[]).map(g => (
+                                <button data-testid="file-activity-btn-btn-1"
+                                    key={g}
+                                    onClick={() => setGranularity(g)}
+                                    className={cn(
+                                        'px-2 py-1 text-xs rounded transition-colors capitalize',
+                                        granularity === g
+                                            ? 'bg-sky-500/20 text-sky-400 border border-sky-500/50'
+                                            : 'bg-slate-700/50 text-slate-400 hover:text-slate-300'
+                                    )}
+                                >
+                                    {g}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
@@ -179,6 +209,17 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
                     zoomEnabled={true}
                     onRangeChange={setTimelineRange}
                     colorScheme={metricColors[metricType]}
+                    onPointClick={(point) => {
+                        const period = point.date instanceof Date
+                            ? point.date.toISOString().slice(0, 10)
+                            : String(point.date);
+                        onDrilldown?.({
+                            mode: 'period',
+                            period,
+                            granularity,
+                            source: `activity-${metricType}`,
+                        });
+                    }}
                 />
             </div>
 
@@ -188,6 +229,13 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
                 <HeatmapCalendar
                     data={heatmapData}
                     colorScheme={['#0f172a', '#064e3b', '#047857', '#059669', '#10b981']}
+                    onDateClick={(date) => {
+                        onDrilldown?.({
+                            mode: 'date',
+                            date: date.toISOString().slice(0, 10),
+                            source: 'heatmap-calendar',
+                        });
+                    }}
                 />
             </div>
 
@@ -205,6 +253,17 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
                     zoomEnabled={true}
                     onRangeChange={setLinesRange}
                     colorScheme={['#10b981']}
+                    onPointClick={(point) => {
+                        const period = point.date instanceof Date
+                            ? point.date.toISOString().slice(0, 10)
+                            : String(point.date);
+                        onDrilldown?.({
+                            mode: 'period',
+                            period,
+                            granularity,
+                            source: 'lines-changed',
+                        });
+                    }}
                 />
 
                 <div className="flex items-center gap-4 mt-3 text-xs">
@@ -233,6 +292,17 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
                     zoomEnabled={true}
                     onRangeChange={setVelocityRange}
                     colorScheme={['#f59e0b']}
+                    onPointClick={(point) => {
+                        const period = point.date instanceof Date
+                            ? point.date.toISOString().slice(0, 10)
+                            : String(point.date);
+                        onDrilldown?.({
+                            mode: 'period',
+                            period,
+                            granularity,
+                            source: 'velocity',
+                        });
+                    }}
                 />
 
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-700/50 text-xs">
@@ -251,6 +321,14 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
                 <DayHourMatrix
                     data={dayHourData}
                     colorScheme={['#0f172a', '#0c4a6e', '#0369a1', '#0284c7', '#0ea5e9']}
+                    onCellClick={(day, hour) => {
+                        onDrilldown?.({
+                            mode: 'weekday-hour',
+                            weekday: day,
+                            hour,
+                            source: 'day-hour-matrix',
+                        });
+                    }}
                 />
             </div>
         </div>

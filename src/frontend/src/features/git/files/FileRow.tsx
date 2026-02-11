@@ -2,7 +2,7 @@
  * FileRow - Shared file row component for tree and table views
  */
 
-import type { MouseEvent } from 'react';
+import type { KeyboardEvent, MouseEvent } from 'react';
 import { Copy, ExternalLink, FileIcon, FolderIcon, Flame, Anchor, Link2, AlertTriangle } from 'lucide-react';
 import { buildGitWebUrl, type GitProvider } from './gitWebUrl';
 import { matchesQuickFilter } from '@/shared/filters/FilterEngine';
@@ -113,11 +113,30 @@ export default function FileRow({
     risky: matchesQuickFilter(quickFilterItem, 'risky'),
   };
 
+  const interactionHint = onDoubleClick
+    ? 'Click to select. Double-click to open details. Right-click for more actions.'
+    : 'Click to select. Right-click for more actions.';
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      if (event.shiftKey && onDoubleClick) {
+        onDoubleClick();
+        return;
+      }
+      onClick?.();
+    }
+  };
+
   return (
     <div
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      title={interactionHint}
       className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
         isSelected
           ? 'bg-sky-500/20 border border-sky-500/50'
@@ -127,7 +146,7 @@ export default function FileRow({
       <Icon size={16} className={type === 'folder' ? 'text-sky-400' : 'text-slate-400'} />
       
       <div className="flex-1 min-w-0">
-        <div className="text-sm text-slate-200 truncate">{fileName}</div>
+        <div className="text-sm text-slate-200 truncate hover:text-sky-300">{fileName}</div>
         {path !== fileName && (
           <div className="text-xs text-slate-500 truncate">{path}</div>
         )}

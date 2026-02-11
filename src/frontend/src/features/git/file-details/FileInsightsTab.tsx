@@ -11,6 +11,7 @@ import { AlertTriangle, CheckCircle, Info, TrendingUp, TrendingDown, Shield, Arr
 interface FileInsightsTabProps {
     details: FileDetailsResponse;
     coupling: CoupledFile[];
+    onNavigateToTab?: (tab: 'activity' | 'authors' | 'coupling' | 'commits') => void;
 }
 
 // Health score bar component
@@ -139,7 +140,7 @@ function TrendIndicator({
     );
 }
 
-export function FileInsightsTab({ details, coupling }: FileInsightsTabProps) {
+export function FileInsightsTab({ details, coupling, onNavigateToTab }: FileInsightsTabProps) {
     // Calculate sub-scores
     const stabilityScore = Math.min(100, Math.max(0, 100 - (details.commits_last_30_days * 5)));
     const ownershipScore = details.authors_count <= 2 ? 100 :
@@ -327,6 +328,36 @@ export function FileInsightsTab({ details, coupling }: FileInsightsTabProps) {
                         {recommendations.map((rec, i) => (
                             <Recommendation key={i} {...rec} />
                         ))}
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                        <button
+                            type="button"
+                            onClick={() => onNavigateToTab?.('commits')}
+                            className="rounded-md border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-xs text-sky-300 hover:bg-sky-500/20"
+                        >
+                            Inspect commits
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onNavigateToTab?.('coupling')}
+                            className="rounded-md border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-xs text-purple-300 hover:bg-purple-500/20"
+                        >
+                            Inspect coupling
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onNavigateToTab?.('authors')}
+                            className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300 hover:bg-amber-500/20"
+                        >
+                            Review authorship
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => onNavigateToTab?.('activity')}
+                            className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300 hover:bg-emerald-500/20"
+                        >
+                            Analyze activity
+                        </button>
                     </div>
                 </div>
             )}

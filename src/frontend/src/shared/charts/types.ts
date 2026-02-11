@@ -37,6 +37,7 @@ export interface TimelineChartProps {
   brushEnabled?: boolean;
   zoomEnabled?: boolean;
   onRangeChange?: (range: [Date, Date]) => void;
+  onPointClick?: (point: TimeSeriesPoint) => void;
   height?: number;
   colorScheme?: string[];
   className?: string;

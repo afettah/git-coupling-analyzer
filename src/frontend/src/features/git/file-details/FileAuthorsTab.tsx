@@ -8,12 +8,16 @@ import { useState, useEffect, useMemo } from 'react';
 import { getFileAuthors, type FileAuthorsResponse, type FileAuthor } from '../../../api/git';
 import { Spinner } from '@/shared';
 import { TimelineChart } from '@/shared/charts';
+import type { TimeSeriesPoint } from '@/shared/charts';
 import { cn } from '@/lib/utils';
-import { Crown, ArrowUpDown } from 'lucide-react';
+import { Crown, ArrowUpDown, MousePointerClick } from 'lucide-react';
+import type { CommitDrilldown } from './useDataNavigation';
 
 interface FileAuthorsTabProps {
     repoId: string;
     filePath: string;
+    selectedAuthor?: string | null;
+    onAuthorSelect?: (author: string, drilldown?: CommitDrilldown) => void;
 }
 
 type SortField = 'commits' | 'lines_added' | 'lines_deleted' | 'last_commit';
@@ -122,7 +126,7 @@ function formatRelativeTime(dateStr: string | null): string {
     return `${Math.floor(diffDays / 365)}y ago`;
 }
 
-export function FileAuthorsTab({ repoId, filePath }: FileAuthorsTabProps) {
+export function FileAuthorsTab({ repoId, filePath, selectedAuthor, onAuthorSelect }: FileAuthorsTabProps) {
     const [data, setData] = useState<FileAuthorsResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [sortField, setSortField] = useState<SortField>('commits');
@@ -254,6 +258,12 @@ export function FileAuthorsTab({ repoId, filePath }: FileAuthorsTabProps) {
 
             {/* Author list */}
             <div className="bg-slate-800/30 rounded-lg border border-slate-700/50 overflow-hidden">
+                <div className="border-b border-slate-700/50 px-3 py-2 text-xs text-slate-500">
+                    <span className="inline-flex items-center gap-1 text-sky-300">
+                        <MousePointerClick size={12} />
+                        Click an author to open filtered commits
+                    </span>
+                </div>
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="text-left text-slate-500 text-xs border-b border-slate-700/50">
@@ -310,7 +320,17 @@ export function FileAuthorsTab({ repoId, filePath }: FileAuthorsTabProps) {
                                         {i === 0 && sortField === 'commits' && sortDir === 'desc' && (
                                             <Crown size={14} className="text-amber-400" />
                                         )}
-                                        <span className="text-slate-300">{author.name}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => onAuthorSelect?.(author.name)}
+                                            className={cn(
+                                                'text-slate-200 hover:text-sky-300 hover:underline text-left',
+                                                selectedAuthor === author.name && 'text-sky-300 underline',
+                                            )}
+                                            title="Show this author's commits"
+                                        >
+                                            {author.name}
+                                        </button>
                                     </div>
                                 </td>
                                 <td className="p-3">
@@ -335,9 +355,16 @@ export function FileAuthorsTab({ repoId, filePath }: FileAuthorsTabProps) {
 
                     {data.authors.slice(0, 3).map((author, authorIndex) => {
                         const authorColors = ['#0ea5e9', '#a78bfa', '#34d399'];
-                        const timelineData = (data.ownership_timeline ?? []).map((point) => {
+                        const timelineData: TimeSeriesPoint[] = (data.ownership_timeline ?? []).map((point) => {
                             const value = point.contributions[author.name] ?? 0;
-                            return { date: point.date, value };
+                            return {
+                                date: point.date,
+                                value,
+                                metadata: {
+                                    author: author.name,
+                                    contributions: value,
+                                },
+                            };
                         });
 
                         return (
@@ -356,6 +383,17 @@ export function FileAuthorsTab({ repoId, filePath }: FileAuthorsTabProps) {
                                             [author.name]: range,
                                         }))
                                     }
+                                    onPointClick={(point) => {
+                                        const period = point.date instanceof Date
+                                            ? point.date.toISOString().slice(0, 10)
+                                            : String(point.date);
+                                        onAuthorSelect?.(author.name, {
+                                            mode: 'period',
+                                            period,
+                                            granularity: 'monthly',
+                                            source: 'authors-timeline',
+                                        });
+                                    }}
                                     colorScheme={[authorColors[authorIndex]]}
                                 />
                             </div>

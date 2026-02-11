@@ -116,6 +116,7 @@ export default function HeatmapCalendar({
           .attr('fill', isInRange ? colorScale(value) : '#1e293b')
           .attr('opacity', isInRange ? 1 : 0.3)
           .style('cursor', onDateClick ? 'pointer' : 'default')
+          .attr('title', onDateClick ? 'Click to drill down to commits for this day' : null)
           .on('click', function() {
             if (onDateClick && isInRange) {
               onDateClick(date);
@@ -142,6 +143,7 @@ export default function HeatmapCalendar({
               .html(`
                 <div><strong>${date.toLocaleDateString()}</strong></div>
                 <div>${value} ${value === 1 ? 'commit' : 'commits'}</div>
+                ${onDateClick ? '<div style="margin-top:4px;color:#7dd3fc;">Click to view related commits</div>' : ''}
               `)
               .style('left', `${event.pageX + 10}px`)
               .style('top', `${event.pageY - 10}px`);

@@ -12,6 +12,10 @@ import {
   DEFAULT_COLOR_SCHEME,
 } from './types';
 
+interface ParsedPoint extends Omit<TimeSeriesPoint, 'date'> {
+  date: Date;
+}
+
 function domainsEqual(a: [Date, Date], b: [Date, Date]): boolean {
   return a[0].getTime() === b[0].getTime() && a[1].getTime() === b[1].getTime();
 }
@@ -50,6 +54,7 @@ export default function TimelineChart({
   brushEnabled = false,
   zoomEnabled = true,
   onRangeChange,
+  onPointClick,
   height = 300,
   colorScheme = DEFAULT_COLOR_SCHEME,
   className = '',
@@ -59,7 +64,7 @@ export default function TimelineChart({
   const [zoomDomain, setZoomDomain] = useState<[Date, Date] | null>(null);
   const clipPathId = useId().replace(/[:]/g, '');
 
-  const parsedData = useMemo(
+  const parsedData = useMemo<ParsedPoint[]>(
     () =>
       data.map((d) => ({
         ...d,
@@ -120,10 +125,43 @@ export default function TimelineChart({
       .attr('height', innerHeight);
 
     const chartContent = g.append('g').attr('clip-path', `url(#${clipPathId})`);
+    const hasPointClick = typeof onPointClick === 'function';
+    const dateFormatter = d3.timeFormat('%b %d, %Y');
+
+    const clearTooltip = () => {
+      d3.selectAll('.timeline-tooltip').remove();
+    };
+
+    const showTooltip = (event: MouseEvent, point: ParsedPoint) => {
+      const metadataEntries = Object.entries(point.metadata ?? {})
+        .slice(0, 4)
+        .map(([key, value]) => `<div>${key}: ${String(value)}</div>`)
+        .join('');
+
+      d3.select('body')
+        .append('div')
+        .attr('class', 'timeline-tooltip')
+        .style('position', 'absolute')
+        .style('background', '#1e293b')
+        .style('color', '#e2e8f0')
+        .style('padding', '8px 12px')
+        .style('border-radius', '6px')
+        .style('font-size', '12px')
+        .style('pointer-events', 'none')
+        .style('z-index', '1000')
+        .style('border', '1px solid #334155')
+        .html(`
+          <div><strong>${dateFormatter(new Date(point.date))}</strong></div>
+          <div>Value: ${point.value}</div>
+          ${metadataEntries}
+        `)
+        .style('left', `${event.pageX + 10}px`)
+        .style('top', `${event.pageY - 10}px`);
+    };
 
     if (chartType === 'area' || chartType === 'stacked-area') {
       const areaGenerator = d3
-        .area<{ date: Date; value: number }>()
+        .area<ParsedPoint>()
         .x((d) => xScale(d.date))
         .y0(innerHeight)
         .y1((d) => yScale(d.value))
@@ -139,7 +177,7 @@ export default function TimelineChart({
         .attr('d', areaGenerator);
     } else if (chartType === 'line') {
       const lineGenerator = d3
-        .line<{ date: Date; value: number }>()
+        .line<ParsedPoint>()
         .x((d) => xScale(d.date))
         .y((d) => yScale(d.value))
         .curve(d3.curveMonotoneX);
@@ -164,7 +202,37 @@ export default function TimelineChart({
         .attr('width', barWidth)
         .attr('height', (d) => innerHeight - yScale(d.value))
         .attr('fill', colorScheme[0])
-        .attr('opacity', 0.8);
+        .attr('opacity', 0.8)
+        .style('cursor', hasPointClick ? 'pointer' : 'default')
+        .on('click', (_event, point) => onPointClick?.(point))
+        .on('mouseenter', function (event, point) {
+          d3.select(this).attr('opacity', 1);
+          clearTooltip();
+          showTooltip(event as MouseEvent, point);
+        })
+        .on('mouseleave', function () {
+          d3.select(this).attr('opacity', 0.8);
+          clearTooltip();
+        });
+    }
+
+    if (chartType !== 'bar') {
+      chartContent
+        .selectAll('.point-hitbox')
+        .data(parsedData)
+        .join('circle')
+        .attr('class', 'point-hitbox')
+        .attr('cx', (d) => xScale(d.date))
+        .attr('cy', (d) => yScale(d.value))
+        .attr('r', 7)
+        .attr('fill', 'transparent')
+        .style('cursor', hasPointClick ? 'pointer' : 'default')
+        .on('click', (_event, point) => onPointClick?.(point))
+        .on('mouseenter', function (event, point) {
+          clearTooltip();
+          showTooltip(event as MouseEvent, point);
+        })
+        .on('mouseleave', clearTooltip);
     }
 
     const xAxis = d3.axisBottom(xScale).ticks(6).tickFormat(d3.timeFormat('%b %Y') as never);
@@ -219,25 +287,25 @@ export default function TimelineChart({
           chartContent.selectAll('path').attr('d', (d: unknown) => {
             if (chartType === 'area' || chartType === 'stacked-area') {
               return d3
-                .area<{ date: Date; value: number }>()
+                .area<ParsedPoint>()
                 .x((row) => newXScale(row.date))
                 .y0(innerHeight)
                 .y1((row) => yScale(row.value))
-                .curve(d3.curveMonotoneX)(d as { date: Date; value: number }[]);
+                .curve(d3.curveMonotoneX)(d as ParsedPoint[]);
             }
             if (chartType === 'line') {
               return d3
-                .line<{ date: Date; value: number }>()
+                .line<ParsedPoint>()
                 .x((row) => newXScale(row.date))
                 .y((row) => yScale(row.value))
-                .curve(d3.curveMonotoneX)(d as { date: Date; value: number }[]);
+                .curve(d3.curveMonotoneX)(d as ParsedPoint[]);
             }
             return null;
           });
 
           chartContent
             .selectAll('.bar')
-            .attr('x', (d: unknown) => newXScale((d as { date: Date }).date) - (innerWidth / Math.max(parsedData.length, 1) - 2) / 2);
+            .attr('x', (d: unknown) => newXScale((d as ParsedPoint).date) - (innerWidth / Math.max(parsedData.length, 1) - 2) / 2);
 
           g.select('.x-axis').call(xAxis.scale(newXScale) as never);
         });
@@ -265,7 +333,7 @@ export default function TimelineChart({
 
       g.append('g').attr('class', 'brush').call(brush);
     }
-  }, [brushEnabled, chartType, clipPathId, colorScheme, effectiveDomain, height, onRangeChange, parsedData, yLabel, zoomEnabled]);
+  }, [brushEnabled, chartType, clipPathId, colorScheme, effectiveDomain, height, onPointClick, onRangeChange, parsedData, yLabel, zoomEnabled]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -280,6 +348,10 @@ export default function TimelineChart({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [height]);
+
+  useEffect(() => () => {
+    d3.selectAll('.timeline-tooltip').remove();
+  }, []);
 
   const handleResetZoom = () => {
     setZoomDomain(null);

@@ -14,6 +14,7 @@ import {
 } from '../../api/git';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/shared';
+import { useDataNavigation, type FilterTarget, type CommitDrilldown } from './file-details/useDataNavigation';
 
 // Tab components
 import { FileActivityTab } from './file-details/FileActivityTab';
@@ -139,6 +140,13 @@ function formatDate(date: string | null): string {
         return 'Unknown';
     }
     return new Date(date).toLocaleDateString();
+}
+
+function asRecord(payload: unknown): Record<string, unknown> {
+    if (payload && typeof payload === 'object') {
+        return payload as Record<string, unknown>;
+    }
+    return {};
 }
 
 function FileSummaryTab({
@@ -280,6 +288,9 @@ export function FileDetailsPanel({
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<TabId>('summary');
     const [copied, setCopied] = useState(false);
+    const [commitSearch, setCommitSearch] = useState('');
+    const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
+    const [commitDrilldown, setCommitDrilldown] = useState<CommitDrilldown | null>(null);
 
     const fileName = filePath.split('/').pop() || filePath;
     const fileIcon = getFileIcon(filePath);
@@ -294,6 +305,56 @@ export function FileDetailsPanel({
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     }, [filePath]);
+
+    const handleAction = useDataNavigation({
+        onNavigate: (target, payload) => {
+            if (target === 'file-details') {
+                const payloadRecord = asRecord(payload);
+                const nextPath = typeof payloadRecord.path === 'string' ? payloadRecord.path : null;
+                if (nextPath) {
+                    onFileSelect?.(nextPath);
+                }
+            }
+        },
+        onFilter: (target: FilterTarget, payload) => {
+            const payloadRecord = asRecord(payload);
+            if (target === 'author') {
+                const author = typeof payloadRecord.author === 'string' ? payloadRecord.author : '';
+                setSelectedAuthor(author || null);
+                setCommitSearch(author);
+                setCommitDrilldown(null);
+                setActiveTab('commits');
+                return;
+            }
+            if (target === 'commits-period') {
+                setCommitDrilldown(payload as CommitDrilldown);
+                setActiveTab('commits');
+                return;
+            }
+            if (target === 'commits-date') {
+                setCommitDrilldown(payload as CommitDrilldown);
+                setActiveTab('commits');
+                return;
+            }
+            if (target === 'commits-weekday-hour') {
+                setCommitDrilldown(payload as CommitDrilldown);
+                setActiveTab('commits');
+                return;
+            }
+            if (target === 'commits-search') {
+                const search = typeof payloadRecord.search === 'string' ? payloadRecord.search : '';
+                setCommitSearch(search);
+                setActiveTab('commits');
+            }
+        },
+        onOpenExternal: (_target, payload) => {
+            const payloadRecord = asRecord(payload);
+            const url = typeof payloadRecord.url === 'string' ? payloadRecord.url : null;
+            if (url) {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            }
+        },
+    });
 
     // Load file details
     useEffect(() => {
@@ -313,6 +374,12 @@ export function FileDetailsPanel({
             }
         };
         loadData();
+    }, [repoId, filePath]);
+
+    useEffect(() => {
+        setCommitSearch('');
+        setSelectedAuthor(null);
+        setCommitDrilldown(null);
     }, [repoId, filePath]);
 
     // Handle keyboard shortcuts
@@ -451,16 +518,42 @@ export function FileDetailsPanel({
                     <FileSummaryTab details={details} filePath={filePath} couplingCount={coupling.length} />
                 )}
                 {activeTab === 'activity' && (
-                    <FileActivityTab repoId={repoId} filePath={filePath} />
+                    <FileActivityTab
+                        repoId={repoId}
+                        filePath={filePath}
+                        onDrilldown={(drilldown) => {
+                            if (drilldown.mode === 'date') {
+                                handleAction({ type: 'filter', target: 'commits-date', payload: drilldown });
+                                return;
+                            }
+                            if (drilldown.mode === 'weekday-hour') {
+                                handleAction({ type: 'filter', target: 'commits-weekday-hour', payload: drilldown });
+                                return;
+                            }
+                            handleAction({ type: 'filter', target: 'commits-period', payload: drilldown });
+                        }}
+                    />
                 )}
                 {activeTab === 'authors' && (
-                    <FileAuthorsTab repoId={repoId} filePath={filePath} />
+                    <FileAuthorsTab
+                        repoId={repoId}
+                        filePath={filePath}
+                        selectedAuthor={selectedAuthor}
+                        onAuthorSelect={(author, drilldown) => {
+                            handleAction({ type: 'filter', target: 'author', payload: { author } });
+                            if (drilldown) {
+                                handleAction({ type: 'filter', target: 'commits-period', payload: drilldown });
+                            }
+                        }}
+                    />
                 )}
                 {activeTab === 'coupling' && (
                     <FileCouplingTab
                         filePath={filePath}
                         coupling={coupling}
-                        onFileSelect={onFileSelect}
+                        onFileSelect={(path) =>
+                            handleAction({ type: 'navigate', target: 'file-details', payload: { path } })
+                        }
                     />
                 )}
                 {activeTab === 'commits' && (
@@ -469,10 +562,18 @@ export function FileDetailsPanel({
                         filePath={filePath}
                         gitWebUrl={gitWebUrl}
                         gitProvider={gitProvider}
+                        initialSearch={commitSearch}
+                        drilldown={commitDrilldown}
+                        onClearDrilldown={() => setCommitDrilldown(null)}
+                        onAuthorFilter={(author) => setSelectedAuthor(author)}
                     />
                 )}
                 {activeTab === 'insights' && (
-                    <FileInsightsTab details={details} coupling={coupling} />
+                    <FileInsightsTab
+                        details={details}
+                        coupling={coupling}
+                        onNavigateToTab={(tab) => setActiveTab(tab)}
+                    />
                 )}
             </div>
         </div>
