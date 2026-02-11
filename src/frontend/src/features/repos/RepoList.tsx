@@ -62,14 +62,14 @@ export default function RepoList({ repos, onSelect, onDeleted }: RepoListProps) 
                     <div className="absolute top-5 right-5 z-10">
                         {deleteConfirm === repo.id ? (
                             <div className="flex items-center gap-2 bg-slate-950/80 p-1 rounded-xl backdrop-blur-md border border-slate-800" onClick={e => e.stopPropagation()}>
-                                <button
+                                <button data-testid="repolist-btn-cancel"
                                     onClick={cancelDelete}
                                     className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 transition-colors"
                                     title="Cancel"
                                 >
                                     <X size={14} />
                                 </button>
-                                <button
+                                <button data-testid="repolist-btn-btn-2"
                                     onClick={(e) => handleDelete(e, repo.id)}
                                     disabled={deleting}
                                     className="px-2 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-bold transition-colors"
@@ -78,7 +78,7 @@ export default function RepoList({ repos, onSelect, onDeleted }: RepoListProps) 
                                 </button>
                             </div>
                         ) : (
-                            <button
+                            <button data-testid="repolist-btn-btn-3"
                                 onClick={(e) => handleDelete(e, repo.id)}
                                 className="p-2 rounded-xl opacity-0 group-hover:opacity-100 bg-slate-800/50 hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-all"
                                 title="Delete project"

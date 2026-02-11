@@ -73,7 +73,7 @@ function renderNode({
     return (
       <div key={fullPath}>
         <div className="flex items-center" style={{ paddingLeft: `${depth * 16}px` }}>
-          <button
+          <button data-testid="files-tree-btn-btn-1"
             onClick={() => onToggleExpand(fullPath)}
             className="w-5 text-xs text-slate-500 hover:text-slate-300"
             title={isExpanded ? 'Collapse' : 'Expand'}
@@ -136,6 +136,10 @@ function renderNode({
         commits={file?.commits}
         authors={file?.authorsCount}
         risk={file?.risk}
+        churn={file?.churn}
+        coupling={file?.coupling}
+        isHot={file?.isHot}
+        isStable={file?.isStable}
         lastChanged={file?.lastChanged}
         onClick={() => onSelectPath(fullPath)}
         onDoubleClick={() => onOpenDetails?.(fullPath, 'file')}

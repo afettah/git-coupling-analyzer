@@ -43,7 +43,7 @@ export function ClustersTab({ clusters, viewMode, depth, onFileSelect }: Cluster
             {/* Summary Bar */}
             <div className="flex items-center justify-between text-xs text-slate-500">
                 <span>{clusters.length} clusters shown</span>
-                <button
+                <button data-testid="clusters-btn-btn-1"
                     onClick={handleExportAll}
                     className="text-sky-400 hover:text-sky-300"
                 >

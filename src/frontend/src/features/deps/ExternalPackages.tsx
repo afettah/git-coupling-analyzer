@@ -60,7 +60,7 @@ export default function ExternalPackages({ repoId }: ExternalPackagesProps) {
                     External Dependencies ({packages.length})
                 </h3>
                 <div className="flex gap-2">
-                    <button
+                    <button data-testid="externalpackages-btn-btn-1"
                         onClick={() => setSortBy('name')}
                         className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${sortBy === 'name'
                             ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
@@ -69,7 +69,7 @@ export default function ExternalPackages({ repoId }: ExternalPackagesProps) {
                     >
                         Name
                     </button>
-                    <button
+                    <button data-testid="externalpackages-btn-btn-2"
                         onClick={() => setSortBy('usage')}
                         className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${sortBy === 'usage'
                             ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
@@ -78,7 +78,7 @@ export default function ExternalPackages({ repoId }: ExternalPackagesProps) {
                     >
                         Usage
                     </button>
-                    <button
+                    <button data-testid="externalpackages-btn-btn-3"
                         onClick={() => setSortBy('files')}
                         className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${sortBy === 'files'
                             ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'

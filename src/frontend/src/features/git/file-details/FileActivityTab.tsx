@@ -25,6 +25,9 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
     const [loading, setLoading] = useState(true);
     const [granularity, setGranularity] = useState<Granularity>('monthly');
     const [metricType, setMetricType] = useState<MetricType>('commits');
+    const [timelineRange, setTimelineRange] = useState<[Date, Date] | undefined>(undefined);
+    const [linesRange, setLinesRange] = useState<[Date, Date] | undefined>(undefined);
+    const [velocityRange, setVelocityRange] = useState<[Date, Date] | undefined>(undefined);
 
     useEffect(() => {
         const loadData = async () => {
@@ -40,6 +43,12 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
         };
         loadData();
     }, [repoId, filePath, granularity]);
+
+    useEffect(() => {
+        setTimelineRange(undefined);
+        setLinesRange(undefined);
+        setVelocityRange(undefined);
+    }, [repoId, filePath, granularity, metricType]);
 
     // Transform data for TimelineChart based on selected metric
     const timelineData: TimeSeriesPoint[] = useMemo(() => {
@@ -127,7 +136,7 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
                     <h3 className="text-sm font-semibold text-slate-300">📈 Activity Timeline</h3>
                     <div className="flex gap-1">
                         {(['daily', 'weekly', 'monthly', 'quarterly'] as Granularity[]).map(g => (
-                            <button
+                            <button data-testid="file-activity-btn-btn-1"
                                 key={g}
                                 onClick={() => setGranularity(g)}
                                 className={cn(
@@ -147,7 +156,7 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
                 <div className="flex items-center gap-4 mb-4 text-xs">
                     {(['commits', 'lines', 'authors'] as MetricType[]).map(m => (
                         <label key={m} className="flex items-center gap-1.5 cursor-pointer">
-                            <input
+                            <input data-testid="file-activity-input-input-1"
                                 type="radio"
                                 checked={metricType === m}
                                 onChange={() => setMetricType(m)}
@@ -163,9 +172,12 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
                 <TimelineChart
                     data={timelineData}
                     chartType="bar"
+                    xDomain={timelineRange}
                     yLabel={metricLabels[metricType]}
                     height={200}
+                    brushEnabled={true}
                     zoomEnabled={true}
+                    onRangeChange={setTimelineRange}
                     colorScheme={metricColors[metricType]}
                 />
             </div>
@@ -186,9 +198,12 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
                 <TimelineChart
                     data={linesAddedData}
                     chartType="area"
+                    xDomain={linesRange}
                     yLabel="Lines"
                     height={180}
+                    brushEnabled={true}
                     zoomEnabled={true}
+                    onRangeChange={setLinesRange}
                     colorScheme={['#10b981']}
                 />
 
@@ -211,9 +226,12 @@ export function FileActivityTab({ repoId, filePath }: FileActivityTabProps) {
                 <TimelineChart
                     data={timelineData}
                     chartType="area"
+                    xDomain={velocityRange}
                     yLabel="Commits"
                     height={150}
+                    brushEnabled={true}
                     zoomEnabled={true}
+                    onRangeChange={setVelocityRange}
                     colorScheme={['#f59e0b']}
                 />
 

@@ -23,3 +23,13 @@ The conflict arises when nested `overflow-auto` containers compete for scroll ev
 1. Add `overflow-x-hidden` to the main content wrapper in the dashboard.
 2. In `TimelineChart.tsx`, set explicit `max-width: 100%` and `overflow: hidden` on the chart container div.
 3. Use `overscroll-behavior: contain` CSS on inner scroll containers to prevent scroll chaining to the parent.
+
+## Progress Update (2026-02-11)
+- Status: ✅ Completed
+- Implemented:
+  - `AnalysisDashboard.tsx`: Main content wrapper uses `overflow-x-hidden overflow-y-auto overscroll-contain`.
+  - `FilesPage.tsx`: Scroll is isolated to inner content container with horizontal overflow prevented.
+  - `TimelineChart.tsx`: Chart wrapper and SVG are bounded to parent width to prevent horizontal spill.
+  - `FileDetailsPanel.tsx`: Content area uses `overflow-x-hidden overflow-y-auto overscroll-contain`.
+- Notes:
+  - Nested scroll behavior is now controlled and horizontal scroll bleed is prevented in primary file-analysis surfaces.

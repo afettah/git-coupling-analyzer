@@ -17,7 +17,7 @@ export default function ClusteringWorkspace({ repo, onBack }: ClusteringWorkspac
             <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
                     <div>
-                        <button
+                        <button data-testid="clustering-workspace-btn-btn-1"
                             onClick={onBack}
                             className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
                         >
@@ -26,7 +26,7 @@ export default function ClusteringWorkspace({ repo, onBack }: ClusteringWorkspac
                         <h1 className="text-2xl font-bold text-sky-400 mt-1">Clustering</h1>
                         <p className="text-xs text-slate-500">{repo.name}</p>
                     </div>
-                    <button
+                    <button data-testid="clustering-workspace-btn-btn-2"
                         onClick={() => navigate(`/repos/${repo.id}/clustering/new`)}
                         className="px-4 py-2 bg-sky-500 text-slate-900 font-semibold rounded-lg hover:bg-sky-400 transition-colors"
                     >

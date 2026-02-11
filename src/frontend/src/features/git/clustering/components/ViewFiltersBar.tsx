@@ -130,7 +130,7 @@ export const ViewFiltersBar = memo(function ViewFiltersBar({
                 {showClusterViewOptions && (
                     <div className="flex items-center gap-1.5 bg-slate-800/50 rounded-lg p-1">
                         {VIEW_OPTIONS.map(option => (
-                            <button
+                            <button data-testid="viewfiltersbar-btn-btn-1"
                                 key={option.value}
                                 onClick={() => onViewModeChange(option.value)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors ${viewMode === option.value
@@ -249,7 +249,7 @@ export const ViewFiltersBar = memo(function ViewFiltersBar({
                 <div className="pt-2 border-t border-slate-800">
                     <div className="flex items-center gap-4">
                         <label className="text-xs text-slate-500 shrink-0">Directory filter</label>
-                        <input
+                        <input data-testid="viewfiltersbar-input-input-1"
                             value={directory || ''}
                             onChange={(e) => onDirectoryChange(e.target.value)}
                             placeholder="e.g. src/components"

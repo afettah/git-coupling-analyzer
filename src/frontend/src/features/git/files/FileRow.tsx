@@ -3,8 +3,9 @@
  */
 
 import type { MouseEvent } from 'react';
-import { Copy, ExternalLink, FileIcon, FolderIcon } from 'lucide-react';
+import { Copy, ExternalLink, FileIcon, FolderIcon, Flame, Anchor, Link2, AlertTriangle } from 'lucide-react';
 import { buildGitWebUrl, type GitProvider } from './gitWebUrl';
+import { matchesQuickFilter } from '@/shared/filters/FilterEngine';
 
 interface FileRowProps {
   path: string;
@@ -12,6 +13,10 @@ interface FileRowProps {
   commits?: number;
   authors?: number;
   risk?: number;
+  churn?: number;
+  coupling?: number;
+  isHot?: boolean;
+  isStable?: boolean;
   lastChanged?: Date | string;
   onClick?: () => void;
   onDoubleClick?: () => void;
@@ -29,6 +34,10 @@ export default function FileRow({
   commits,
   authors,
   risk,
+  churn,
+  coupling,
+  isHot,
+  isStable,
   lastChanged,
   onClick,
   onDoubleClick,
@@ -79,6 +88,23 @@ export default function FileRow({
     }
   };
 
+  const quickFilterItem = {
+    path,
+    risk,
+    churn,
+    coupling,
+    lastChanged,
+    isHot,
+    isStable,
+  };
+
+  const badgeStates = {
+    hot: matchesQuickFilter(quickFilterItem, 'hot'),
+    stable: matchesQuickFilter(quickFilterItem, 'stable'),
+    coupled: matchesQuickFilter(quickFilterItem, 'coupled'),
+    risky: matchesQuickFilter(quickFilterItem, 'risky'),
+  };
+
   return (
     <div
       onClick={onClick}
@@ -100,6 +126,30 @@ export default function FileRow({
       </div>
 
       <div className="flex items-center gap-4 text-xs">
+        {type === 'file' && (
+          <div className="flex items-center gap-1.5">
+            {badgeStates.hot && (
+              <span title="Hot file">
+                <Flame size={13} className="text-rose-400" />
+              </span>
+            )}
+            {badgeStates.risky && (
+              <span title="Risky file">
+                <AlertTriangle size={13} className="text-amber-400" />
+              </span>
+            )}
+            {badgeStates.coupled && (
+              <span title="Highly coupled file">
+                <Link2 size={13} className="text-cyan-400" />
+              </span>
+            )}
+            {badgeStates.stable && (
+              <span title="Stable file">
+                <Anchor size={13} className="text-emerald-400" />
+              </span>
+            )}
+          </div>
+        )}
         {commits !== undefined && (
           <span className="text-slate-400">{commits} commits</span>
         )}
@@ -114,7 +164,7 @@ export default function FileRow({
         {lastChanged && (
           <span className="text-slate-500">{formatDate(lastChanged)}</span>
         )}
-        <button
+        <button data-testid="file-row-btn-copy-path"
           onClick={handleCopyPath}
           className="inline-flex items-center justify-center rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-700/60 hover:text-slate-200"
           title="Copy path"
@@ -122,7 +172,7 @@ export default function FileRow({
         >
           <Copy size={14} />
         </button>
-        <button
+        <button data-testid="file-row-btn-open-in-git-provider"
           onClick={handleOpenInGit}
           disabled={!url}
           className={`inline-flex items-center justify-center rounded-md p-1 transition-colors ${

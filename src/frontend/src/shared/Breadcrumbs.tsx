@@ -42,7 +42,7 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
                         <ChevronRight size={14} className="text-slate-600 flex-shrink-0" />
                     )}
                     {item.path ? (
-                        <button
+                        <button data-testid="breadcrumbs-btn-btn-1"
                             onClick={() => navigate(item.path!)}
                             className="flex items-center gap-1.5 px-2 py-1 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 rounded transition-colors"
                         >

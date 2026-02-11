@@ -64,7 +64,7 @@ export function ClustersTable({ clusters, onExplore }: ClustersTableProps) {
                                 {formatNumber(cluster.total_churn)}
                             </td>
                             <td className="px-4 py-3">
-                                <button
+                                <button data-testid="clusterstable-btn-btn-1"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         onExplore(cluster);

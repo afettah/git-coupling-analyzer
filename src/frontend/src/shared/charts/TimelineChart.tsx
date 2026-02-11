@@ -3,7 +3,7 @@
  * Supports continuous time x-axis, zoom/pan, brush selection, auto-scaling
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import {
   type TimelineChartProps,
@@ -12,12 +12,41 @@ import {
   DEFAULT_COLOR_SCHEME,
 } from './types';
 
+function domainsEqual(a: [Date, Date], b: [Date, Date]): boolean {
+  return a[0].getTime() === b[0].getTime() && a[1].getTime() === b[1].getTime();
+}
+
+function getAutoScaleRange(points: TimeSeriesPoint[]): [Date, Date] {
+  if (points.length === 0) {
+    const now = new Date();
+    return [new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), now];
+  }
+
+  const dates = points.map((p) => new Date(p.date)).sort((a, b) => a.getTime() - b.getTime());
+  const firstDate = dates[0];
+  const lastDate = dates[dates.length - 1];
+  const now = new Date();
+  const daysSinceLastActivity = (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
+
+  if (daysSinceLastActivity < 30) {
+    return [new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), now];
+  }
+  if (daysSinceLastActivity < 90) {
+    return [new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000), now];
+  }
+  if (daysSinceLastActivity < 365) {
+    return [new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000), now];
+  }
+
+  const padding = (lastDate.getTime() - firstDate.getTime()) * 0.05;
+  return [new Date(firstDate.getTime() - padding), new Date(lastDate.getTime() + padding)];
+}
+
 export default function TimelineChart({
   data,
   chartType,
   xDomain,
   yLabel = '',
-  series = [],
   brushEnabled = false,
   zoomEnabled = true,
   onRangeChange,
@@ -26,45 +55,33 @@ export default function TimelineChart({
   className = '',
 }: TimelineChartProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const brushRef = useRef<SVGGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height });
+  const [zoomDomain, setZoomDomain] = useState<[Date, Date] | null>(null);
+  const clipPathId = useId().replace(/[:]/g, '');
 
-  // Auto-scale algorithm: detect optimal time window
-  const getAutoScaleRange = (points: TimeSeriesPoint[]): [Date, Date] => {
-    if (points.length === 0) {
-      const now = new Date();
-      return [new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), now];
-    }
+  const parsedData = useMemo(
+    () =>
+      data.map((d) => ({
+        ...d,
+        date: new Date(d.date),
+      })),
+    [data],
+  );
 
-    const dates = points.map(p => new Date(p.date)).sort((a, b) => a.getTime() - b.getTime());
-    const firstDate = dates[0];
-    const lastDate = dates[dates.length - 1];
-    const now = new Date();
-    
-    const daysSinceLastActivity = (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
-
-    // Auto-scale logic from design doc
-    if (daysSinceLastActivity < 30) {
-      // Show last 30 days
-      return [new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), now];
-    } else if (daysSinceLastActivity < 90) {
-      // Show last 90 days
-      return [new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000), now];
-    } else if (daysSinceLastActivity < 365) {
-      // Show last 12 months
-      return [new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000), now];
-    } else {
-      // Show all time with padding
-      const padding = (lastDate.getTime() - firstDate.getTime()) * 0.05;
-      return [
-        new Date(firstDate.getTime() - padding),
-        new Date(lastDate.getTime() + padding),
-      ];
-    }
-  };
+  const autoDomain = useMemo<[Date, Date]>(() => getAutoScaleRange(parsedData), [parsedData]);
+  const effectiveDomain: [Date, Date] = zoomDomain ?? xDomain ?? autoDomain;
+  const isZoomed = !domainsEqual(effectiveDomain, autoDomain);
 
   useEffect(() => {
-    if (!svgRef.current || data.length === 0) return;
+    if (xDomain) {
+      setZoomDomain(null);
+    }
+  }, [xDomain]);
+
+  useEffect(() => {
+    if (!svgRef.current || parsedData.length === 0) {
+      return;
+    }
 
     const svg = d3.select(svgRef.current);
     const container = svgRef.current.parentElement;
@@ -73,60 +90,47 @@ export default function TimelineChart({
     const width = container.clientWidth;
     setDimensions({ width, height });
 
-    // Clear previous content
     svg.selectAll('*').remove();
 
     const margin = DEFAULT_CHART_MARGIN;
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
-    // Parse dates and prepare data
-    const parsedData = data.map(d => ({
-      ...d,
-      date: new Date(d.date),
-    }));
+    const [xMin, xMax] = effectiveDomain;
 
-    // Determine x-axis domain
-    const [xMin, xMax] = xDomain || getAutoScaleRange(parsedData);
+    const xScale = d3.scaleTime().domain([xMin, xMax]).range([0, innerWidth]);
 
-    // Create scales
-    const xScale = d3.scaleTime()
-      .domain([xMin, xMax])
-      .range([0, innerWidth]);
-
-    const yScale = d3.scaleLinear()
-      .domain([0, d3.max(parsedData, d => d.value) || 1])
+    const yScale = d3
+      .scaleLinear()
+      .domain([0, d3.max(parsedData, (d) => d.value) || 1])
       .nice()
       .range([innerHeight, 0]);
 
-    // Create main group
     const g = svg
       .attr('width', width)
       .attr('height', height)
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Add clip path
     g.append('defs')
       .append('clipPath')
-      .attr('id', 'chart-clip')
+      .attr('id', clipPathId)
       .append('rect')
       .attr('width', innerWidth)
       .attr('height', innerHeight);
 
-    // Chart content group (will be clipped and zoomed)
-    const chartContent = g.append('g')
-      .attr('clip-path', 'url(#chart-clip)');
+    const chartContent = g.append('g').attr('clip-path', `url(#${clipPathId})`);
 
-    // Draw chart based on type
     if (chartType === 'area' || chartType === 'stacked-area') {
-      const areaGenerator = d3.area<{ date: Date; value: number }>()
-        .x(d => xScale(d.date))
+      const areaGenerator = d3
+        .area<{ date: Date; value: number }>()
+        .x((d) => xScale(d.date))
         .y0(innerHeight)
-        .y1(d => yScale(d.value))
+        .y1((d) => yScale(d.value))
         .curve(d3.curveMonotoneX);
 
-      chartContent.append('path')
+      chartContent
+        .append('path')
         .datum(parsedData)
         .attr('fill', colorScheme[0])
         .attr('fill-opacity', 0.3)
@@ -134,36 +138,36 @@ export default function TimelineChart({
         .attr('stroke-width', 2)
         .attr('d', areaGenerator);
     } else if (chartType === 'line') {
-      const lineGenerator = d3.line<{ date: Date; value: number }>()
-        .x(d => xScale(d.date))
-        .y(d => yScale(d.value))
+      const lineGenerator = d3
+        .line<{ date: Date; value: number }>()
+        .x((d) => xScale(d.date))
+        .y((d) => yScale(d.value))
         .curve(d3.curveMonotoneX);
 
-      chartContent.append('path')
+      chartContent
+        .append('path')
         .datum(parsedData)
         .attr('fill', 'none')
         .attr('stroke', colorScheme[0])
         .attr('stroke-width', 2)
         .attr('d', lineGenerator);
     } else if (chartType === 'bar') {
-      const barWidth = Math.max(2, innerWidth / parsedData.length - 2);
+      const barWidth = Math.max(2, innerWidth / Math.max(parsedData.length, 1) - 2);
 
-      chartContent.selectAll('.bar')
+      chartContent
+        .selectAll('.bar')
         .data(parsedData)
         .join('rect')
         .attr('class', 'bar')
-        .attr('x', d => xScale(d.date) - barWidth / 2)
-        .attr('y', d => yScale(d.value))
+        .attr('x', (d) => xScale(d.date) - barWidth / 2)
+        .attr('y', (d) => yScale(d.value))
         .attr('width', barWidth)
-        .attr('height', d => innerHeight - yScale(d.value))
+        .attr('height', (d) => innerHeight - yScale(d.value))
         .attr('fill', colorScheme[0])
         .attr('opacity', 0.8);
     }
 
-    // X-axis
-    const xAxis = d3.axisBottom(xScale)
-      .ticks(6)
-      .tickFormat(d3.timeFormat('%b %Y') as any);
+    const xAxis = d3.axisBottom(xScale).ticks(6).tickFormat(d3.timeFormat('%b %Y') as never);
 
     g.append('g')
       .attr('class', 'x-axis')
@@ -173,10 +177,8 @@ export default function TimelineChart({
       .style('fill', '#94a3b8')
       .style('font-size', '11px');
 
-    g.selectAll('.x-axis line, .x-axis path')
-      .style('stroke', '#334155');
+    g.selectAll('.x-axis line, .x-axis path').style('stroke', '#334155');
 
-    // Y-axis
     const yAxis = d3.axisLeft(yScale).ticks(5);
 
     g.append('g')
@@ -186,10 +188,8 @@ export default function TimelineChart({
       .style('fill', '#94a3b8')
       .style('font-size', '11px');
 
-    g.selectAll('.y-axis line, .y-axis path')
-      .style('stroke', '#334155');
+    g.selectAll('.y-axis line, .y-axis path').style('stroke', '#334155');
 
-    // Y-axis label
     if (yLabel) {
       g.append('text')
         .attr('transform', 'rotate(-90)')
@@ -201,58 +201,72 @@ export default function TimelineChart({
         .text(yLabel);
     }
 
-    // Zoom behavior
     if (zoomEnabled) {
-      const zoom = d3.zoom<SVGSVGElement, unknown>()
+      const zoom = d3
+        .zoom<SVGSVGElement, unknown>()
         .scaleExtent([1, 50])
-        .translateExtent([[0, 0], [innerWidth, innerHeight]])
-        .extent([[0, 0], [innerWidth, innerHeight]])
+        .translateExtent([
+          [0, 0],
+          [innerWidth, innerHeight],
+        ])
+        .extent([
+          [0, 0],
+          [innerWidth, innerHeight],
+        ])
         .on('zoom', (event) => {
           const newXScale = event.transform.rescaleX(xScale);
-          chartContent.selectAll('path').attr('d', (d: any) => {
+
+          chartContent.selectAll('path').attr('d', (d: unknown) => {
             if (chartType === 'area' || chartType === 'stacked-area') {
-              return d3.area<{ date: Date; value: number }>()
-                .x(d => newXScale(d.date))
+              return d3
+                .area<{ date: Date; value: number }>()
+                .x((row) => newXScale(row.date))
                 .y0(innerHeight)
-                .y1(d => yScale(d.value))
-                .curve(d3.curveMonotoneX)(d);
-            } else if (chartType === 'line') {
-              return d3.line<{ date: Date; value: number }>()
-                .x(d => newXScale(d.date))
-                .y(d => yScale(d.value))
-                .curve(d3.curveMonotoneX)(d);
+                .y1((row) => yScale(row.value))
+                .curve(d3.curveMonotoneX)(d as { date: Date; value: number }[]);
+            }
+            if (chartType === 'line') {
+              return d3
+                .line<{ date: Date; value: number }>()
+                .x((row) => newXScale(row.date))
+                .y((row) => yScale(row.value))
+                .curve(d3.curveMonotoneX)(d as { date: Date; value: number }[]);
             }
             return null;
           });
 
-          chartContent.selectAll('.bar')
-            .attr('x', (d: any) => newXScale(d.date) - (innerWidth / parsedData.length - 2) / 2);
+          chartContent
+            .selectAll('.bar')
+            .attr('x', (d: unknown) => newXScale((d as { date: Date }).date) - (innerWidth / Math.max(parsedData.length, 1) - 2) / 2);
 
-          g.select('.x-axis').call(xAxis.scale(newXScale) as any);
+          g.select('.x-axis').call(xAxis.scale(newXScale) as never);
         });
 
-      svg.call(zoom as any);
+      svg.call(zoom as never);
     }
 
-    // Brush for range selection
-    if (brushEnabled && brushRef.current) {
-      const brush = d3.brushX()
-        .extent([[0, 0], [innerWidth, innerHeight]])
+    if (brushEnabled) {
+      const brush = d3
+        .brushX()
+        .extent([
+          [0, 0],
+          [innerWidth, innerHeight],
+        ])
         .on('end', (event) => {
           if (!event.selection) return;
           const [x0, x1] = event.selection as [number, number];
-          const range: [Date, Date] = [xScale.invert(x0), xScale.invert(x1)];
-          onRangeChange?.(range);
+          if (Math.abs(x1 - x0) < 2) return;
+
+          const brushed: [Date, Date] = [xScale.invert(Math.min(x0, x1)), xScale.invert(Math.max(x0, x1))];
+          setZoomDomain(brushed);
+          onRangeChange?.(brushed);
+          d3.select(event.currentTarget as SVGGElement).call(brush.move as never, null);
         });
 
-      const brushGroup = g.append('g')
-        .attr('class', 'brush')
-        .call(brush);
+      g.append('g').attr('class', 'brush').call(brush);
     }
+  }, [brushEnabled, chartType, clipPathId, colorScheme, effectiveDomain, height, onRangeChange, parsedData, yLabel, zoomEnabled]);
 
-  }, [data, chartType, xDomain, yLabel, height, brushEnabled, zoomEnabled, onRangeChange, colorScheme]);
-
-  // Handle window resize
   useEffect(() => {
     const handleResize = () => {
       if (svgRef.current?.parentElement) {
@@ -267,9 +281,23 @@ export default function TimelineChart({
     return () => window.removeEventListener('resize', handleResize);
   }, [height]);
 
+  const handleResetZoom = () => {
+    setZoomDomain(null);
+    onRangeChange?.(autoDomain);
+  };
+
   return (
-    <div className={`timeline-chart ${className}`}>
-      <svg ref={svgRef} className="w-full" />
+    <div className={`timeline-chart relative max-w-full overflow-hidden ${className}`}>
+      {isZoomed && (
+        <button data-testid="timelinechart-btn-btn-1"
+          type="button"
+          onClick={handleResetZoom}
+          className="absolute right-2 top-2 z-10 rounded-md border border-slate-600 bg-slate-900/85 px-2 py-1 text-[11px] text-slate-200 transition-colors hover:bg-slate-800"
+        >
+          Reset zoom
+        </button>
+      )}
+      <svg ref={svgRef} className="block h-auto w-full max-w-full" aria-label="timeline-chart" />
     </div>
   );
 }

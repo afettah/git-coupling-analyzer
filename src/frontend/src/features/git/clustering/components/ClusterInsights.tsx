@@ -76,7 +76,7 @@ function CommitsCard({ commits, repoUrlConfig }: CommitsCardProps) {
                                 {getFileName(commit.message || 'Commit')} • {commit.file_count} files
                             </span>
                             {repoUrlConfig && (
-                                <a
+                                <a data-testid="clusterinsights-link-link-1"
                                     href={buildCommitUrl(repoUrlConfig, commit.oid)}
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -113,7 +113,7 @@ function HotFilesCard({ hotFiles, repoUrlConfig, onFileSelect }: HotFilesCardPro
                                 {getFileName(file.path)} • {formatNumber(file.churn)} churn
                             </span>
                             {onFileSelect && (
-                                <button
+                                <button data-testid="clusterinsights-btn-btn-1"
                                     onClick={() => onFileSelect(file.path)}
                                     className="text-slate-500 hover:text-sky-400 flex-shrink-0"
                                     title="View file details"
@@ -122,7 +122,7 @@ function HotFilesCard({ hotFiles, repoUrlConfig, onFileSelect }: HotFilesCardPro
                                 </button>
                             )}
                             {repoUrlConfig && (
-                                <a
+                                <a data-testid="clusterinsights-link-open-in-repository"
                                     href={buildFileUrl(repoUrlConfig, file.path)}
                                     target="_blank"
                                     rel="noopener noreferrer"

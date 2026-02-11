@@ -70,7 +70,7 @@ export default function DomainOverviewWidget({ repoId, limit = 4 }: DomainOvervi
         <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-200">Semantic Domains</h3>
-                <button
+                <button data-testid="domainoverviewwidget-btn-btn-1"
                     onClick={() => navigate(`/repos/${repoId}/semantic/domains`)}
                     className="text-xs text-sky-400 hover:text-sky-300 transition-colors"
                 >
@@ -79,7 +79,7 @@ export default function DomainOverviewWidget({ repoId, limit = 4 }: DomainOvervi
             </div>
             <div className="grid grid-cols-2 gap-3">
                 {domains.map((domain, index) => (
-                    <button
+                    <button data-testid="domainoverviewwidget-btn-btn-2"
                         key={domain.domain_id}
                         onClick={() => navigate(`/repos/${repoId}/semantic/domains/${domain.domain_id}`)}
                         className="text-left p-4 rounded-lg border transition-all group hover:scale-105"

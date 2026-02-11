@@ -194,7 +194,7 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                 <div className="p-4 border-b border-slate-800 flex gap-4 bg-slate-900/50">
                     <div className="flex-1 relative">
                         <Search className="absolute left-3 top-2.5 text-slate-500" size={18} />
-                        <input
+                        <input data-testid="impact-graph-input-search-file-path..."
                             type="text"
                             placeholder="Search file path..."
                             value={filePath}
@@ -209,7 +209,7 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                             <div className="mt-2 flex flex-wrap gap-2 text-xs">
                                 <span className="text-slate-500">Presets:</span>
                                 {suggestedPaths.map((path) => (
-                                    <button
+                                    <button data-testid="impact-graph-btn-btn-1"
                                         key={path}
                                         onClick={() => {
                                             setSearchParams({ path });
@@ -223,7 +223,7 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                             </div>
                         )}
                     </div>
-                    <button
+                    <button data-testid="impact-graph-btn-btn-2"
                         onClick={() => setSearchParams({ path: filePath })}
                         disabled={loading}
                         className="bg-sky-500 hover:bg-sky-400 text-slate-900 px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap"
@@ -231,7 +231,7 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                         {loading ? 'Loading...' : 'Load Impact'}
                     </button>
                     {filePath && (
-                        <button
+                        <button data-testid="impact-graph-btn-btn-3"
                             onClick={() => navigate(`/repos/${repoId}/file-details?file=${encodeURIComponent(filePath)}`)}
                             className="px-3 py-2 rounded-lg text-sm border border-slate-700 text-slate-300 hover:border-sky-400 hover:text-sky-400 transition-all"
                             title="View file details"
@@ -279,7 +279,7 @@ export default function ImpactGraph({ repoId }: ImpactGraphProps) {
                                 <div key={i} className="bg-slate-950 p-2 rounded border border-slate-800 flex justify-between items-center text-xs">
                                     <div className="truncate pr-2 font-mono flex-1" title={imp.path}>{imp.path?.split('/').pop()}</div>
                                     <div className="text-sky-400 font-bold mr-2">{(imp.jaccard * 100).toFixed(1)}%</div>
-                                    <button
+                                    <button data-testid="impact-graph-btn-btn-4"
                                         onClick={() => navigate(`/repos/${repoId}/file-details?file=${encodeURIComponent(imp.path)}`)}
                                         className="text-slate-500 hover:text-sky-400 flex-shrink-0"
                                         title="View file details"

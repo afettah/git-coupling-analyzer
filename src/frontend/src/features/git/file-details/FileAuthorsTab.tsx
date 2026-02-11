@@ -127,6 +127,7 @@ export function FileAuthorsTab({ repoId, filePath }: FileAuthorsTabProps) {
     const [loading, setLoading] = useState(true);
     const [sortField, setSortField] = useState<SortField>('commits');
     const [sortDir, setSortDir] = useState<SortDir>('desc');
+    const [authorRanges, setAuthorRanges] = useState<Record<string, [Date, Date] | undefined>>({});
 
     useEffect(() => {
         const loadData = async () => {
@@ -141,6 +142,10 @@ export function FileAuthorsTab({ repoId, filePath }: FileAuthorsTabProps) {
             }
         };
         loadData();
+    }, [repoId, filePath]);
+
+    useEffect(() => {
+        setAuthorRanges({});
     }, [repoId, filePath]);
 
     const sortedAuthors = useMemo(() => {
@@ -341,8 +346,16 @@ export function FileAuthorsTab({ repoId, filePath }: FileAuthorsTabProps) {
                                 <TimelineChart
                                     data={timelineData}
                                     chartType="area"
+                                    xDomain={authorRanges[author.name]}
                                     height={80}
-                                    zoomEnabled={false}
+                                    brushEnabled={true}
+                                    zoomEnabled={true}
+                                    onRangeChange={(range) =>
+                                        setAuthorRanges((prev) => ({
+                                            ...prev,
+                                            [author.name]: range,
+                                        }))
+                                    }
                                     colorScheme={[authorColors[authorIndex]]}
                                 />
                             </div>

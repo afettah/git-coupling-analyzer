@@ -39,7 +39,7 @@ export default function SearchInput({
   return (
     <div className={`relative ${className}`}>
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-      <input
+      <input data-testid="searchinput-input-input-1"
         type="text"
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
@@ -47,7 +47,7 @@ export default function SearchInput({
         className="w-full pl-10 pr-10 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
       />
       {localValue && (
-        <button
+        <button data-testid="searchinput-btn-btn-1"
           onClick={() => {
             setLocalValue('');
             onChange('');

@@ -24,7 +24,7 @@ export function FileListView({ files, repoUrlConfig, onFileSelect }: FileListVie
                 >
                     <span className="flex-1 truncate">{file}</span>
                     {onFileSelect && (
-                        <button
+                        <button data-testid="filelistview-btn-btn-1"
                             onClick={() => onFileSelect(file)}
                             className="text-slate-500 hover:text-sky-400 flex-shrink-0"
                             title="View file details"
@@ -33,7 +33,7 @@ export function FileListView({ files, repoUrlConfig, onFileSelect }: FileListVie
                         </button>
                     )}
                     {repoUrlConfig && (
-                        <a
+                        <a data-testid="filelistview-link-open-in-repository"
                             href={buildFileUrl(repoUrlConfig, file)}
                             target="_blank"
                             rel="noopener noreferrer"

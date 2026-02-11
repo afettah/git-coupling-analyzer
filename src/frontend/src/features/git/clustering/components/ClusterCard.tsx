@@ -121,7 +121,7 @@ export function ClusterCard({
             <div>
                 <div className="flex items-center justify-between mb-2">
                     <div className="text-xs uppercase text-slate-500">Preview files</div>
-                    <button
+                    <button data-testid="cluster-card-btn-btn-1"
                         onClick={togglePathMode}
                         className="text-xs text-slate-500 hover:text-slate-300"
                     >
@@ -148,20 +148,20 @@ export function ClusterCard({
 
             {/* Actions */}
             <div className="flex items-center justify-between pt-2">
-                <button
+                <button data-testid="cluster-card-btn-btn-2"
                     onClick={onExplore}
                     className="text-sm text-sky-400 hover:text-sky-300"
                 >
                     Show all {fileCount} files
                 </button>
                 <div className="flex items-center gap-2">
-                    <button
+                    <button data-testid="cluster-card-btn-btn-3"
                         onClick={onExport}
                         className="px-3 py-1.5 text-xs rounded-lg border border-slate-800 text-slate-300 hover:text-slate-100 hover:border-slate-700"
                     >
                         Export
                     </button>
-                    <button
+                    <button data-testid="cluster-card-btn-btn-4"
                         onClick={onExplore}
                         className="px-3 py-1.5 text-xs rounded-lg bg-sky-500 text-slate-900 font-semibold hover:bg-sky-400"
                     >
@@ -224,7 +224,7 @@ function FilePreviewItem({
                     {pathMode === 'name' ? getFileName(file) : file}
                 </span>
                 {onFileSelect && (
-                    <button
+                    <button data-testid="cluster-card-btn-btn-5"
                         onClick={(e) => {
                             e.stopPropagation();
                             onFileSelect(file);
@@ -236,7 +236,7 @@ function FilePreviewItem({
                     </button>
                 )}
                 {repoUrlConfig && (
-                    <a
+                    <a data-testid="cluster-card-link-link-1"
                         href={buildFileUrl(repoUrlConfig, file)}
                         target="_blank"
                         rel="noopener noreferrer"

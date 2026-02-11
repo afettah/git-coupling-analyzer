@@ -21,7 +21,7 @@ export default function SemanticLayout({ repoId }: SemanticLayoutProps) {
         <div className="flex flex-col h-full">
             <div className="flex items-center gap-1 px-4 pt-4 pb-2 border-b border-slate-800">
                 {tabs.map(tab => (
-                    <button
+                    <button data-testid="semantic-btn-btn-1"
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(

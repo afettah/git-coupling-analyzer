@@ -30,13 +30,13 @@ export function GlobalFiltersPanel({ isOpen, onClose }: GlobalFiltersPanelProps)
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <button data-testid="globalfilterspanel-btn-btn-1"
               onClick={resetFilters}
               className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"
             >
               Reset
             </button>
-            <button
+            <button data-testid="globalfilterspanel-btn-btn-2"
               onClick={onClose}
               className="rounded-md p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
             >

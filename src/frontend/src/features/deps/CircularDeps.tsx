@@ -100,7 +100,7 @@ export default function CircularDeps({ repoId }: CircularDepsProps) {
                                 key={cycle.cycle_id}
                                 className="border border-slate-800 rounded-lg overflow-hidden hover:border-slate-700 transition-colors"
                             >
-                                <button
+                                <button data-testid="circulardeps-btn-btn-1"
                                     onClick={() => toggleExpand(cycle.cycle_id)}
                                     className="w-full p-4 bg-slate-900/50 hover:bg-slate-900 transition-colors"
                                 >
@@ -148,7 +148,7 @@ export default function CircularDeps({ repoId }: CircularDepsProps) {
                                                     <div className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-800 text-xs text-slate-400">
                                                         {index + 1}
                                                     </div>
-                                                    <button
+                                                    <button data-testid="circulardeps-btn-btn-2"
                                                         onClick={() =>
                                                             navigate(
                                                                 `/repos/${repoId}/git/files/${encodeURIComponent(

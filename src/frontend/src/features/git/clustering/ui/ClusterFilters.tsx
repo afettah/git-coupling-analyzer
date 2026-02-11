@@ -54,7 +54,7 @@ export const ClusterFilters = memo(function ClusterFilters({
 
                 <div className="flex items-center gap-2 flex-1 min-w-[240px]">
                     <Search className="w-3.5 h-3.5 text-slate-500" />
-                    <input
+                    <input data-testid="clusterfilters-input-input-1"
                         value={filters.search}
                         onChange={(e) => updateFilter('search', e.target.value)}
                         placeholder="Search clusters or files..."

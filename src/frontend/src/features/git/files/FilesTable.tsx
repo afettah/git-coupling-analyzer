@@ -38,6 +38,10 @@ export default function FilesTable({
           commits={file.commits}
           authors={file.authorsCount}
           risk={file.risk}
+          churn={file.churn}
+          coupling={file.coupling}
+          isHot={file.isHot}
+          isStable={file.isStable}
           lastChanged={file.lastChanged}
           onClick={() => onSelectPath(file.path)}
           onDoubleClick={() => onOpenDetails?.(file.path, 'file')}

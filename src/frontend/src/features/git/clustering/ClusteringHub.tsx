@@ -65,7 +65,7 @@ export default function ClusteringHub({ repoId }: ClusteringHubProps) {
                 <div className="flex items-center gap-3 w-full lg:max-w-xl">
                     <div className="relative flex-1">
                         <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                        <input
+                        <input data-testid="clustering-hub-input-input-1"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Search snapshots..."
@@ -74,7 +74,7 @@ export default function ClusteringHub({ repoId }: ClusteringHubProps) {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
+                    <button data-testid="clustering-hub-btn-btn-1"
                         onClick={handleCompare}
                         disabled={selectedIds.length !== 2 || compareLoading}
                         className="px-4 py-2 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 disabled:opacity-40 flex items-center gap-2 text-sm"
@@ -82,7 +82,7 @@ export default function ClusteringHub({ repoId }: ClusteringHubProps) {
                         <GitCompare className="w-4 h-4" />
                         {compareLoading ? 'Comparing…' : 'Compare Selected'}
                     </button>
-                    <button
+                    <button data-testid="clustering-hub-btn-btn-2"
                         onClick={() => navigate(`/repos/${repoId}/clustering/new`)}
                         className="px-4 py-2 rounded-lg bg-sky-500 text-slate-900 hover:bg-sky-400 flex items-center gap-2 text-sm font-semibold"
                     >
@@ -110,7 +110,7 @@ export default function ClusteringHub({ repoId }: ClusteringHubProps) {
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     {renameId === snap.id ? (
-                                        <input
+                                        <input data-testid="clustering-hub-input-input-2"
                                             value={renameValue}
                                             onChange={(e) => setRenameValue(e.target.value)}
                                             onBlur={commitRename}
@@ -119,7 +119,7 @@ export default function ClusteringHub({ repoId }: ClusteringHubProps) {
                                             autoFocus
                                         />
                                     ) : (
-                                        <button
+                                        <button data-testid="clustering-hub-btn-btn-3"
                                             onClick={() => navigate(`${snap.id}`)}
                                             className="text-left"
                                         >
@@ -128,14 +128,14 @@ export default function ClusteringHub({ repoId }: ClusteringHubProps) {
                                         </button>
                                     )}
                                     <div className="flex items-center gap-2">
-                                        <button
+                                        <button data-testid="clustering-hub-btn-btn-4"
                                             onClick={() => startRename(snap)}
                                             className="text-slate-500 hover:text-slate-200"
                                             title="Rename"
                                         >
                                             <Pencil className="w-4 h-4" />
                                         </button>
-                                        <button
+                                        <button data-testid="clustering-hub-btn-btn-5"
                                             onClick={() => remove(snap.id)}
                                             className="text-slate-500 hover:text-rose-400"
                                             title="Delete"
@@ -154,14 +154,14 @@ export default function ClusteringHub({ repoId }: ClusteringHubProps) {
                                     <div>{relativeTime(snap.created_at)}</div>
                                 </div>
                                 <div className="flex items-center justify-between mt-4">
-                                    <button
+                                    <button data-testid="clustering-hub-btn-btn-6"
                                         onClick={() => navigate(`${snap.id}`)}
                                         className="text-xs text-sky-400 hover:text-sky-300"
                                     >
                                         Open snapshot
                                     </button>
                                     <label className="text-xs text-slate-400 flex items-center gap-2">
-                                        <input
+                                        <input data-testid="clustering-hub-input-input-3"
                                             type="checkbox"
                                             checked={selectedIds.includes(snap.id)}
                                             onChange={() => handleSelect(snap.id)}
@@ -206,7 +206,7 @@ export default function ClusteringHub({ repoId }: ClusteringHubProps) {
                                     <td className="px-4 py-3">{formatPercent(snap.avg_coupling)}</td>
                                     <td className="px-4 py-3">{formatDateShort(snap.created_at)}</td>
                                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                                        <input
+                                        <input data-testid="clustering-hub-input-input-4"
                                             type="checkbox"
                                             checked={selectedIds.includes(snap.id)}
                                             onChange={() => handleSelect(snap.id)}

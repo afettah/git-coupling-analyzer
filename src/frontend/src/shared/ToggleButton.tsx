@@ -24,7 +24,7 @@ export function ToggleButton({
     className,
 }: ToggleButtonProps) {
     return (
-        <button
+        <button data-testid="togglebutton-btn-btn-1"
             onClick={onToggle}
             title={title}
             className={cn(

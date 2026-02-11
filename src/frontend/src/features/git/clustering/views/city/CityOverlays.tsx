@@ -48,7 +48,7 @@ export const ViewModeSwitcher = memo(function ViewModeSwitcher({
 
     return (
         <div className="relative">
-            <button
+            <button data-testid="city-overlays-btn-btn-1"
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-2 px-3 py-2 bg-slate-700/80 hover:bg-slate-600 rounded-lg text-sm text-white transition-all border border-slate-600"
             >
@@ -62,7 +62,7 @@ export const ViewModeSwitcher = memo(function ViewModeSwitcher({
                     <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
                     <div className="absolute top-full mt-1 left-0 z-50 bg-slate-800 rounded-lg border border-slate-700 shadow-2xl overflow-hidden min-w-52">
                         {VIEW_MODES.map(mode => (
-                            <button
+                            <button data-testid="city-overlays-btn-btn-2"
                                 key={mode.id}
                                 onClick={() => { onViewModeChange(mode.id); setIsOpen(false); }}
                                 className={`w-full flex items-center gap-3 px-4 py-3 text-left text-sm transition-colors ${viewMode === mode.id
@@ -109,7 +109,7 @@ export const CameraPresets = memo(function CameraPresets({
     return (
         <div className="flex gap-1">
             {CAMERA_PRESETS.map(preset => (
-                <button
+                <button data-testid="city-overlays-btn-btn-3"
                     key={preset.id}
                     onClick={() => onChange(preset.id)}
                     title={preset.label}
@@ -156,7 +156,7 @@ export const FeatureToggles = memo(function FeatureToggles({
     return (
         <div className="flex gap-1 flex-wrap">
             {toggles.map(t => (
-                <button
+                <button data-testid="city-overlays-btn-btn-4"
                     key={t.label}
                     onClick={() => t.onChange(!t.active)}
                     title={t.label}
@@ -202,7 +202,7 @@ export const BuildingInfoPanel = memo(function BuildingInfoPanel({
                     </h3>
                 </div>
                 {onClose && (
-                    <button
+                    <button data-testid="city-overlays-btn-btn-5"
                         onClick={onClose}
                         className="text-slate-400 hover:text-white transition-colors p-1 -mr-1 -mt-1 rounded hover:bg-slate-700"
                     >
@@ -358,7 +358,7 @@ export const CityControls = memo(function CityControls({
         <div className={`absolute top-4 left-4 bg-slate-900/95 backdrop-blur-sm rounded-xl shadow-2xl border border-slate-700/80 transition-all ${collapsed ? 'w-auto' : 'min-w-56'}`}>
             {/* Header */}
             <div className="flex items-center justify-between p-3 border-b border-slate-700/50">
-                <button
+                <button data-testid="city-overlays-btn-btn-6"
                     onClick={() => setCollapsed(!collapsed)}
                     className="flex items-center gap-2 text-white hover:text-blue-300 transition-colors"
                 >
@@ -367,7 +367,7 @@ export const CityControls = memo(function CityControls({
                 </button>
                 <div className="flex gap-1">
                     {onOpenSettings && (
-                        <button
+                        <button data-testid="city-overlays-btn-color-settings"
                             onClick={onOpenSettings}
                             className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
                             title="Color Settings"
@@ -376,7 +376,7 @@ export const CityControls = memo(function CityControls({
                         </button>
                     )}
                     {onToggleFullscreen && (
-                        <button
+                        <button data-testid="city-overlays-btn-btn-8"
                             onClick={onToggleFullscreen}
                             className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
                             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
@@ -423,7 +423,7 @@ export const CityControls = memo(function CityControls({
 
                     {/* Height Scale */}
                     <ControlGroup label="Building Height">
-                        <input
+                        <input data-testid="city-overlays-input-input-1"
                             type="range"
                             min="0.5"
                             max="3"
@@ -437,7 +437,7 @@ export const CityControls = memo(function CityControls({
 
                     {/* Folder Depth */}
                     <ControlGroup label="Folder Depth">
-                        <input
+                        <input data-testid="city-overlays-input-input-2"
                             type="range"
                             min="1"
                             max="10"
@@ -463,7 +463,7 @@ export const CityControls = memo(function CityControls({
 
                     {/* Quick Toggles */}
                     <div className="flex gap-1.5">
-                        <button
+                        <button data-testid="city-overlays-btn-btn-9"
                             onClick={() => onShowLabelsChange(!showLabels)}
                             className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-all
                                 ${showLabels
@@ -474,7 +474,7 @@ export const CityControls = memo(function CityControls({
                             {showLabels ? <Eye size={12} /> : <EyeOff size={12} />}
                             Labels
                         </button>
-                        <button
+                        <button data-testid="city-overlays-btn-btn-10"
                             onClick={() => onAutoRotateChange(!autoRotate)}
                             className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-all
                                 ${autoRotate
@@ -489,7 +489,7 @@ export const CityControls = memo(function CityControls({
 
                     {/* Reset */}
                     {onReset && (
-                        <button
+                        <button data-testid="city-overlays-btn-btn-11"
                             onClick={onReset}
                             className="w-full px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg text-[11px] font-medium transition-all"
                         >
@@ -679,7 +679,7 @@ export const CityLegend = memo(function CityLegend({
             <div className="flex items-center justify-between text-[10px] text-slate-500 mb-2">
                 <span className="uppercase tracking-wider">Cluster Colors</span>
                 {clusterColors.length > 8 && (
-                    <button
+                    <button data-testid="city-overlays-btn-btn-12"
                         onClick={() => setExpanded(!expanded)}
                         className="text-blue-400 hover:text-blue-300"
                     >

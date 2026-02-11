@@ -91,7 +91,7 @@ export default function FileContextMenu({
       }}
     >
       {onViewDetails && (
-        <button
+        <button data-testid="filecontextmenu-btn-btn-1"
           onClick={() => handleAction(onViewDetails)}
           className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 transition-colors"
         >
@@ -100,7 +100,7 @@ export default function FileContextMenu({
         </button>
       )}
 
-      <button
+      <button data-testid="filecontextmenu-btn-btn-2"
         onClick={() => handleAction(copyPath)}
         className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 transition-colors"
       >
@@ -111,7 +111,7 @@ export default function FileContextMenu({
       {gitWebUrl && defaultBranch && (
         <>
           <div className="h-px bg-slate-700 my-1" />
-          <button
+          <button data-testid="filecontextmenu-btn-btn-3"
             onClick={() => handleAction(openInGit)}
             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800 transition-colors"
           >

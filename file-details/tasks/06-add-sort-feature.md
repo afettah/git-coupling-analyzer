@@ -17,3 +17,12 @@ There is no UI control to sort files in the file list/table. The `FilterEngine.t
 1. Add a `<select>` or custom dropdown in `FilesToolbar.tsx` with options: `path`, `commits`, `churn`, `risk`, `coupling`, `lastChanged`.
 2. Add an `ArrowUpDown` toggle button for sort direction.
 3. The `useFilesFilters().filterAndSortFiles()` already applies sorting, so only the UI selector is needed.
+
+## Progress Update (2026-02-11)
+- Status: ✅ Completed
+- Implemented:
+  - `FilesToolbar.tsx`: Added sort field selector with options for name/commits/churn/risk/coupling/last changed.
+  - `FilesToolbar.tsx`: Added asc/desc toggle button wired to `sortOrder`.
+  - Test IDs added for sort controls to support QA and E2E coverage.
+- Notes:
+  - Sorting is applied through existing `useFilesFilters().filterAndSortFiles()` without backend changes.

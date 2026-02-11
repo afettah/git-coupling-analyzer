@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { X, ExternalLink, GitBranch, Copy, FileCode, Users, Calendar, Link2, Plus, Minus, Activity, AlertTriangle } from 'lucide-react';
+import { X, ExternalLink, GitBranch, Copy, FileCode, Users, Calendar, Link2, Plus, Minus, Activity, AlertTriangle, BarChart3, FolderTree, Clock3 } from 'lucide-react';
 import {
     getFileDetails,
     getCoupling,
@@ -32,9 +32,10 @@ export interface FileDetailsPanelProps {
     defaultBranch?: string;
 }
 
-type TabId = 'activity' | 'authors' | 'coupling' | 'commits' | 'insights';
+type TabId = 'summary' | 'activity' | 'authors' | 'coupling' | 'commits' | 'insights';
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
+    { id: 'summary', label: 'Summary', icon: <BarChart3 size={14} /> },
     { id: 'activity', label: 'Activity', icon: <Activity size={14} /> },
     { id: 'authors', label: 'Authors', icon: <Users size={14} /> },
     { id: 'coupling', label: 'Coupling', icon: <Link2 size={14} /> },
@@ -133,6 +134,138 @@ function StatCard({
     );
 }
 
+function formatDate(date: string | null): string {
+    if (!date) {
+        return 'Unknown';
+    }
+    return new Date(date).toLocaleDateString();
+}
+
+function FileSummaryTab({
+    details,
+    filePath,
+    couplingCount,
+}: {
+    details: FileDetailsResponse;
+    filePath: string;
+    couplingCount: number;
+}) {
+    const riskColor = details.risk_score >= 70 ? 'text-red-400' :
+        details.risk_score >= 40 ? 'text-amber-400' :
+            'text-emerald-400';
+    const directory = filePath.includes('/') ? filePath.slice(0, filePath.lastIndexOf('/')) : '/';
+    const extension = filePath.includes('.') ? filePath.split('.').pop()?.toLowerCase() : 'none';
+    const depth = filePath.split('/').length;
+    const totalLinesChanged = details.total_lines_added + details.total_lines_deleted;
+    const avgLinesPerCommit = details.total_commits > 0 ? Math.round(totalLinesChanged / details.total_commits) : 0;
+    const activityTrend = details.churn_trend ? details.churn_trend : 'unknown';
+    const riskFactors = details.risk_factors ?? [];
+
+    return (
+        <div data-testid="file-details-summary-tab" className="p-4 space-y-4">
+            <div className="grid grid-cols-1 gap-3 xl:grid-cols-4">
+                <StatCard
+                    icon={<GitBranch size={12} />}
+                    label="Commits"
+                    value={details.total_commits}
+                    subValue={details.commits_last_30_days > 0 ? `+${details.commits_last_30_days} (30d)` : undefined}
+                />
+                <StatCard
+                    icon={<Users size={12} />}
+                    label="Authors"
+                    value={details.authors_count}
+                    subValue={details.top_author ? `Top: @${details.top_author.split(' ')[0]}` : undefined}
+                />
+                <StatCard
+                    icon={<Calendar size={12} />}
+                    label="Age"
+                    value={calculateAge(details.first_commit_date)}
+                    subValue={details.first_commit_date ? `Since ${new Date(details.first_commit_date).getFullYear()}` : undefined}
+                />
+                <StatCard
+                    icon={<Link2 size={12} />}
+                    label="Coupling"
+                    value={`${details.coupled_files_count} files`}
+                    subValue={details.max_coupling > 0 ? `Max: ${Math.round(details.max_coupling * 100)}%` : undefined}
+                />
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 xl:grid-cols-4">
+                <StatCard
+                    icon={<Plus size={12} />}
+                    label="Additions"
+                    value={details.total_lines_added.toLocaleString()}
+                    color="text-emerald-400"
+                />
+                <StatCard
+                    icon={<Minus size={12} />}
+                    label="Deletions"
+                    value={details.total_lines_deleted.toLocaleString()}
+                    color="text-red-400"
+                />
+                <StatCard
+                    icon={<Activity size={12} />}
+                    label="Churn Rate"
+                    value={`${details.churn_rate}/wk`}
+                />
+                <StatCard
+                    icon={<AlertTriangle size={12} />}
+                    label="Risk Score"
+                    value={`${details.risk_score}/100`}
+                    color={riskColor}
+                />
+            </div>
+
+            <div data-testid="file-details-summary-utility" className="rounded-lg border border-slate-700/50 bg-slate-800/30 p-4">
+                <h3 className="mb-3 text-sm font-semibold text-slate-200">Utility Info</h3>
+                <div className="grid grid-cols-1 gap-3 text-sm text-slate-300 md:grid-cols-2">
+                    <div className="rounded-md border border-slate-700/60 bg-slate-900/50 p-3">
+                        <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+                            <FolderTree size={12} />
+                            Location
+                        </div>
+                        <p className="font-mono text-xs text-slate-200 break-all">{directory}</p>
+                        <p className="mt-1 text-xs text-slate-500">Depth: {depth} levels</p>
+                        <p className="text-xs text-slate-500">Extension: .{extension}</p>
+                    </div>
+                    <div className="rounded-md border border-slate-700/60 bg-slate-900/50 p-3">
+                        <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+                            <Clock3 size={12} />
+                            Timeline
+                        </div>
+                        <p className="text-xs text-slate-400">First commit: <span className="text-slate-200">{formatDate(details.first_commit_date)}</span></p>
+                        <p className="text-xs text-slate-400">Last commit: <span className="text-slate-200">{formatDate(details.last_commit_date)}</span></p>
+                        <p className="text-xs text-slate-400">Trend: <span className="text-slate-200 capitalize">{activityTrend}</span></p>
+                    </div>
+                </div>
+                <div className="mt-3 grid grid-cols-1 gap-3 text-xs text-slate-400 md:grid-cols-4">
+                    <div className="rounded-md border border-slate-700/60 bg-slate-900/40 p-2">Avg lines/commit: <span className="text-slate-200">{avgLinesPerCommit}</span></div>
+                    <div className="rounded-md border border-slate-700/60 bg-slate-900/40 p-2">Total lines changed: <span className="text-slate-200">{totalLinesChanged.toLocaleString()}</span></div>
+                    <div className="rounded-md border border-slate-700/60 bg-slate-900/40 p-2">Strong couplings: <span className="text-slate-200">{details.strong_coupling_count}</span></div>
+                    <div className="rounded-md border border-slate-700/60 bg-slate-900/40 p-2">Loaded relations: <span className="text-slate-200">{couplingCount}</span></div>
+                </div>
+            </div>
+
+            {riskFactors.length > 0 && (
+                <div className="rounded-lg border border-slate-700/50 bg-slate-800/30 p-4">
+                    <h3 className="mb-3 text-sm font-semibold text-slate-200">Risk Factors</h3>
+                    <div className="space-y-2">
+                        {riskFactors.slice(0, 6).map((factor) => (
+                            <div key={factor.name} className="rounded-md border border-slate-700/60 bg-slate-900/50 p-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-medium text-slate-100">{factor.label}</span>
+                                    <span className="text-xs text-slate-400">Score {factor.score.toFixed(1)} / Weight {factor.weight.toFixed(2)}</span>
+                                </div>
+                                <p className="mt-1 text-xs text-slate-500">{factor.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 export function FileDetailsPanel({
     repoId,
     filePath,
@@ -145,7 +278,7 @@ export function FileDetailsPanel({
     const [details, setDetails] = useState<FileDetailsResponse | null>(null);
     const [coupling, setCoupling] = useState<CoupledFile[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<TabId>('activity');
+    const [activeTab, setActiveTab] = useState<TabId>('summary');
     const [copied, setCopied] = useState(false);
 
     const fileName = filePath.split('/').pop() || filePath;
@@ -228,12 +361,8 @@ export function FileDetailsPanel({
         );
     }
 
-    const riskColor = details.risk_score >= 70 ? 'text-red-400' :
-        details.risk_score >= 40 ? 'text-amber-400' :
-            'text-emerald-400';
-
     return (
-        <div className="h-full flex flex-col bg-slate-900 border-l border-slate-800 overflow-hidden">
+        <div data-testid="file-details-panel" className="h-full flex flex-col bg-slate-900 border-l border-slate-800 overflow-hidden">
             {/* Header */}
             <div className="p-4 border-b border-slate-800 flex-shrink-0">
                 <div className="flex items-start justify-between gap-4">
@@ -244,7 +373,7 @@ export function FileDetailsPanel({
                         </div>
                         <p className="text-xs text-slate-500 truncate mt-1 font-mono">{filePath}</p>
                     </div>
-                    <button
+                    <button data-testid="file-details-btn-btn-1"
                         onClick={onClose}
                         className="p-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-800 rounded-lg transition-colors"
                     >
@@ -255,7 +384,7 @@ export function FileDetailsPanel({
                 {/* Action buttons */}
                 <div className="flex items-center gap-2 mt-4">
                     {fileUrl ? (
-                        <a
+                        <a data-testid="file-details-link-open-file-in-repository"
                             href={fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -266,7 +395,7 @@ export function FileDetailsPanel({
                             Open in Repo
                         </a>
                     ) : (
-                        <button
+                        <button data-testid="file-details-btn-btn-2"
                             type="button"
                             disabled
                             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-500 bg-slate-800/60 rounded-lg cursor-not-allowed"
@@ -277,7 +406,7 @@ export function FileDetailsPanel({
                         </button>
                     )}
                     {blameUrl && (
-                        <a
+                        <a data-testid="file-details-link-link-2"
                             href={blameUrl}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -287,7 +416,7 @@ export function FileDetailsPanel({
                             Blame
                         </a>
                     )}
-                    <button
+                    <button data-testid="file-details-btn-btn-3"
                         onClick={handleCopyPath}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-400 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
                     >
@@ -297,65 +426,10 @@ export function FileDetailsPanel({
                 </div>
             </div>
 
-            {/* Stats cards */}
-            <div className="p-4 border-b border-slate-800 flex-shrink-0">
-                <div className="grid grid-cols-4 gap-3">
-                    <StatCard
-                        icon={<GitBranch size={12} />}
-                        label="Commits"
-                        value={details.total_commits}
-                        subValue={details.commits_last_30_days > 0 ? `+${details.commits_last_30_days} (30d)` : undefined}
-                    />
-                    <StatCard
-                        icon={<Users size={12} />}
-                        label="Authors"
-                        value={details.authors_count}
-                        subValue={details.top_author ? `Top: @${details.top_author.split(' ')[0]}` : undefined}
-                    />
-                    <StatCard
-                        icon={<Calendar size={12} />}
-                        label="Age"
-                        value={calculateAge(details.first_commit_date)}
-                        subValue={details.first_commit_date ? `Since ${new Date(details.first_commit_date).getFullYear()}` : undefined}
-                    />
-                    <StatCard
-                        icon={<Link2 size={12} />}
-                        label="Coupling"
-                        value={`${details.coupled_files_count} files`}
-                        subValue={details.max_coupling > 0 ? `Max: ${Math.round(details.max_coupling * 100)}%` : undefined}
-                    />
-                </div>
-                <div className="grid grid-cols-4 gap-3 mt-3">
-                    <StatCard
-                        icon={<Plus size={12} />}
-                        label="Additions"
-                        value={details.total_lines_added.toLocaleString()}
-                        color="text-emerald-400"
-                    />
-                    <StatCard
-                        icon={<Minus size={12} />}
-                        label="Deletions"
-                        value={details.total_lines_deleted.toLocaleString()}
-                        color="text-red-400"
-                    />
-                    <StatCard
-                        icon={<Activity size={12} />}
-                        label="Churn Rate"
-                        value={`${details.churn_rate}/wk`}
-                    />
-                    <StatCard
-                        icon={<AlertTriangle size={12} />}
-                        label="Risk Score"
-                        value={`${details.risk_score}/100`}
-                        color={riskColor}
-                    />
-                </div>
-            </div>
-
             {/* Tab navigation */}
-            <div className="flex border-b border-slate-800 px-4 flex-shrink-0">
-                {TABS.map(tab => (
-                    <button
+            <div data-testid="file-details-tab-nav" className="flex border-b border-slate-800 px-4 flex-shrink-0 overflow-x-auto">
+                {TABS.map((tab) => (
+                    <button data-testid={`file-details-tab-${tab.id}`}
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
@@ -372,7 +446,10 @@ export function FileDetailsPanel({
             </div>
 
             {/* Tab content */}
-            <div className="flex-1 overflow-auto">
+            <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
+                {activeTab === 'summary' && (
+                    <FileSummaryTab details={details} filePath={filePath} couplingCount={coupling.length} />
+                )}
                 {activeTab === 'activity' && (
                     <FileActivityTab repoId={repoId} filePath={filePath} />
                 )}

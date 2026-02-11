@@ -186,7 +186,7 @@ export function CommandPalette({ isOpen, onClose, repoId }: CommandPaletteProps)
                 {/* Search input */}
                 <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-800">
                     <Search size={18} className="text-slate-500 flex-shrink-0" />
-                    <input
+                    <input data-testid="command-palette-input-search-files,-navigate..."
                         ref={inputRef}
                         type="text"
                         placeholder="Search files, navigate..."
@@ -214,7 +214,7 @@ export function CommandPalette({ isOpen, onClose, repoId }: CommandPaletteProps)
                         </div>
                     ) : (
                         filteredCommands.map((cmd, index) => (
-                            <button
+                            <button data-testid="command-palette-btn-btn-1"
                                 key={cmd.id}
                                 onClick={() => handleSelect(cmd)}
                                 className={cn(

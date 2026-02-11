@@ -32,7 +32,7 @@ export default function FilterBar({ className = '' }: { className?: string }) {
       {QUICK_FILTERS.map(({ id, label, icon: Icon }) => {
         const isActive = filters.quickFilters.has(id);
         return (
-          <button
+          <button data-testid="filterbar-btn-btn-1"
             key={id}
             onClick={() => toggleQuickFilter(id)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${

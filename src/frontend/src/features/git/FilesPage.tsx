@@ -210,7 +210,7 @@ export default function FilesPage({
   }
 
   return (
-    <div className="h-full min-h-0 overflow-hidden rounded-lg border border-slate-800 bg-slate-950 flex flex-col">
+    <div className="h-full min-h-0 overflow-x-hidden overflow-y-hidden rounded-lg border border-slate-800 bg-slate-950 flex flex-col">
       <FilesToolbar
         totalFiles={allFiles.length}
         visibleFiles={visibleFiles.length}
@@ -222,7 +222,7 @@ export default function FilesPage({
         onCollapseAll={handleCollapseAll}
       />
 
-      <div className="min-h-0 flex-1 overflow-auto">
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
         {viewMode === 'tree' ? (
           <FilesTree
             tree={tree}

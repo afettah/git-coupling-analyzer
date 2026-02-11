@@ -76,7 +76,7 @@ export default function RiskFileTable({ repoId }: RiskFileTableProps) {
                         <tr>
                             <th className="text-left p-4 text-sm font-medium text-slate-400">File</th>
                             <th className="text-left p-4 text-sm font-medium text-slate-400">
-                                <button
+                                <button data-testid="riskfiletable-btn-btn-1"
                                     onClick={() => handleSort('overall_risk')}
                                     className="flex items-center gap-2 hover:text-slate-200 transition-colors"
                                 >
@@ -85,7 +85,7 @@ export default function RiskFileTable({ repoId }: RiskFileTableProps) {
                                 </button>
                             </th>
                             <th className="text-left p-4 text-sm font-medium text-slate-400">
-                                <button
+                                <button data-testid="riskfiletable-btn-btn-2"
                                     onClick={() => handleSort('coupling_risk')}
                                     className="flex items-center gap-2 hover:text-slate-200 transition-colors"
                                 >
@@ -94,7 +94,7 @@ export default function RiskFileTable({ repoId }: RiskFileTableProps) {
                                 </button>
                             </th>
                             <th className="text-left p-4 text-sm font-medium text-slate-400">
-                                <button
+                                <button data-testid="riskfiletable-btn-btn-3"
                                     onClick={() => handleSort('dependency_risk')}
                                     className="flex items-center gap-2 hover:text-slate-200 transition-colors"
                                 >
@@ -103,7 +103,7 @@ export default function RiskFileTable({ repoId }: RiskFileTableProps) {
                                 </button>
                             </th>
                             <th className="text-left p-4 text-sm font-medium text-slate-400">
-                                <button
+                                <button data-testid="riskfiletable-btn-btn-4"
                                     onClick={() => handleSort('churn_risk')}
                                     className="flex items-center gap-2 hover:text-slate-200 transition-colors"
                                 >

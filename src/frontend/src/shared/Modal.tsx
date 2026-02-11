@@ -84,7 +84,7 @@ export function Modal({
                             {subtitle && <div className="text-xs text-slate-500">{subtitle}</div>}
                             {title && <h3 className="text-xl font-semibold text-slate-100">{title}</h3>}
                         </div>
-                        <button
+                        <button data-testid="modal-btn-btn-1"
                             onClick={onClose}
                             className="text-slate-500 hover:text-slate-200 transition-colors"
                         >

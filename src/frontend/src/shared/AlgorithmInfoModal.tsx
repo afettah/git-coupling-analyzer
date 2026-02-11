@@ -75,7 +75,7 @@ export default function AlgorithmInfoModal({ isOpen, onClose }: AlgorithmInfoMod
                             <p className="text-sm text-slate-400">Choose the best method for your analysis</p>
                         </div>
                     </div>
-                    <button
+                    <button data-testid="algorithm-info-btn-btn-1"
                         onClick={onClose}
                         className="p-2 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white"
                     >
@@ -97,7 +97,7 @@ export default function AlgorithmInfoModal({ isOpen, onClose }: AlgorithmInfoMod
                                             <h4 className="text-lg font-bold text-white group-hover:text-sky-400 transition-colors">
                                                 {algo.name}
                                             </h4>
-                                            <a
+                                            <a data-testid="algorithm-info-link-link-2"
                                                 href={algo.link}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
@@ -130,7 +130,7 @@ export default function AlgorithmInfoModal({ isOpen, onClose }: AlgorithmInfoMod
 
                 {/* Footer */}
                 <div className="p-4 border-t border-slate-800 bg-slate-900/50 flex justify-end">
-                    <button
+                    <button data-testid="algorithm-info-btn-btn-2"
                         onClick={onClose}
                         className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-lg transition-colors"
                     >

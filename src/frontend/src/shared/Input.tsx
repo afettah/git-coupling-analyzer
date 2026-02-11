@@ -39,7 +39,7 @@ export function TextInput({
     return (
         <div className={cn('flex flex-col gap-1', className)}>
             {label && <label className="text-xs text-slate-500">{label}</label>}
-            <input
+            <input data-testid="input-input-input-1"
                 type="text"
                 value={value}
                 onChange={handleChange}
@@ -91,7 +91,7 @@ export function NumberInput({
     return (
         <div className={cn('flex items-center gap-2', className)}>
             {label && <label className="text-xs text-slate-500">{label}</label>}
-            <input
+            <input data-testid="input-input-input-2"
                 type="number"
                 min={min}
                 max={max}
@@ -149,7 +149,7 @@ export function SearchInput({
     return (
         <div className={cn('relative', className)}>
             <Search className={cn(styles.icon, 'text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none')} />
-            <input
+            <input data-testid="input-input-input-3"
                 type="text"
                 value={value}
                 onChange={handleChange}
@@ -161,7 +161,7 @@ export function SearchInput({
                 )}
             />
             {showClear && value && (
-                <button
+                <button data-testid="input-btn-btn-1"
                     onClick={handleClear}
                     className={cn(styles.icon, 'text-slate-500 hover:text-slate-300 absolute right-2.5 top-1/2 -translate-y-1/2')}
                 >

@@ -86,7 +86,7 @@ function CommitDetailModal({
             <div className="bg-slate-900 border border-slate-700 rounded-lg p-5 max-w-lg w-full" onClick={e => e.stopPropagation()}>
                 <div className="flex items-start justify-between gap-4 mb-4">
                     <h3 className="text-sm font-semibold text-slate-200">Commit Details</h3>
-                    <button onClick={onClose} className="p-1 text-slate-500 hover:text-slate-300">
+                    <button data-testid="file-commits-btn-btn-1" onClick={onClose} className="p-1 text-slate-500 hover:text-slate-300">
                         <X size={16} />
                     </button>
                 </div>
@@ -97,7 +97,7 @@ function CommitDetailModal({
                         <GitCommit size={14} className="text-slate-500" />
                         <code className="text-sm text-sky-400 font-mono">{commit.oid}</code>
                         {commitUrl && (
-                            <a
+                            <a data-testid="file-commits-link-link-1"
                                 href={commitUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -139,7 +139,7 @@ function CommitDetailModal({
 
                 <div className="mt-5 flex justify-end gap-2">
                     {commitUrl && (
-                        <a
+                        <a data-testid="file-commits-link-link-2"
                             href={commitUrl}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -148,7 +148,7 @@ function CommitDetailModal({
                             View in Repository
                         </a>
                     )}
-                    <button
+                    <button data-testid="file-commits-btn-btn-2"
                         onClick={onClose}
                         className="px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors"
                     >
@@ -190,7 +190,7 @@ function CommitItem({
                     <div className="flex items-start justify-between gap-2">
                         <p className="text-sm text-slate-200 line-clamp-2">{commit.message || 'No message'}</p>
                         {commitUrl && (
-                            <a
+                            <a data-testid="file-commits-link-link-3"
                                 href={commitUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -230,6 +230,7 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
     const [excludeBots, setExcludeBots] = useState(false);
     const [selectedCommit, setSelectedCommit] = useState<FileCommit | null>(null);
     const [offset, setOffset] = useState(0);
+    const [densityRange, setDensityRange] = useState<[Date, Date] | undefined>(undefined);
     const limit = 30;
 
     const loadCommits = useCallback(async (reset = false) => {
@@ -269,6 +270,10 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
     useEffect(() => {
         loadCommits(true);
     }, [repoId, filePath, search, excludeMerges]);
+
+    useEffect(() => {
+        setDensityRange(undefined);
+    }, [repoId, filePath, search, excludeMerges, excludeBots]);
 
     // Debounced search
     const [searchInput, setSearchInput] = useState('');
@@ -314,7 +319,7 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
                 <div className="flex items-center gap-3">
                     <div className="relative flex-1">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                        <input
+                        <input data-testid="file-commits-input-input-1"
                             type="text"
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
@@ -326,7 +331,7 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
 
                 <div className="flex items-center gap-4 mt-2">
                     <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
-                        <input
+                        <input data-testid="file-commits-input-input-2"
                             type="checkbox"
                             checked={excludeMerges}
                             onChange={(e) => setExcludeMerges(e.target.checked)}
@@ -335,7 +340,7 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
                         Exclude merges
                     </label>
                     <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
-                        <input
+                        <input data-testid="file-commits-input-input-3"
                             type="checkbox"
                             checked={excludeBots}
                             onChange={(e) => setExcludeBots(e.target.checked)}
@@ -364,8 +369,11 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
                     <TimelineChart
                         data={commitDensityData}
                         chartType="bar"
+                        xDomain={densityRange}
                         height={60}
-                        zoomEnabled={false}
+                        brushEnabled={true}
+                        zoomEnabled={true}
+                        onRangeChange={setDensityRange}
                         colorScheme={['#0ea5e9']}
                     />
                 </div>
@@ -398,7 +406,7 @@ export function FileCommitsTab({ repoId, filePath, gitWebUrl, gitProvider }: Fil
 
                         {hasMore && (
                             <div className="p-4 text-center">
-                                <button
+                                <button data-testid="file-commits-btn-btn-3"
                                     onClick={() => loadCommits(false)}
                                     disabled={loadingMore}
                                     className="px-4 py-2 text-sm text-sky-400 hover:text-sky-300 disabled:opacity-50"

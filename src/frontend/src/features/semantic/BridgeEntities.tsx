@@ -62,7 +62,7 @@ export default function BridgeEntities({ repoId }: BridgeEntitiesProps) {
                         {bridges
                             .sort((a, b) => b.domain_count - a.domain_count)
                             .map((bridge) => (
-                                <button
+                                <button data-testid="bridgeentities-btn-btn-1"
                                     key={bridge.path}
                                     onClick={() => navigate(`/repos/${repoId}/git/files/${encodeURIComponent(bridge.path)}`)}
                                     className="w-full p-4 bg-slate-900/50 rounded-lg border border-slate-800 hover:border-sky-500/50 hover:bg-slate-900 transition-all group text-left"

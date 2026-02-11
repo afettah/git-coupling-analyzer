@@ -97,7 +97,7 @@ export function FolderSummaryView({ files, onFileSelect }: FolderSummaryViewProp
                                             <FileText className="w-3 h-3 text-slate-500" />
                                             <span className="flex-1">{file.split('/').pop()}</span>
                                             {onFileSelect && (
-                                                <button
+                                                <button data-testid="foldersummaryview-btn-btn-1"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         onFileSelect(file);

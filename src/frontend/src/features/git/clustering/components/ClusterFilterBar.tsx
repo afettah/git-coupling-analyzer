@@ -167,7 +167,7 @@ export function ClusterFilterBar({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label className="text-xs text-slate-500 block mb-1">Directory filter</label>
-                        <input
+                        <input data-testid="cluster-filter-input-input-1"
                             value={directory || ''}
                             onChange={(e) => onDirectoryChange(e.target.value)}
                             placeholder="e.g. src/components"

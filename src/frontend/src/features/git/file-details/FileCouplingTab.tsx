@@ -160,7 +160,7 @@ function CouplingEvidenceModal({
                     </p>
                 </div>
 
-                <button
+                <button data-testid="file-coupling-btn-btn-1"
                     onClick={onClose}
                     className="mt-4 w-full px-3 py-2 text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors"
                 >
@@ -288,14 +288,14 @@ export function FileCouplingTab({ filePath, coupling, onFileSelect }: FileCoupli
                                 <td className="p-3 text-slate-400">{file.pair_count}</td>
                                 <td className="p-3">
                                     <div className="flex items-center gap-1">
-                                        <button
+                                        <button data-testid="file-coupling-btn-btn-2"
                                             onClick={() => setEvidenceFile(file)}
                                             className="p-1 text-slate-500 hover:text-slate-300 transition-colors"
                                             title="Why coupled?"
                                         >
                                             <HelpCircle size={14} />
                                         </button>
-                                        <button
+                                        <button data-testid="file-coupling-btn-btn-3"
                                             onClick={() => onFileSelect?.(file.path)}
                                             className="p-1 text-slate-500 hover:text-slate-300 transition-colors"
                                             title="Go to file"

@@ -202,7 +202,7 @@ export function HotspotsView({ repoId }: HotspotsViewProps) {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button
+                    <button data-testid="hotspots-btn-btn-1"
                         onClick={handleExport}
                         className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm text-slate-300 transition-colors"
                     >
@@ -245,7 +245,7 @@ export function HotspotsView({ repoId }: HotspotsViewProps) {
                 {/* Search */}
                 <div className="relative flex-1 min-w-[200px] max-w-md">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                    <input
+                    <input data-testid="hotspots-input-search-files..."
                         type="text"
                         placeholder="Search files..."
                         value={searchQuery}
@@ -255,7 +255,7 @@ export function HotspotsView({ repoId }: HotspotsViewProps) {
                 </div>
 
                 {/* Folder Filter */}
-                <select
+                <select data-testid="hotspots-select-select-1"
                     value={selectedFolder || ''}
                     onChange={(e) => setSelectedFolder(e.target.value || null)}
                     className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-200"
@@ -268,7 +268,7 @@ export function HotspotsView({ repoId }: HotspotsViewProps) {
 
                 {/* View Mode */}
                 <div className="flex items-center gap-1 p-1 bg-slate-800 rounded-lg">
-                    <button
+                    <button data-testid="hotspots-btn-btn-2"
                         onClick={() => setViewMode('heatmap')}
                         className={cn(
                             'p-2 rounded transition-colors',
@@ -278,7 +278,7 @@ export function HotspotsView({ repoId }: HotspotsViewProps) {
                     >
                         <LayoutGrid size={18} />
                     </button>
-                    <button
+                    <button data-testid="hotspots-btn-btn-3"
                         onClick={() => setViewMode('table')}
                         className={cn(
                             'p-2 rounded transition-colors',
@@ -288,7 +288,7 @@ export function HotspotsView({ repoId }: HotspotsViewProps) {
                     >
                         <List size={18} />
                     </button>
-                    <button
+                    <button data-testid="hotspots-btn-btn-4"
                         onClick={() => setViewMode('treemap')}
                         className={cn(
                             'p-2 rounded transition-colors',
@@ -364,7 +364,7 @@ function HeatmapView({ hotspots, onFileClick }: { hotspots: HotspotFile[]; onFil
             <h3 className="text-lg font-semibold text-slate-200 mb-4">Risk Heatmap</h3>
             <div className="flex flex-wrap gap-2">
                 {hotspots.slice(0, 100).map((h) => (
-                    <button
+                    <button data-testid="hotspots-btn-btn-5"
                         key={h.path}
                         onClick={() => onFileClick(h.path)}
                         className={cn(

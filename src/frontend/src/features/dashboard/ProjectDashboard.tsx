@@ -232,14 +232,14 @@ export function ProjectDashboard({ repo }: ProjectDashboardProps) {
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
+                    <button data-testid="project-dashboard-btn-btn-1"
                         onClick={() => navigate(`/repos/${repo.id}/graph`)}
                         className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm text-slate-300 transition-colors"
                     >
                         <Eye size={16} />
                         View Graph
                     </button>
-                    <button
+                    <button data-testid="project-dashboard-btn-btn-2"
                         onClick={() => navigate(`/repos/${repo.id}/clustering`)}
                         className="flex items-center gap-2 px-4 py-2 bg-sky-500 hover:bg-sky-400 rounded-lg text-sm text-slate-900 font-semibold transition-colors"
                     >
@@ -337,7 +337,7 @@ export function ProjectDashboard({ repo }: ProjectDashboardProps) {
                             <Flame size={18} className="text-red-400" />
                             <h3 className="font-semibold text-slate-200">Hotspot Files</h3>
                         </div>
-                        <button
+                        <button data-testid="project-dashboard-btn-btn-3"
                             onClick={() => navigate(`/repos/${repo.id}/tree`)}
                             className="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1"
                         >
@@ -536,7 +536,7 @@ function HotspotRow({ file, rank, onClick }: { file: HotspotFile; rank: number; 
     const riskColor = file.riskScore >= 70 ? 'text-red-400' : file.riskScore >= 40 ? 'text-amber-400' : 'text-emerald-400';
 
     return (
-        <button
+        <button data-testid="project-dashboard-btn-btn-4"
             onClick={onClick}
             className="w-full flex items-center gap-3 p-3 bg-slate-800/50 hover:bg-slate-800 rounded-lg transition-colors group"
         >
@@ -612,7 +612,7 @@ function InsightCard({
         <div className={cn('p-4 rounded-xl border', config.bg, config.border)}>
             <h4 className={cn('font-semibold mb-1', config.text)}>{title}</h4>
             <p className="text-xs text-slate-400 mb-3">{description}</p>
-            <button
+            <button data-testid="project-dashboard-btn-btn-5"
                 onClick={onClick}
                 className={cn('text-xs font-medium', config.text, 'hover:underline')}
             >

@@ -188,7 +188,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
                         <p className="text-sm text-slate-500">Configure analysis and display preferences</p>
                     </div>
                 </div>
-                <button
+                <button data-testid="settings-btn-btn-1"
                     onClick={handleSave}
                     disabled={loading}
                     className={cn(
@@ -221,7 +221,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
                 {/* Sidebar */}
                 <div className="w-56 space-y-1">
                     {sections.map(section => (
-                        <button
+                        <button data-testid="settings-btn-btn-2"
                             key={section.id}
                             onClick={() => setActiveSection(section.id)}
                             className={cn(
@@ -249,7 +249,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
 
                             <div className="grid grid-cols-2 gap-6">
                                 <SettingField label="Minimum Revisions" description="Files with fewer commits are excluded">
-                                    <input
+                                    <input data-testid="settings-input-input-1"
                                         type="number"
                                         min={1}
                                         value={analysisSettings.minRevisions}
@@ -259,7 +259,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
                                 </SettingField>
 
                                 <SettingField label="Max Changeset Size" description="Skip commits with too many files">
-                                    <input
+                                    <input data-testid="settings-input-input-2"
                                         type="number"
                                         min={10}
                                         value={analysisSettings.maxChangesetSize}
@@ -269,7 +269,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
                                 </SettingField>
 
                                 <SettingField label="Changeset Mode" description="How to group changes">
-                                    <select
+                                    <select data-testid="settings-select-select-1"
                                         value={analysisSettings.changesetMode}
                                         onChange={(e) => setAnalysisSettings(prev => ({ ...prev, changesetMode: e.target.value as any }))}
                                         className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200"
@@ -281,7 +281,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
                                 </SettingField>
 
                                 <SettingField label="Min Co-occurrence" description="Minimum times files changed together">
-                                    <input
+                                    <input data-testid="settings-input-input-3"
                                         type="number"
                                         min={1}
                                         value={analysisSettings.minCooccurrence}
@@ -291,7 +291,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
                                 </SettingField>
 
                                 <SettingField label="Time Window (days)" description="Only analyze recent history">
-                                    <input
+                                    <input data-testid="settings-input-no-limit"
                                         type="number"
                                         min={0}
                                         placeholder="No limit"
@@ -305,7 +305,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
                             <SettingField label="Exclude Patterns" description="Files matching these patterns are excluded">
                                 <div className="space-y-2">
                                     <div className="flex gap-2">
-                                        <input
+                                        <input data-testid="settings-input-e.g.,-*.test.*,-vendor/*"
                                             type="text"
                                             placeholder="e.g., *.test.*, vendor/*"
                                             value={excludePatternInput}
@@ -313,7 +313,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
                                             onKeyDown={(e) => e.key === 'Enter' && handleAddExcludePattern()}
                                             className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 placeholder:text-slate-600"
                                         />
-                                        <button
+                                        <button data-testid="settings-btn-btn-3"
                                             onClick={handleAddExcludePattern}
                                             className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition-colors"
                                         >
@@ -327,7 +327,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
                                                 className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-800 rounded-lg text-xs text-slate-300 font-mono"
                                             >
                                                 {pattern}
-                                                <button
+                                                <button data-testid="settings-btn-btn-4"
                                                     onClick={() => handleRemoveExcludePattern(pattern)}
                                                     className="text-slate-500 hover:text-red-400"
                                                 >
@@ -351,7 +351,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
 
                             <div className="grid grid-cols-1 gap-6">
                                 <SettingField label="Repository Web URL" description="URL for viewing files in browser (GitHub, GitLab, etc.)">
-                                    <input
+                                    <input data-testid="settings-input-https://github.com/org/repo"
                                         type="url"
                                         placeholder="https://github.com/org/repo"
                                         value={gitWebUrl}
@@ -361,7 +361,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
                                 </SettingField>
 
                                 <SettingField label="Default Branch" description="Branch used for file links">
-                                    <input
+                                    <input data-testid="settings-input-main"
                                         type="text"
                                         placeholder="main"
                                         value={gitDefaultBranch}
@@ -424,7 +424,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
 
                                 <SettingField label="Max Graph Nodes" description="Limit nodes displayed in graph view">
                                     <div className="flex items-center gap-4">
-                                        <input
+                                        <input data-testid="settings-input-input-8"
                                             type="range"
                                             min={25}
                                             max={500}
@@ -441,7 +441,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
 
                                 <SettingField label="Lazy Load Threshold" description="Number of items before lazy loading kicks in">
                                     <div className="flex items-center gap-4">
-                                        <input
+                                        <input data-testid="settings-input-input-9"
                                             type="range"
                                             min={100}
                                             max={2000}
@@ -474,7 +474,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
                                         { value: 'light', icon: <Sun size={16} />, label: 'Light' },
                                         { value: 'system', icon: <Monitor size={16} />, label: 'System' },
                                     ].map(theme => (
-                                        <button
+                                        <button data-testid="settings-btn-btn-5"
                                             key={theme.value}
                                             onClick={() => setDisplaySettings(prev => ({ ...prev, theme: theme.value as any }))}
                                             className={cn(
@@ -492,7 +492,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
                             </SettingField>
 
                             <SettingField label="Date Format" description="How dates are displayed">
-                                <select
+                                <select data-testid="settings-select-select-2"
                                     value={displaySettings.dateFormat}
                                     onChange={(e) => setDisplaySettings(prev => ({ ...prev, dateFormat: e.target.value as any }))}
                                     className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200"
@@ -504,7 +504,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
                             </SettingField>
 
                             <SettingField label="Default View" description="View shown when opening a project">
-                                <select
+                                <select data-testid="settings-select-select-3"
                                     value={displaySettings.defaultView}
                                     onChange={(e) => setDisplaySettings(prev => ({ ...prev, defaultView: e.target.value as any }))}
                                     className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200"
@@ -573,7 +573,7 @@ export function SettingsView({ repo }: SettingsViewProps) {
                                 {notificationSettings.couplingThresholdAlerts && (
                                     <SettingField label="Coupling Alert Threshold" description="Alert when coupling exceeds this percentage">
                                         <div className="flex items-center gap-4">
-                                            <input
+                                            <input data-testid="settings-input-input-10"
                                                 type="range"
                                                 min={50}
                                                 max={90}
@@ -655,7 +655,7 @@ function ToggleSetting({ label, description, checked, onChange }: { label: strin
                 <div className="text-sm font-medium text-slate-300">{label}</div>
                 <div className="text-xs text-slate-500">{description}</div>
             </div>
-            <input
+            <input data-testid="settings-input-input-11"
                 type="checkbox"
                 checked={checked}
                 onChange={(e) => onChange(e.target.checked)}

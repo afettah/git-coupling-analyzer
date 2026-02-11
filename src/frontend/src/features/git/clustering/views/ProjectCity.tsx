@@ -372,7 +372,7 @@ export const ProjectCity = memo(function ProjectCity({
                     Drag to rotate • Scroll to zoom • Click buildings to inspect • Use controls to customize
                 </span>
                 <div className="flex items-center gap-3">
-                    <button
+                    <button data-testid="projectcity-btn-btn-1"
                         onClick={() => setShowMinimap(!showMinimap)}
                         className={`transition-colors ${showMinimap ? 'text-blue-400' : 'text-slate-600 hover:text-slate-400'}`}
                     >

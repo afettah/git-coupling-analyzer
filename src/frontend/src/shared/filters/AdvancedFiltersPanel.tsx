@@ -12,7 +12,7 @@ export default function AdvancedFiltersPanel({ className = '' }: { className?: s
 
   return (
     <div className={`border border-slate-700 rounded-lg bg-slate-900 ${className}`}>
-      <button
+      <button data-testid="filters-btn-btn-1"
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-300 hover:bg-slate-800 transition-colors"
       >
@@ -26,7 +26,7 @@ export default function AdvancedFiltersPanel({ className = '' }: { className?: s
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-2">Risk Score</label>
             <div className="flex gap-2 items-center">
-              <input
+              <input data-testid="filters-input-min"
                 type="number"
                 placeholder="Min"
                 value={filters.riskRange?.min ?? ''}
@@ -37,7 +37,7 @@ export default function AdvancedFiltersPanel({ className = '' }: { className?: s
                 className="w-24 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-slate-200 text-sm"
               />
               <span className="text-slate-500">—</span>
-              <input
+              <input data-testid="filters-input-max"
                 type="number"
                 placeholder="Max"
                 value={filters.riskRange?.max ?? ''}
@@ -54,7 +54,7 @@ export default function AdvancedFiltersPanel({ className = '' }: { className?: s
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-2">Churn Rate</label>
             <div className="flex gap-2 items-center">
-              <input
+              <input data-testid="filters-input-min"
                 type="number"
                 placeholder="Min"
                 value={filters.churnRange?.min ?? ''}
@@ -65,7 +65,7 @@ export default function AdvancedFiltersPanel({ className = '' }: { className?: s
                 className="w-24 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-slate-200 text-sm"
               />
               <span className="text-slate-500">—</span>
-              <input
+              <input data-testid="filters-input-max"
                 type="number"
                 placeholder="Max"
                 value={filters.churnRange?.max ?? ''}
@@ -82,7 +82,7 @@ export default function AdvancedFiltersPanel({ className = '' }: { className?: s
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-2">Coupling Score</label>
             <div className="flex gap-2 items-center">
-              <input
+              <input data-testid="filters-input-min"
                 type="number"
                 step="0.1"
                 min="0"
@@ -96,7 +96,7 @@ export default function AdvancedFiltersPanel({ className = '' }: { className?: s
                 className="w-24 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-slate-200 text-sm"
               />
               <span className="text-slate-500">—</span>
-              <input
+              <input data-testid="filters-input-max"
                 type="number"
                 step="0.1"
                 min="0"
@@ -114,7 +114,7 @@ export default function AdvancedFiltersPanel({ className = '' }: { className?: s
 
           {/* Actions */}
           <div className="flex gap-2 pt-2">
-            <button
+            <button data-testid="filters-btn-btn-2"
               onClick={resetFilters}
               className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition-colors"
             >

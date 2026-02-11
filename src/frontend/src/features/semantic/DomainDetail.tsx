@@ -51,7 +51,7 @@ export default function DomainDetailView() {
         <div className="p-6 space-y-6">
             {/* Header */}
             <div className="flex items-center gap-4">
-                <button
+                <button data-testid="domaindetail-btn-btn-1"
                     onClick={() => navigate(`/repos/${repoId}/semantic/domains`)}
                     className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
                 >
@@ -129,7 +129,7 @@ export default function DomainDetailView() {
                     <h3 className="text-lg font-semibold text-slate-200 mb-4">Cross-Domain Coupling</h3>
                     <div className="space-y-2">
                         {domain.cross_coupling.map((coupling) => (
-                            <button
+                            <button data-testid="domaindetail-btn-btn-2"
                                 key={coupling.domain_id}
                                 onClick={() => navigate(`/repos/${repoId}/semantic/domains/${coupling.domain_id}`)}
                                 className="w-full p-3 bg-slate-900/50 rounded-lg border border-slate-800 hover:border-sky-500/50 hover:bg-slate-900 transition-all flex items-center justify-between group"
@@ -166,7 +166,7 @@ export default function DomainDetailView() {
                     {domain.files
                         .sort((a, b) => b.score - a.score)
                         .map((file) => (
-                            <button
+                            <button data-testid="domaindetail-btn-btn-3"
                                 key={file.path}
                                 onClick={() => navigate(`/repos/${repoId}/git/files/${encodeURIComponent(file.path)}`)}
                                 className="w-full p-2 px-3 rounded-lg hover:bg-slate-900/50 transition-colors flex items-center justify-between group text-left"

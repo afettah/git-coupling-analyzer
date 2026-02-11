@@ -264,21 +264,21 @@ export function TimeMachineView({ repoId }: TimeMachineViewProps) {
 
                     {/* Controls */}
                     <div className="flex items-center gap-2">
-                        <button
+                        <button data-testid="time-machine-btn-btn-1"
                             onClick={() => setCurrentIndex(0)}
                             className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
                             title="Go to start"
                         >
                             <Rewind size={18} />
                         </button>
-                        <button
+                        <button data-testid="time-machine-btn-btn-2"
                             onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
                             className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
                             disabled={currentIndex === 0}
                         >
                             <SkipBack size={18} />
                         </button>
-                        <button
+                        <button data-testid="time-machine-btn-btn-3"
                             onClick={() => setIsPlaying(!isPlaying)}
                             className={cn(
                                 'p-3 rounded-full transition-colors',
@@ -289,14 +289,14 @@ export function TimeMachineView({ repoId }: TimeMachineViewProps) {
                         >
                             {isPlaying ? <Pause size={20} /> : <Play size={20} />}
                         </button>
-                        <button
+                        <button data-testid="time-machine-btn-btn-4"
                             onClick={() => setCurrentIndex(Math.min(timeline.length - 1, currentIndex + 1))}
                             className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
                             disabled={currentIndex === timeline.length - 1}
                         >
                             <SkipForward size={18} />
                         </button>
-                        <button
+                        <button data-testid="time-machine-btn-btn-5"
                             onClick={() => setCurrentIndex(timeline.length - 1)}
                             className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
                             title="Go to end"
@@ -309,7 +309,7 @@ export function TimeMachineView({ repoId }: TimeMachineViewProps) {
                     <div className="flex items-center gap-2">
                         <span className="text-xs text-slate-500">Speed:</span>
                         {[2000, 1000, 500].map(speed => (
-                            <button
+                            <button data-testid="time-machine-btn-btn-6"
                                 key={speed}
                                 onClick={() => setPlaySpeed(speed)}
                                 className={cn(
@@ -326,7 +326,7 @@ export function TimeMachineView({ repoId }: TimeMachineViewProps) {
 
                     {/* Slider */}
                     <div className="flex-1 max-w-md">
-                        <input
+                        <input data-testid="time-machine-input-input-1"
                             type="range"
                             min={0}
                             max={timeline.length - 1}

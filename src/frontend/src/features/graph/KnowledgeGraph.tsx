@@ -96,7 +96,7 @@ export default function KnowledgeGraph({ repoId }: KnowledgeGraphProps) {
             <div className="flex gap-2 px-4 pt-4">
                 <div className="relative flex-1">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                    <input
+                    <input data-testid="knowledge-graph-input-input-1"
                         type="text"
                         value={query}
                         onChange={e => setQuery(e.target.value)}
@@ -105,7 +105,7 @@ export default function KnowledgeGraph({ repoId }: KnowledgeGraphProps) {
                         className="w-full pl-9 pr-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
                     />
                 </div>
-                <select
+                <select data-testid="knowledge-graph-select-select-1"
                     value={kindFilter}
                     onChange={e => setKindFilter(e.target.value)}
                     className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-blue-500"
@@ -115,7 +115,7 @@ export default function KnowledgeGraph({ repoId }: KnowledgeGraphProps) {
                         <option key={k} value={k}>{k} ({stats.by_kind[k]})</option>
                     ))}
                 </select>
-                <button
+                <button data-testid="knowledge-graph-btn-btn-1"
                     onClick={handleSearch}
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition-colors"
                 >
@@ -134,7 +134,7 @@ export default function KnowledgeGraph({ repoId }: KnowledgeGraphProps) {
                     ) : (
                         <div className="space-y-1">
                             {entities.map(e => (
-                                <button
+                                <button data-testid="knowledge-graph-btn-btn-2"
                                     key={e.entity_id}
                                     onClick={() => handleEntityClick(e.entity_id)}
                                     className={cn(
@@ -160,7 +160,7 @@ export default function KnowledgeGraph({ repoId }: KnowledgeGraphProps) {
                     <Card className="w-96 shrink-0 overflow-auto p-4">
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="text-sm font-semibold text-slate-200 truncate">{selectedEntity.name}</h3>
-                            <button onClick={() => setSelectedEntity(null)} className="text-slate-500 hover:text-slate-300">
+                            <button data-testid="knowledge-graph-btn-btn-3" onClick={() => setSelectedEntity(null)} className="text-slate-500 hover:text-slate-300">
                                 <X size={16} />
                             </button>
                         </div>

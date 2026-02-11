@@ -40,13 +40,13 @@ const ColorInput = memo(function ColorInput({
         <div className="flex items-center gap-3">
             <label className="text-sm text-slate-300 w-32">{label}</label>
             <div className="flex items-center gap-2">
-                <input
+                <input data-testid="city-settings-input-input-1"
                     type="color"
                     value={color}
                     onChange={(e) => onChange(e.target.value)}
                     className="w-8 h-8 rounded cursor-pointer border border-slate-600"
                 />
-                <input
+                <input data-testid="city-settings-input-input-2"
                     type="text"
                     value={color}
                     onChange={(e) => onChange(e.target.value)}
@@ -70,7 +70,7 @@ const PalettePreview = memo(function PalettePreview({
     onSelect
 }: PalettePreviewProps) {
     return (
-        <button
+        <button data-testid="city-settings-btn-btn-1"
             onClick={onSelect}
             className={`
                 p-3 rounded-lg border-2 transition-all w-full text-left
@@ -156,7 +156,7 @@ export const CitySettingsModal = memo(function CitySettingsModal({
                         <Palette size={20} className="text-blue-400" />
                         <h3 className="text-lg font-semibold text-white">Viewer Settings</h3>
                     </div>
-                    <button
+                    <button data-testid="city-settings-btn-btn-2"
                         onClick={onClose}
                         className="p-1 text-slate-400 hover:text-white transition-colors"
                     >
@@ -166,7 +166,7 @@ export const CitySettingsModal = memo(function CitySettingsModal({
 
                 {/* Tabs */}
                 <div className="flex border-b border-slate-700">
-                    <button
+                    <button data-testid="city-settings-btn-btn-3"
                         onClick={() => setActiveTab('palettes')}
                         className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'palettes'
                             ? 'text-blue-400 border-b-2 border-blue-400 bg-slate-700/50'
@@ -178,7 +178,7 @@ export const CitySettingsModal = memo(function CitySettingsModal({
                             Cluster Palettes
                         </div>
                     </button>
-                    <button
+                    <button data-testid="city-settings-btn-btn-4"
                         onClick={() => setActiveTab('colors')}
                         className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'colors'
                             ? 'text-blue-400 border-b-2 border-blue-400 bg-slate-700/50'
@@ -218,7 +218,7 @@ export const CitySettingsModal = memo(function CitySettingsModal({
                                 <div className="flex gap-2 items-center flex-wrap">
                                     {settings.folderColors.map((color, i) => (
                                         <div key={i} className="flex flex-col items-center gap-1">
-                                            <input
+                                            <input data-testid="city-settings-input-input-3"
                                                 type="color"
                                                 value={color}
                                                 onChange={(e) => {
@@ -269,14 +269,14 @@ export const CitySettingsModal = memo(function CitySettingsModal({
 
                 {/* Footer */}
                 <div className="flex items-center justify-between p-4 border-t border-slate-700 bg-slate-800/50">
-                    <button
+                    <button data-testid="city-settings-btn-btn-5"
                         onClick={onResetToDefaults}
                         className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white transition-colors"
                     >
                         <RotateCcw size={14} />
                         Reset to Defaults
                     </button>
-                    <button
+                    <button data-testid="city-settings-btn-btn-6"
                         onClick={onClose}
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
                     >

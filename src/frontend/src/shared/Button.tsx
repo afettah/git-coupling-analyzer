@@ -43,7 +43,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
     ...props
 }, ref) => {
     return (
-        <button
+        <button data-testid="button-btn-btn-1"
             ref={ref}
             disabled={disabled || loading}
             className={cn(

@@ -145,7 +145,7 @@ export default function SnapshotDetail({ repoId }: SnapshotDetailProps) {
         <div className="space-y-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div>
-                    <button
+                    <button data-testid="snapshotdetail-btn-btn-1"
                         onClick={() => navigate('..')}
                         className="text-xs text-slate-400 hover:text-slate-200"
                     >

@@ -204,7 +204,7 @@ export function ExportPanel({ isOpen, onClose, repoId, repoName }: ExportPanelPr
                             <p className="text-xs text-slate-500">Download coupling data and reports</p>
                         </div>
                     </div>
-                    <button
+                    <button data-testid="export-btn-btn-1"
                         onClick={onClose}
                         className="p-2 text-slate-500 hover:text-slate-300 hover:bg-slate-800 rounded-lg transition-colors"
                     >
@@ -219,7 +219,7 @@ export function ExportPanel({ isOpen, onClose, repoId, repoName }: ExportPanelPr
                         <label className="block text-sm font-medium text-slate-300 mb-3">Export Format</label>
                         <div className="grid grid-cols-2 gap-2">
                             {EXPORT_OPTIONS.map((option) => (
-                                <button
+                                <button data-testid="export-btn-btn-2"
                                     key={option.id}
                                     onClick={() => setFormat(option.id)}
                                     className={cn(
@@ -250,7 +250,7 @@ export function ExportPanel({ isOpen, onClose, repoId, repoName }: ExportPanelPr
                                 { id: 'filtered', label: 'Filtered Only' },
                                 { id: 'selected', label: 'Selected Items' },
                             ].map((s) => (
-                                <button
+                                <button data-testid="export-btn-btn-3"
                                     key={s.id}
                                     onClick={() => setScope(s.id as ExportScope)}
                                     className={cn(
@@ -286,7 +286,7 @@ export function ExportPanel({ isOpen, onClose, repoId, repoName }: ExportPanelPr
                                         <div className="text-sm text-slate-300">{item.label}</div>
                                         <div className="text-xs text-slate-500">{item.desc}</div>
                                     </div>
-                                    <input
+                                    <input data-testid="export-input-input-1"
                                         type="checkbox"
                                         checked={exportData[item.key as keyof ExportData]}
                                         onChange={(e) => setExportData(prev => ({
@@ -306,7 +306,7 @@ export function ExportPanel({ isOpen, onClose, repoId, repoName }: ExportPanelPr
                     <div className="text-xs text-slate-500">
                         {EXPORT_OPTIONS.find(o => o.id === format)?.description}
                     </div>
-                    <button
+                    <button data-testid="export-btn-btn-4"
                         onClick={handleExport}
                         disabled={exporting}
                         className={cn(

@@ -69,7 +69,7 @@ export default function RiskSignalsWidget({ repoId, limit = 5 }: RiskSignalsWidg
         <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-slate-200">Top Risk Files</h3>
-                <button
+                <button data-testid="risksignalswidget-btn-btn-1"
                     onClick={() => navigate(`/repos/${repoId}/risk`)}
                     className="text-xs text-sky-400 hover:text-sky-300 transition-colors"
                 >
@@ -78,7 +78,7 @@ export default function RiskSignalsWidget({ repoId, limit = 5 }: RiskSignalsWidg
             </div>
             <div className="space-y-2">
                 {risks.map((risk) => (
-                    <button
+                    <button data-testid="risksignalswidget-btn-btn-2"
                         key={risk.entity_id}
                         onClick={() => navigate(`/repos/${repoId}/git/files/${encodeURIComponent(risk.path)}`)}
                         className="w-full text-left p-3 bg-slate-900/50 rounded-lg border border-slate-800 hover:border-slate-700 hover:bg-slate-900 transition-all group"

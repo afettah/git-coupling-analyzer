@@ -56,7 +56,7 @@ const ErrorNotification: React.FC = () => {
                             </div>
                         )}
                     </div>
-                    <button
+                    <button data-testid="errornotification-btn-btn-1"
                         onClick={() => removeError(error.id)}
                         className="flex-shrink-0 text-red-400 hover:text-red-500"
                     >

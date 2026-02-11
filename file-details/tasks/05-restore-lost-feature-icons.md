@@ -25,3 +25,12 @@ Also from `FilterEngine.ts`, `matchesQuickFilter()` defines the exact thresholds
 1. Import the `matchesQuickFilter` function from `FilterEngine.ts`.
 2. In `FileRow`, compute which badges apply to the file and render small colored icons inline.
 3. Keep the badges subtle (small, muted colors) to avoid visual clutter.
+
+## Progress Update (2026-02-11)
+- Status: ✅ Completed
+- Implemented:
+  - `FileRow.tsx`: Added inline badges using `matchesQuickFilter` (`Flame`, `AlertTriangle`, `Link2`, `Anchor`).
+  - `FilesTree.tsx`: Passes `churn` and `coupling` to `FileRow`.
+  - `FilesTable.tsx`: Passes `churn` and `coupling` to `FileRow`.
+- Notes:
+  - Badge logic is now consistent with quick filter thresholds from `FilterEngine.ts`.

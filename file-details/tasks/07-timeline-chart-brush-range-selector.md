@@ -17,3 +17,14 @@ The `TimelineChart` component supports zoom via scroll but there is no mouse dra
 1. In `TimelineChart.tsx`, when brush ends, update `xDomain` internally (use local state) to zoom into the brushed range.
 2. Add a small "Reset Zoom" button that appears when zoomed in.
 3. In `FileActivityTab.tsx`, enable brush on the main timeline: `<TimelineChart brushEnabled onRangeChange={...} />`.
+
+## Progress Update (2026-02-11)
+- Status: ✅ Completed and extended
+- Implemented:
+  - `TimelineChart.tsx`: Brush selection zooms into brushed range and exposes reset zoom control.
+  - `TimelineChart.tsx`: Wrapper/SVG constrained to avoid horizontal overflow (`overflow-hidden`, `max-w-full`).
+  - `FileActivityTab.tsx`: Brush-enabled range selection wired for all timeline charts in the tab.
+  - `FileCommitsTab.tsx`: Added brush+zoom with local range state for commit density chart.
+  - `FileAuthorsTab.tsx`: Added brush+zoom with per-author range state for ownership timelines.
+- Notes:
+  - Mouse drag selection is now consistently available on all timeline graphs in file-details views.

@@ -43,7 +43,7 @@ function App() {
                 </h1>
                 <p className="text-slate-400 mt-2 text-lg">Unified analysis for git, dependencies, and semantics</p>
               </div>
-              <button
+              <button data-testid="app-btn-btn-1"
                 onClick={() => setIsCreateModalOpen(true)}
                 className="flex items-center gap-2 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 hover:-translate-y-0.5"
               >

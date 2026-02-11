@@ -12,7 +12,7 @@ import { type AnalysisStatus, type GitRemoteInfo, getAnalysisStatus, startAnalys
 import { useFilters } from '../../shared/filters/useFilters';
 import {
     ArrowLeft, Play, Loader2, GitCommit,
-    AlertTriangle, Filter, Keyboard, Command, ChevronDown, ChevronRight
+    AlertTriangle, Filter, Keyboard, Command, ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import * as Icons from 'lucide-react';
 
@@ -76,7 +76,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
     const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-    const sidebarCollapsed = false;
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [expandedTabs, setExpandedTabs] = useState<Record<string, boolean>>({ git: true });
 
     const breadcrumbs = useBreadcrumbs(repo.name, repo.id);
@@ -176,7 +176,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                             {status?.error || 'Unknown error occurred'}
                         </p>
                     </div>
-                    <button
+                    <button data-testid="dashboard-btn-btn-1"
                         onClick={handleStartAnalysis}
                         disabled={loading}
                         className="px-8 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-all shadow-xl shadow-red-500/20 text-lg"
@@ -198,7 +198,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                     <p className="text-slate-400 max-w-md mx-auto mb-8 text-lg">
                         Start the analysis to build the dependency graph and uncover hidden coupling.
                     </p>
-                    <button
+                    <button data-testid="dashboard-btn-btn-2"
                         onClick={handleStartAnalysis}
                         className="px-8 py-4 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-sky-500/25 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/30 text-lg flex items-center gap-3"
                     >
@@ -286,12 +286,22 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
     return (
         <div className="min-h-screen bg-slate-950 text-slate-50 flex font-sans">
             {/* Sidebar */}
-            <aside className={`fixed top-0 left-0 h-screen border-r border-slate-800 bg-slate-900/80 backdrop-blur-md flex flex-col z-20 transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-72'}`}>
+            <aside data-testid="dashboard-sidebar" className={`fixed top-0 left-0 h-screen border-r border-slate-800 bg-slate-900/80 backdrop-blur-md flex flex-col z-20 transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-72'}`}>
+                <button
+                    data-testid="dashboard-btn-toggle-sidebar"
+                    type="button"
+                    onClick={() => setSidebarCollapsed((prev) => !prev)}
+                    className="absolute -right-3 top-6 z-30 inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-slate-400 transition-colors hover:border-sky-500/60 hover:text-sky-300"
+                    aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                    {sidebarCollapsed ? <PanelLeftOpen size={13} /> : <PanelLeftClose size={13} />}
+                </button>
                 {/* Header */}
                 <div className="p-5 border-b border-slate-800/50 flex items-center justify-between">
                     {!sidebarCollapsed && (
                         <div className="overflow-hidden">
-                            <button
+                            <button data-testid="dashboard-btn-btn-3"
                                 onClick={onBack}
                                 className="flex items-center gap-2 text-slate-400 hover:text-sky-400 transition-colors mb-2 text-xs uppercase tracking-wider font-semibold"
                             >
@@ -302,7 +312,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                         </div>
                     )}
                     {sidebarCollapsed && (
-                        <button onClick={onBack} className="mx-auto text-slate-400 hover:text-sky-400">
+                        <button data-testid="dashboard-btn-btn-4" onClick={onBack} className="mx-auto text-slate-400 hover:text-sky-400">
                             <ArrowLeft size={20} />
                         </button>
                     )}
@@ -323,7 +333,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                         return (
                             <div key={tab.id}>
                                 <div className="relative group">
-                                    <button
+                                    <button data-testid="dashboard-btn-btn-5"
                                         onClick={() => {
                                             if (hasSubTabs) {
                                                 toggleTabExpanded(tab.id);
@@ -360,7 +370,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                                         {tab.subTabs.map((sub) => {
                                             const isSubActive = isActive && subTabId === sub.id;
                                             return (
-                                                <button
+                                                <button data-testid="dashboard-btn-btn-6"
                                                     key={sub.id}
                                                     onClick={() => onTabChange(`${tab.id}/${sub.id}`)}
                                                     className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${isSubActive
@@ -402,7 +412,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                             )}
                         </div>
                     ) : (
-                        <button
+                        <button data-testid="dashboard-btn-re-analyze"
                             onClick={handleStartAnalysis}
                             disabled={loading || isRunning}
                             className={`w-full flex items-center justify-center gap-2 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 disabled:from-slate-800 disabled:to-slate-800 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-sky-900/20 ${sidebarCollapsed ? 'px-0' : 'px-4'}`}
@@ -416,7 +426,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
             </aside>
 
             {/* Main Content */}
-            <main className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'ml-20' : 'ml-72'} relative`}>
+            <main className={`relative flex flex-col h-screen flex-1 overflow-x-hidden transition-all duration-300 ${sidebarCollapsed ? 'ml-20' : 'ml-72'}`}>
                 {/* Top Bar with Breadcrumbs & Actions */}
                 {isComplete && (
                     <div className="sticky top-0 z-10 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800 px-6 py-3 flex items-center justify-between">
@@ -424,12 +434,12 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
 
                         <div className="flex items-center gap-2">
                             {/* Command Palette Trigger */}
-                            <button onClick={() => setIsCommandPaletteOpen(true)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-700" title="Search (Cmd+K)">
+                            <button data-testid="dashboard-btn-btn-8" onClick={() => setIsCommandPaletteOpen(true)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-700" title="Search (Cmd+K)">
                                 <Command size={18} />
                             </button>
 
                             {/* Filter Trigger */}
-                            <button
+                            <button data-testid="dashboard-btn-btn-9"
                                 onClick={() => setIsFiltersOpen(true)}
                                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all border ${isFiltering
                                     ? 'bg-amber-500/10 text-amber-400 border-amber-500/30 shadow-amber-500/10 shadow-lg'
@@ -442,7 +452,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                                 )}
                             </button>
 
-                            <button onClick={() => setIsShortcutsOpen(true)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-700" title="Shortcuts (?)">
+                            <button data-testid="dashboard-btn-btn-10" onClick={() => setIsShortcutsOpen(true)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-700" title="Shortcuts (?)">
                                 <Keyboard size={18} />
                             </button>
                         </div>
@@ -450,7 +460,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                 )}
 
                 {/* Content Area */}
-                <div className="h-[calc(100vh-60px)] overflow-hidden flex flex-col">
+                <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
                     {renderContent()}
                 </div>
             </main>

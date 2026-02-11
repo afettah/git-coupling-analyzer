@@ -32,7 +32,7 @@ export default function CreateRepoModal({ onClose, onCreated }: CreateRepoModalP
             <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl">
                 <div className="flex justify-between items-center p-6 border-b border-slate-800">
                     <h2 className="text-xl font-bold">New Project</h2>
-                    <button onClick={onClose} className="text-slate-500 hover:text-slate-300">
+                    <button data-testid="create-repo-btn-btn-1" onClick={onClose} className="text-slate-500 hover:text-slate-300">
                         <X size={24} />
                     </button>
                 </div>
@@ -42,7 +42,7 @@ export default function CreateRepoModal({ onClose, onCreated }: CreateRepoModalP
                         <label className="block text-sm font-medium text-slate-400 mb-1">
                             Repository Path
                         </label>
-                        <input
+                        <input data-testid="create-repo-input-input-1"
                             type="text"
                             required
                             value={path}
@@ -56,7 +56,7 @@ export default function CreateRepoModal({ onClose, onCreated }: CreateRepoModalP
                         <label className="block text-sm font-medium text-slate-400 mb-1">
                             Project Name (Optional)
                         </label>
-                        <input
+                        <input data-testid="create-repo-input-input-2"
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
@@ -68,14 +68,14 @@ export default function CreateRepoModal({ onClose, onCreated }: CreateRepoModalP
                     {error && <p className="text-red-400 text-sm">{error}</p>}
 
                     <div className="pt-4 flex gap-3">
-                        <button
+                        <button data-testid="create-repo-btn-btn-2"
                             type="button"
                             onClick={onClose}
                             className="flex-1 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-lg transition-colors"
                         >
                             Cancel
                         </button>
-                        <button
+                        <button data-testid="create-repo-btn-btn-3"
                             type="submit"
                             disabled={loading}
                             className="flex-1 px-4 py-2 bg-sky-500 hover:bg-sky-400 disabled:bg-sky-500/50 text-slate-900 font-bold rounded-lg transition-all flex justify-center items-center"

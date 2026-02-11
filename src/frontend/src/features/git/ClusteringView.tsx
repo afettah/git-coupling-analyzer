@@ -100,7 +100,7 @@ export default function ClusteringView({ repoId }: ClusteringViewProps) {
                     <div>
                         <div className="flex justify-between items-center mb-1">
                             <label className="block text-sm font-medium text-slate-400">Algorithm</label>
-                            <button
+                            <button data-testid="clustering-btn-btn-1"
                                 onClick={() => setInfoModalOpen(true)}
                                 className="text-slate-500 hover:text-sky-400 transition-colors"
                                 title="Learn more about these algorithms"
@@ -108,7 +108,7 @@ export default function ClusteringView({ repoId }: ClusteringViewProps) {
                                 <Info className="w-4 h-4" />
                             </button>
                         </div>
-                        <select
+                        <select data-testid="clustering-select-select-1"
                             value={selectedAlgo}
                             onChange={(e) => {
                                 setSelectedAlgo(e.target.value);
@@ -124,7 +124,7 @@ export default function ClusteringView({ repoId }: ClusteringViewProps) {
 
                     <div>
                         <label className="block text-sm font-medium text-slate-400 mb-1">Weight Metric</label>
-                        <select
+                        <select data-testid="clustering-select-select-2"
                             value={weightColumn}
                             onChange={(e) => setWeightColumn(e.target.value)}
                             className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white"
@@ -137,7 +137,7 @@ export default function ClusteringView({ repoId }: ClusteringViewProps) {
 
                     <div>
                         <label className="block text-sm font-medium text-slate-400 mb-1">Min Weight</label>
-                        <input
+                        <input data-testid="clustering-input-input-1"
                             type="number"
                             step="0.05"
                             min="0"
@@ -159,7 +159,7 @@ export default function ClusteringView({ repoId }: ClusteringViewProps) {
                                     <label className="block text-xs text-slate-500 mb-1">
                                         {key} {prop.description && `- ${prop.description}`}
                                     </label>
-                                    <input
+                                    <input data-testid="clustering-input-input-2"
                                         type={prop.type === 'number' || prop.type === 'integer' ? 'number' : 'text'}
                                         step={prop.type === 'number' ? '0.1' : undefined}
                                         value={params[key] ?? prop.default ?? ''}
@@ -182,7 +182,7 @@ export default function ClusteringView({ repoId }: ClusteringViewProps) {
                         <label className="block text-sm font-medium text-slate-400 mb-1">
                             Snapshot Name
                         </label>
-                        <input
+                        <input data-testid="clustering-input-e.g.-q4-baseline-analysis"
                             type="text"
                             placeholder="e.g. Q4 Baseline Analysis"
                             value={snapshotName}
@@ -195,7 +195,7 @@ export default function ClusteringView({ repoId }: ClusteringViewProps) {
                         <label className="block text-sm font-medium text-slate-400 mb-1">
                             Filter to folders (comma-separated)
                         </label>
-                        <input
+                        <input data-testid="clustering-input-e.g.-src/api,-src/hooks"
                             type="text"
                             placeholder="e.g. src/api, src/hooks"
                             value={folders}
@@ -209,7 +209,7 @@ export default function ClusteringView({ repoId }: ClusteringViewProps) {
                     </div>
                 </div>
 
-                <button
+                <button data-testid="clustering-btn-btn-2"
                     onClick={handleRun}
                     disabled={loading}
                     className="w-full bg-sky-500 hover:bg-sky-400 text-slate-900 font-bold py-3 rounded-xl transition-all shadow-lg shadow-sky-500/20 flex items-center justify-center gap-2"

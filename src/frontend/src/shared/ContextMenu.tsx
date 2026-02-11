@@ -99,7 +99,7 @@ export function ContextMenu({
                     item.divider ? (
                         <div key={`divider-${index}`} className="h-px bg-slate-700 my-1" />
                     ) : (
-                        <button
+                        <button data-testid="contextmenu-btn-btn-1"
                             key={item.id}
                             onClick={() => {
                                 if (!item.disabled) {

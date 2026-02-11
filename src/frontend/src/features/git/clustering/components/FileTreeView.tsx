@@ -66,7 +66,7 @@ function FileItem({ path, displayPath, repoUrlConfig, onFileSelect }: FileItemPr
         <div className="flex items-center gap-1 text-xs text-slate-400 ml-4">
             <span className="flex-1">📄 {displayPath || path}</span>
             {onFileSelect && (
-                <button
+                <button data-testid="filetreeview-btn-btn-1"
                     onClick={() => onFileSelect(path)}
                     className="text-slate-500 hover:text-sky-400"
                     title="View file details"
@@ -75,7 +75,7 @@ function FileItem({ path, displayPath, repoUrlConfig, onFileSelect }: FileItemPr
                 </button>
             )}
             {repoUrlConfig && (
-                <a
+                <a data-testid="filetreeview-link-open-in-repository"
                     href={buildFileUrl(repoUrlConfig, path)}
                     target="_blank"
                     rel="noopener noreferrer"

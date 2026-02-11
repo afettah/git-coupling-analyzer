@@ -124,7 +124,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
                             <p className="text-xs text-slate-500">Navigate faster with keyboard</p>
                         </div>
                     </div>
-                    <button
+                    <button data-testid="keyboardshortcutsmodal-btn-btn-1"
                         onClick={onClose}
                         className="p-2 text-slate-500 hover:text-slate-300 hover:bg-slate-800 rounded-lg transition-colors"
                     >

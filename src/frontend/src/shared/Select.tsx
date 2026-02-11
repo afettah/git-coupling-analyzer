@@ -43,7 +43,7 @@ export function Select<T extends string = string>({
     return (
         <div className={cn('flex items-center gap-2', className)}>
             {label && <label className="text-xs text-slate-500">{label}</label>}
-            <select
+            <select data-testid="select-select-select-1"
                 value={value}
                 onChange={handleChange}
                 disabled={disabled}

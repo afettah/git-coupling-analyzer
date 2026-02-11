@@ -206,7 +206,7 @@ function SimpleTreemap({
                 const height = Math.max(30, Math.min(80, percentage * 2));
 
                 return (
-                    <button
+                    <button data-testid="folder-details-btn-btn-1"
                         key={item.path}
                         onClick={() => onFileSelect?.(item.path)}
                         className={cn(
@@ -329,7 +329,7 @@ function CouplingVisualization({
                     <h4 className="text-sm font-medium text-slate-300 mb-3">External Dependencies</h4>
                     <div className="space-y-1 max-h-32 overflow-auto">
                         {stats.coupled_external_files.map((file, i) => (
-                            <button
+                            <button data-testid="folder-details-btn-btn-2"
                                 key={i}
                                 onClick={() => onFileSelect?.(file.path)}
                                 className="flex items-center gap-2 w-full text-left p-1.5 rounded hover:bg-slate-700/50 transition-colors text-xs text-slate-400 hover:text-slate-300"
@@ -445,7 +445,7 @@ export function FolderDetailsPanel({
                             Contains {details.file_count} files in {details.subfolder_count} subfolders
                         </p>
                     </div>
-                    <button
+                    <button data-testid="folder-details-btn-btn-3"
                         onClick={onClose}
                         className="p-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-800 rounded-lg transition-colors"
                     >
@@ -456,7 +456,7 @@ export function FolderDetailsPanel({
                 {/* Action buttons */}
                 <div className="flex items-center gap-2 mt-4">
                     {folderUrl && (
-                        <a
+                        <a data-testid="folder-details-link-link-1"
                             href={folderUrl}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -466,7 +466,7 @@ export function FolderDetailsPanel({
                             Browse in Repo
                         </a>
                     )}
-                    <button
+                    <button data-testid="folder-details-btn-btn-4"
                         onClick={handleCopyPath}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-400 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
                     >
@@ -513,7 +513,7 @@ export function FolderDetailsPanel({
             {/* Tab navigation */}
             <div className="flex border-b border-slate-800 px-4 flex-shrink-0">
                 {TABS.map(tab => (
-                    <button
+                    <button data-testid="folder-details-btn-btn-5"
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
