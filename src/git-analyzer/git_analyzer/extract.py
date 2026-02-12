@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from collections import Counter
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from fnmatch import fnmatch
 from pathlib import Path
 from typing import Callable, List
 
@@ -12,7 +14,7 @@ import pyarrow as pa
 
 from code_intel.config import RepoPaths, ValidationMode
 from git_analyzer.config import CouplingConfig
-from git_analyzer.git import iter_log, ValidationIssue
+from git_analyzer.git import iter_log, iter_numstat, ValidationIssue
 from git_analyzer.file_metrics import materialize_hot_stable_metrics
 from code_intel.storage import Storage
 from git_analyzer.sync import sync_head_files
@@ -40,11 +42,13 @@ class HistoryExtractor:
     def __init__(
         self, 
         paths: RepoPaths, 
-        config: CouplingConfig | None = None
+        config: CouplingConfig | None = None,
+        storage: Storage | None = None,
     ):
         self.paths = paths
         self.config = config or CouplingConfig()
-        self.storage = Storage(paths.db_path, paths.parquet_dir)
+        self._owns_storage = storage is None
+        self.storage = storage or Storage(paths.db_path, paths.parquet_dir)
     
     def run(
         self,
@@ -61,17 +65,79 @@ class HistoryExtractor:
         file_authors: dict[int, set[str]] = {}  # file_id -> set of author emails
         file_line_stats: dict[int, dict[str, int]] = {}  # file_id -> {added, deleted}
         file_timestamps: dict[int, dict[str, int]] = {}  # file_id -> {first, last}
+        entity_cache: dict[str, int] = {}
         max_issues = self.config.max_validation_issues
+        if max_issues is None:
+            max_issues = 1_000_000
         
         # Collect commits for Parquet
         commits_data = []
         changes_data = []
+
+        effective_since = since
+        if not effective_since and self.config.window_days:
+            cutoff = datetime.now(timezone.utc) - timedelta(days=self.config.window_days)
+            effective_since = cutoff.strftime("%Y-%m-%d")
+
+        # Build a fast lookup for line churn by (commit_oid, path).
+        numstat_lookup: dict[tuple[str, str], tuple[int, int]] = {}
+        for commit_oid, rows in iter_numstat(
+            self.paths.mirror_path,
+            since=effective_since,
+            until=until,
+            ref=self.config.ref,
+            all_refs=self.config.all_refs,
+            skip_merge_commits=self.config.skip_merge_commits,
+            first_parent_only=self.config.first_parent_only,
+            find_renames_threshold=self.config.find_renames_threshold,
+        ):
+            for path, added, deleted in rows:
+                numstat_lookup[(commit_oid, path)] = (added, deleted)
+
+        def get_or_create_cached_entity(path: str) -> int:
+            cached = entity_cache.get(path)
+            if cached is not None:
+                return cached
+            existing = self.storage.get_entity_by_qualified_name(path, kind="file")
+            if existing:
+                entity_cache[path] = existing["entity_id"]
+                return existing["entity_id"]
+            entity_id = self.storage.get_or_create_entity(
+                kind="file",
+                name=Path(path).name,
+                qualified_name=path,
+                metadata_json={"exists_at_head": True},
+            )
+            entity_cache[path] = entity_id
+            return entity_id
+
+        include_patterns = self.config.include_paths or []
+        exclude_patterns = self.config.exclude_paths or []
+        include_exts = {ext.lower() for ext in (self.config.include_extensions or [])}
+        exclude_exts = {ext.lower() for ext in (self.config.exclude_extensions or [])}
+
+        def in_scope(path: str) -> bool:
+            extension = Path(path).suffix.lower()
+            if include_exts and extension not in include_exts:
+                return False
+            if exclude_exts and extension in exclude_exts:
+                return False
+            if include_patterns and not any(fnmatch(path, pattern) for pattern in include_patterns):
+                return False
+            if exclude_patterns and any(fnmatch(path, pattern) for pattern in exclude_patterns):
+                return False
+            return True
         
         # Process git log from MIRROR with validation mode
         for header, changes in iter_log(
             self.paths.mirror_path,
-            since=since,
+            since=effective_since,
             until=until,
+            ref=self.config.ref,
+            all_refs=self.config.all_refs,
+            skip_merge_commits=self.config.skip_merge_commits,
+            first_parent_only=self.config.first_parent_only,
+            find_renames_threshold=self.config.find_renames_threshold,
             validation_mode=self.config.validation_mode.value,
         ):
             stats.commit_count += 1
@@ -99,10 +165,6 @@ class HistoryExtractor:
             if stats.commit_count % 1000 == 0:
                 logger.info(f"Processed {stats.commit_count} commits...")
             
-            # Skip large changesets
-            if len(changes) > self.config.max_changeset_size:
-                continue
-            
             is_merge = len(header.parents) > 1
             
             commits_data.append({
@@ -117,79 +179,73 @@ class HistoryExtractor:
             })
             
             file_ids_in_commit = set()
-            
-            with self.storage.transaction():
-                for status, path, old_path in changes:
-                    if not path:
-                        continue
-                    
-                    # Defense-in-depth: skip invalid paths that leaked through
-                    if len(path) <= 3 and path.isalpha():
-                        logger.warning(f"Skipping invalid path: {path!r}")
+            for status, path, old_path in changes:
+                if not path:
+                    continue
+                if not in_scope(path):
+                    continue
+
+                # Defense-in-depth: skip invalid paths that leaked through
+                if len(path) <= 3 and path.isalpha():
+                    logger.warning(f"Skipping invalid path: {path!r}")
+                    stats.skipped_suspicious_path += 1
+                    continue
+                if not ('/' in path or '.' in path):
+                    if len(path) < 10:  # Short paths without / or . are suspicious
+                        logger.warning(f"Skipping suspicious path: {path!r}")
                         stats.skipped_suspicious_path += 1
                         continue
-                    if not ('/' in path or '.' in path):
-                        if len(path) < 10:  # Short paths without / or . are suspicious
-                            logger.warning(f"Skipping suspicious path: {path!r}")
-                            stats.skipped_suspicious_path += 1
-                            continue
-                    
-                    # Handle renames: reuse old entity and update path
-                    if old_path and (status.startswith("R") or status.startswith("C")):
-                        # Try to find the old entity
-                        old_entity = self.storage.get_entity_by_qualified_name(old_path, kind="file")
-                        
-                        if old_entity:
-                            file_id = old_entity["entity_id"]
-                            
-                            # Check if target path already exists (different entity)
-                            existing_target = self.storage.get_entity_by_qualified_name(path, kind="file")
-                            
-                            if existing_target and existing_target["entity_id"] != file_id:
-                                # Target path already exists with different entity
-                                # This can happen with complex rename chains
-                                # Use the existing target entity and mark old one as deleted
-                                self.storage.conn.execute(
-                                    "UPDATE entities SET exists_at_head = FALSE WHERE entity_id = ?",
-                                    (file_id,)
-                                )
-                                file_id = existing_target["entity_id"]
-                            else:
-                                # Safe to update the path - no conflict
-                                self.storage.conn.execute(
-                                    "UPDATE entities SET qualified_name = ?, name = ?, updated_at = CURRENT_TIMESTAMP WHERE entity_id = ?",
-                                    (path, Path(path).name, file_id)
-                                )
-                        else:
-                            # Old path not found - treat as new file
-                            file_id = self.storage.get_or_create_entity(
-                                kind="file",
-                                name=Path(path).name,
-                                qualified_name=path,
-                                metadata_json={"exists_at_head": True}
+
+                # Handle renames: reuse old entity and update path
+                if old_path and (status.startswith("R") or status.startswith("C")):
+                    old_entity = self.storage.get_entity_by_qualified_name(old_path, kind="file")
+                    if old_entity:
+                        file_id = old_entity["entity_id"]
+                        existing_target = self.storage.get_entity_by_qualified_name(path, kind="file")
+                        if existing_target and existing_target["entity_id"] != file_id:
+                            self.storage.conn.execute(
+                                "UPDATE entities SET exists_at_head = FALSE WHERE entity_id = ?",
+                                (file_id,),
                             )
+                            file_id = existing_target["entity_id"]
+                        else:
+                            self.storage.conn.execute(
+                                "UPDATE entities SET qualified_name = ?, name = ?, updated_at = CURRENT_TIMESTAMP WHERE entity_id = ?",
+                                (path, Path(path).name, file_id),
+                            )
+                        entity_cache.pop(old_path, None)
+                        entity_cache[path] = file_id
                     else:
-                        # Normal add/modify - get or create entity
-                        file_id = self.storage.get_or_create_entity(
-                            kind="file",
-                            name=Path(path).name,
-                            qualified_name=path,
-                            metadata_json={"exists_at_head": True}
-                        )
-                    file_ids_in_commit.add(file_id)
-                    
-                    changes_data.append({
+                        file_id = get_or_create_cached_entity(path)
+                else:
+                    file_id = get_or_create_cached_entity(path)
+
+                file_ids_in_commit.add(file_id)
+
+                lines_added, lines_deleted = numstat_lookup.get(
+                    (header.commit_oid, path),
+                    numstat_lookup.get((header.commit_oid, old_path or ""), (0, 0)),
+                )
+                if file_id not in file_line_stats:
+                    file_line_stats[file_id] = {"added": 0, "deleted": 0}
+                file_line_stats[file_id]["added"] += int(lines_added)
+                file_line_stats[file_id]["deleted"] += int(lines_deleted)
+
+                changes_data.append(
+                    {
                         "commit_oid": header.commit_oid,
                         "file_id": file_id,
                         "path": path,
                         "status": status,
                         "old_path": old_path,
                         "commit_ts": header.committer_ts,
-                    })
-                    
-                    # Track renames
-                    if old_path and (status.startswith("R") or status.startswith("C")):
-                        self._record_rename(file_id, old_path, path, header.commit_oid)
+                        "lines_added": int(lines_added),
+                        "lines_deleted": int(lines_deleted),
+                    }
+                )
+
+                if old_path and (status.startswith("R") or status.startswith("C")):
+                    self._record_rename(file_id, old_path, path, header.commit_oid)
             
             # Update file commit counts and stats
             for fid in file_ids_in_commit:
@@ -219,6 +275,12 @@ class HistoryExtractor:
                     file_line_stats[fid] = {"added": 0, "deleted": 0}
             
             stats.change_count += len(changes)
+            if stats.commit_count % 500 == 0:
+                self.storage.conn.commit()
+                stats.transaction_count += 1
+
+        self.storage.conn.commit()
+        stats.transaction_count += 1
         
         # Write Parquet files
         self._write_parquet("commits", commits_data)
@@ -245,10 +307,30 @@ class HistoryExtractor:
     
     def _record_rename(self, file_id: int, old_path: str, new_path: str, commit_oid: str):
         """Record file rename in lineage."""
-        self.storage.conn.execute("""
-            INSERT OR IGNORE INTO git_file_lineage (entity_id, path, start_commit_oid, end_commit_oid)
-            VALUES (?, ?, ?, NULL)
-        """, (file_id, old_path, commit_oid))
+        self.storage.conn.execute(
+            """
+            UPDATE git_file_lineage
+            SET end_commit_oid = ?
+            WHERE entity_id = ? AND path = ? AND end_commit_oid IS NULL
+            """,
+            (commit_oid, file_id, old_path),
+        )
+        existing_open = self.storage.conn.execute(
+            """
+            SELECT 1 FROM git_file_lineage
+            WHERE entity_id = ? AND path = ? AND end_commit_oid IS NULL
+            LIMIT 1
+            """,
+            (file_id, new_path),
+        ).fetchone()
+        if not existing_open:
+            self.storage.conn.execute(
+                """
+                INSERT INTO git_file_lineage (entity_id, path, start_commit_oid, end_commit_oid)
+                VALUES (?, ?, ?, NULL)
+                """,
+                (file_id, new_path, commit_oid),
+            )
     
     def _update_file_stats(
         self,
@@ -301,7 +383,8 @@ class HistoryExtractor:
         total_lines_deleted = sum(s.get("deleted", 0) for s in line_stats.values())
         
         # Count hotspots (files with >50 commits)
-        hotspot_count = sum(1 for count in file_commit_counts.values() if count > 50)
+        hotspot_threshold = max(1, self.config.hotspot_threshold)
+        hotspot_count = sum(1 for count in file_commit_counts.values() if count >= hotspot_threshold)
         
         summary = {
             "file_count": len(file_commit_counts),
@@ -310,6 +393,7 @@ class HistoryExtractor:
             "linesAdded": total_lines_added,
             "linesDeleted": total_lines_deleted,
             "hotspotCount": hotspot_count,
+            "hotspotThreshold": hotspot_threshold,
             "avgCoupling": 0.0,  # Will be computed after edges analysis
             "riskScore": 0.0,  # Will be computed after edges analysis
         }
@@ -328,4 +412,5 @@ class HistoryExtractor:
         self.storage.write_parquet(name, table)
     
     def close(self):
-        self.storage.close()
+        if self._owns_storage:
+            self.storage.close()

@@ -75,10 +75,25 @@ export interface ComparisonResult {
 export interface AnalysisConfig {
     repo_path?: string;
     min_revisions?: number;
-    max_changeset_size?: number;
+    max_changeset_size?: number | null;
+    max_logical_changeset_size?: number | null;
     changeset_mode?: 'by_commit' | 'by_author_time' | 'by_ticket_id';
+    author_time_window_hours?: number;
+    ticket_id_pattern?: string;
     min_cooccurrence?: number;
+    topk_edges_per_file?: number | null;
+    component_depth?: number;
+    min_component_cooccurrence?: number;
     window_days?: number;
+    decay_half_life_days?: number;
+    hotspot_threshold?: number;
+    ref?: string;
+    all_refs?: boolean;
+    skip_merge_commits?: boolean;
+    first_parent_only?: boolean;
+    find_renames_threshold?: number;
+    validation_mode?: 'strict' | 'soft' | 'permissive';
+    max_validation_issues?: number | null;
     since?: string;
     until?: string;
 }
@@ -273,15 +288,58 @@ export const getGitInfo = (repoId: string) =>
 export const updateGitInfo = (repoId: string, info: Partial<GitRemoteInfo>) =>
     client.put(`/repos/${repoId}/git-info`, info).then(res => res.data);
 
-export const startAnalysis = (repoId: string, config: AnalysisConfig) =>
-    client.post(`/repos/${repoId}/analyzers/run`, { analyzer_type: 'git', config }).then(res => res.data);
+export const startAnalysis = async (repoId: string, config: AnalysisConfig) => {
+    const configRecord = await client.post<{ id: string }>(`/repos/${repoId}/analysis/configs`, {
+        name: `Adhoc ${new Date().toISOString()}`,
+        description: 'Created via startAnalysis helper',
+        config,
+        include_patterns: [],
+        exclude_patterns: [],
+        is_active: true,
+    }).then(res => res.data);
 
-export const getAnalysisStatus = (repoId: string) =>
-    client.get(`/repos/${repoId}/analyzers/git/status`).then(res => res.data);
+    return client.post(`/repos/${repoId}/analysis/run`, { config_id: configRecord.id }).then(res => res.data);
+};
+
+export const getAnalysisStatus = async (repoId: string): Promise<AnalysisStatus> => {
+    const runs = await client.get<Array<{
+        state: string;
+        stage?: string;
+        progress?: number;
+        metrics?: Record<string, unknown>;
+        error?: string | null;
+    }>>(`/repos/${repoId}/analysis/runs`).then(res => res.data);
+    const latest = runs[0];
+    if (!latest) {
+        return { state: 'not_run', progress: 0 };
+    }
+    const metrics = latest.metrics ?? {};
+    return {
+        state: latest.state,
+        stage: latest.stage,
+        progress: latest.progress,
+        processed_commits: Number(metrics.processed_commits ?? 0),
+        total_commits: Number(metrics.total_commits ?? metrics.commit_count ?? 0),
+        error: latest.error ?? undefined,
+    };
+};
 
 // Files
 export const getFileTree = (repoId: string) =>
     client.get(`/repos/${repoId}/git/tree`).then(res => res.data);
+
+export interface GitRef {
+    name: string;
+    kind: 'branch' | 'tag';
+    short_sha: string;
+    date: string | null;
+}
+
+export const getGitRefs = (repoId: string, params?: {
+    q?: string;
+    kind?: 'branch' | 'tag' | 'all';
+    limit?: number;
+}) => client.get<GitRef[]>(`/repos/${repoId}/git/refs`, { params }).then(res => res.data);
 
 export const listFiles = (repoId: string, params?: {
     q?: string;

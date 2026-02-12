@@ -9,7 +9,19 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from code_intel.logging_utils import get_logger
-from code_intel.routers import repos, git, analyzers, deps, semantic, intelligence, risk, graph
+from code_intel.routers import (
+    repos,
+    git,
+    analyzers,
+    deps,
+    semantic,
+    intelligence,
+    risk,
+    graph,
+    tree,
+    analysis,
+    analysis_stream,
+)
 
 logger = get_logger(__name__)
 
@@ -70,6 +82,9 @@ register_analyzers()
 app.include_router(repos.router)
 app.include_router(git.router)
 app.include_router(analyzers.router)
+app.include_router(tree.router)
+app.include_router(analysis.router)
+app.include_router(analysis_stream.router)
 app.include_router(deps.router)
 app.include_router(semantic.router)
 app.include_router(intelligence.router)

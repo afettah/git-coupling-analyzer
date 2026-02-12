@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from fastapi import APIRouter
-from code_intel.config import RepoPaths
+from fastapi import APIRouter, Query
+from code_intel.config import RepoPaths, DEFAULT_DATA_DIR
 from code_intel.registry import registry
 from code_intel.storage import Storage
 from code_intel.logging_utils import get_logger
@@ -23,35 +23,45 @@ def _storage(repo_id: str, data_dir: str) -> Storage:
 
 
 @router.get("/domains")
-async def get_domains(repo_id: str, data_dir: str = "data"):
+async def get_domains(repo_id: str, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     paths = _paths(repo_id, data_dir)
     api = registry.get_semantic_api()
     return api.get_domains(paths.db_path)
 
 
 @router.get("/files/{path:path}/classify")
-async def classify_file(repo_id: str, path: str, data_dir: str = "data"):
+async def classify_file(repo_id: str, path: str, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     paths = _paths(repo_id, data_dir)
     api = registry.get_semantic_api()
     return api.classify_file(paths.db_path, path)
 
 
 @router.get("/files/{path:path}/similar")
-async def get_similar_files(repo_id: str, path: str, limit: int = 10, min_similarity: float = 0.5, data_dir: str = "data"):
+async def get_similar_files(repo_id: str, path: str, limit: int = 10, min_similarity: float = 0.5, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     paths = _paths(repo_id, data_dir)
     api = registry.get_semantic_api()
     return api.get_similar_files(paths.db_path, path, limit=limit, min_similarity=min_similarity)
 
 
 @router.get("/domains/{domain_id}")
-async def get_domain_detail(repo_id: str, domain_id: int, data_dir: str = "data"):
+async def get_domain_detail(repo_id: str, domain_id: int, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     paths = _paths(repo_id, data_dir)
     api = registry.get_semantic_api()
     return api.get_domain_detail(paths.db_path, domain_id)
 
 
 @router.get("/files/{path:path}/tokens")
-async def get_file_tokens(repo_id: str, path: str, data_dir: str = "data"):
+async def get_file_tokens(repo_id: str, path: str, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     storage = _storage(repo_id, data_dir)
     try:
         row = storage.conn.execute(
@@ -69,7 +79,9 @@ async def get_file_tokens(repo_id: str, path: str, data_dir: str = "data"):
 
 
 @router.get("/bridges")
-async def get_bridge_entities(repo_id: str, min_domains: int = 2, data_dir: str = "data"):
+async def get_bridge_entities(repo_id: str, min_domains: int = 2, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     storage = _storage(repo_id, data_dir)
     try:
         rows = storage.conn.execute(

@@ -2,13 +2,12 @@
  * Clustering Module Constants
  * 
  * Centralized constants for colors, thresholds, and configuration values.
- * Re-exports from design-tokens for backward compatibility.
  */
 
 import { colors, getCouplingColor as getColor, COUPLING_THRESHOLDS } from '@/design-tokens';
 
 // ============================================================
-// Color Palettes (Re-exported from design-tokens)
+// Color Palettes
 // ============================================================
 
 /** Color palette for cluster visualization */
@@ -81,12 +80,7 @@ export const CITY_CONFIG = {
     folderGap: 0.8,
     labelMargin: 1.5,
     minDistrictSize: 2,
-    baseCitySize: 20,
-    // Deprecated - use new names above
-    defaultMaxDepth: 10,
-    defaultHeightScale: 1.5,
-    defaultFolderGap: 0.8,
-    defaultLabelMargin: 1.5
+    baseCitySize: 20
 } as const;
 
 // ============================================================

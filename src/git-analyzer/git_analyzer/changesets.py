@@ -36,8 +36,9 @@ def group_by_commit(
     for commit in commits:
         commit_ts[commit["commit_oid"]] = commit["committer_ts"]
     
+    max_changeset_size = config.max_changeset_size
     for commit_oid, file_ids in commit_files.items():
-        if len(file_ids) > config.max_changeset_size:
+        if max_changeset_size is not None and len(file_ids) > max_changeset_size:
             continue
         
         yield Changeset(
@@ -69,6 +70,7 @@ def group_by_author_time(
     current_author: str | None = None
     current_end_time: int = 0
     
+    max_logical_changeset_size = config.max_logical_changeset_size
     for commit in sorted_commits:
         author = commit["author_email"]
         ts = commit["committer_ts"]
@@ -78,7 +80,13 @@ def group_by_author_time(
             author != current_author or 
             ts > current_end_time):
             # Start new group
-            if current_group and len(current_group.file_ids) <= config.max_logical_changeset_size:
+            if (
+                current_group
+                and (
+                    max_logical_changeset_size is None
+                    or len(current_group.file_ids) <= max_logical_changeset_size
+                )
+            ):
                 yield current_group
             
             current_group = Changeset(
@@ -91,7 +99,13 @@ def group_by_author_time(
         
         current_group.file_ids.update(files)
     
-    if current_group and len(current_group.file_ids) <= config.max_logical_changeset_size:
+    if (
+        current_group
+        and (
+            max_logical_changeset_size is None
+            or len(current_group.file_ids) <= max_logical_changeset_size
+        )
+    ):
         yield current_group
 
 
@@ -131,8 +145,9 @@ def group_by_ticket_id(
         if ticket_id not in ticket_ts:
             ticket_ts[ticket_id] = commit["committer_ts"]
     
+    max_logical_changeset_size = config.max_logical_changeset_size
     for ticket_id, file_ids in ticket_files.items():
-        if len(file_ids) > config.max_logical_changeset_size:
+        if max_logical_changeset_size is not None and len(file_ids) > max_logical_changeset_size:
             continue
         
         yield Changeset(

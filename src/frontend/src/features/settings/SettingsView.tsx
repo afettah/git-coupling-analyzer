@@ -11,22 +11,23 @@ import {
     Save, RefreshCw, AlertCircle, CheckCircle, Info,
     Sliders, Monitor, Moon, Sun
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { type RepoInfo } from '../../api/repos';
 import { updateGitInfo, type GitRemoteInfo, getGitInfo } from '../../api/git';
+import {
+    createAnalysisConfig,
+    listAnalysisConfigs,
+    updateAnalysisConfig,
+} from '../../api/analysis';
+import { AnalysisConfigurator as GitAnalysisConfigurator } from '../analysis-configurator';
+import {
+    buildGitAnalyzerRunConfig,
+    DEFAULT_GIT_ANALYSIS_CONFIG,
+    type GitAnalysisConfig,
+    normalizeGitAnalysisConfig,
+} from './gitAnalysisConfig';
 
 interface SettingsViewProps {
     repo: RepoInfo;
-}
-
-interface AnalysisSettings {
-    minRevisions: number;
-    maxChangesetSize: number;
-    changesetMode: 'by_commit' | 'by_author_time' | 'by_ticket_id';
-    minCooccurrence: number;
-    windowDays: number | null;
-    excludePatterns: string[];
-    includeBranches: string[];
 }
 
 interface DisplaySettings {
@@ -52,16 +53,6 @@ interface PerformanceSettings {
     lazyLoadThreshold: number;
     enableAnimations: boolean;
 }
-
-const DEFAULT_ANALYSIS_SETTINGS: AnalysisSettings = {
-    minRevisions: 5,
-    maxChangesetSize: 50,
-    changesetMode: 'by_commit',
-    minCooccurrence: 2,
-    windowDays: null,
-    excludePatterns: ['*.test.*', '*.spec.*', 'node_modules/*', 'vendor/*', '*.lock'],
-    includeBranches: ['main', 'master', 'develop'],
-};
 
 const DEFAULT_DISPLAY_SETTINGS: DisplaySettings = {
     theme: 'dark',
@@ -89,14 +80,14 @@ const DEFAULT_PERFORMANCE_SETTINGS: PerformanceSettings = {
 
 export function SettingsView({ repo }: SettingsViewProps) {
     const [activeSection, setActiveSection] = useState<string>('analysis');
-    const [analysisSettings, setAnalysisSettings] = useState<AnalysisSettings>(DEFAULT_ANALYSIS_SETTINGS);
+    const [analysisSettings, setAnalysisSettings] = useState<GitAnalysisConfig>(DEFAULT_GIT_ANALYSIS_CONFIG);
     const [displaySettings, setDisplaySettings] = useState<DisplaySettings>(DEFAULT_DISPLAY_SETTINGS);
     const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
     const [performanceSettings, setPerformanceSettings] = useState<PerformanceSettings>(DEFAULT_PERFORMANCE_SETTINGS);
     const [gitInfo, setGitInfo] = useState<GitRemoteInfo | null>(null);
     const [gitWebUrl, setGitWebUrl] = useState('');
     const [gitDefaultBranch, setGitDefaultBranch] = useState('main');
-    const [excludePatternInput, setExcludePatternInput] = useState('');
+    const [activeConfigId, setActiveConfigId] = useState<string | null>(null);
     const [saved, setSaved] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -111,16 +102,36 @@ export function SettingsView({ repo }: SettingsViewProps) {
                 console.error('Failed to load git info:', e);
             }
 
-            // Load from localStorage
-            const savedAnalysis = localStorage.getItem(`settings-analysis-${repo.id}`);
+            // Load UI preferences from localStorage
             const savedDisplay = localStorage.getItem('settings-display');
             const savedNotifications = localStorage.getItem('settings-notifications');
             const savedPerformance = localStorage.getItem('settings-performance');
 
-            if (savedAnalysis) setAnalysisSettings(JSON.parse(savedAnalysis));
             if (savedDisplay) setDisplaySettings(JSON.parse(savedDisplay));
             if (savedNotifications) setNotificationSettings(JSON.parse(savedNotifications));
             if (savedPerformance) setPerformanceSettings(JSON.parse(savedPerformance));
+
+            try {
+                const configs = await listAnalysisConfigs(repo.id);
+                const active = configs.find((config) => config.is_active) ?? configs[0] ?? null;
+                if (!active) {
+                    setActiveConfigId(null);
+                    setAnalysisSettings(DEFAULT_GIT_ANALYSIS_CONFIG);
+                    return;
+                }
+
+                setActiveConfigId(active.id);
+                const normalized = normalizeGitAnalysisConfig({
+                    ...DEFAULT_GIT_ANALYSIS_CONFIG,
+                    ...(active.config as Partial<GitAnalysisConfig>),
+                    preset_id: active.preset_id ?? 'custom',
+                });
+                setAnalysisSettings(normalized);
+            } catch (error) {
+                console.error('Failed to load analysis config:', error);
+                setActiveConfigId(null);
+                setAnalysisSettings(DEFAULT_GIT_ANALYSIS_CONFIG);
+            }
         };
         loadSettings();
     }, [repo.id]);
@@ -134,8 +145,36 @@ export function SettingsView({ repo }: SettingsViewProps) {
                 git_default_branch: gitDefaultBranch,
             });
 
-            // Save to localStorage
-            localStorage.setItem(`settings-analysis-${repo.id}`, JSON.stringify(analysisSettings));
+            const runConfig = buildGitAnalyzerRunConfig(analysisSettings);
+            const presetId = analysisSettings.preset_id === 'custom'
+                ? null
+                : analysisSettings.preset_id;
+            const configName = `${repo.name} Settings`;
+
+            if (activeConfigId) {
+                const updated = await updateAnalysisConfig(repo.id, activeConfigId, {
+                    name: configName,
+                    description: 'Saved from settings',
+                    preset_id: presetId,
+                    config: runConfig,
+                    include_patterns: [],
+                    exclude_patterns: [],
+                    is_active: true,
+                });
+                setActiveConfigId(updated.id);
+            } else {
+                const created = await createAnalysisConfig(repo.id, {
+                    name: configName,
+                    description: 'Saved from settings',
+                    preset_id: presetId,
+                    config: runConfig,
+                    include_patterns: [],
+                    exclude_patterns: [],
+                    is_active: true,
+                });
+                setActiveConfigId(created.id);
+            }
+
             localStorage.setItem('settings-display', JSON.stringify(displaySettings));
             localStorage.setItem('settings-notifications', JSON.stringify(notificationSettings));
             localStorage.setItem('settings-performance', JSON.stringify(performanceSettings));
@@ -147,23 +186,6 @@ export function SettingsView({ repo }: SettingsViewProps) {
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleAddExcludePattern = () => {
-        if (excludePatternInput.trim() && !analysisSettings.excludePatterns.includes(excludePatternInput.trim())) {
-            setAnalysisSettings(prev => ({
-                ...prev,
-                excludePatterns: [...prev.excludePatterns, excludePatternInput.trim()],
-            }));
-            setExcludePatternInput('');
-        }
-    };
-
-    const handleRemoveExcludePattern = (pattern: string) => {
-        setAnalysisSettings(prev => ({
-            ...prev,
-            excludePatterns: prev.excludePatterns.filter(p => p !== pattern),
-        }));
     };
 
     const sections = [
@@ -191,12 +213,11 @@ export function SettingsView({ repo }: SettingsViewProps) {
                 <button data-testid="settings-btn-btn-1"
                     onClick={handleSave}
                     disabled={loading}
-                    className={cn(
-                        'flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors',
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors ${
                         saved
                             ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50'
                             : 'bg-sky-500 hover:bg-sky-400 text-slate-900'
-                    )}
+                    }`}
                 >
                     {saved ? (
                         <>
@@ -224,12 +245,11 @@ export function SettingsView({ repo }: SettingsViewProps) {
                         <button data-testid="settings-btn-btn-2"
                             key={section.id}
                             onClick={() => setActiveSection(section.id)}
-                            className={cn(
-                                'w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-colors',
+                            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-colors ${
                                 activeSection === section.id
                                     ? 'bg-sky-500/10 text-sky-400 border border-sky-500/30'
                                     : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                            )}
+                            }`}
                         >
                             {section.icon}
                             <span className="text-sm font-medium">{section.label}</span>
@@ -244,100 +264,13 @@ export function SettingsView({ repo }: SettingsViewProps) {
                             <SectionHeader
                                 icon={<Sliders size={20} />}
                                 title="Analysis Configuration"
-                                description="Configure how coupling analysis is performed"
+                                description="Choose behavior presets, tune key parameters, and refine advanced options"
                             />
-
-                            <div className="grid grid-cols-2 gap-6">
-                                <SettingField label="Minimum Revisions" description="Files with fewer commits are excluded">
-                                    <input data-testid="settings-input-input-1"
-                                        type="number"
-                                        min={1}
-                                        value={analysisSettings.minRevisions}
-                                        onChange={(e) => setAnalysisSettings(prev => ({ ...prev, minRevisions: parseInt(e.target.value) || 1 }))}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200"
-                                    />
-                                </SettingField>
-
-                                <SettingField label="Max Changeset Size" description="Skip commits with too many files">
-                                    <input data-testid="settings-input-input-2"
-                                        type="number"
-                                        min={10}
-                                        value={analysisSettings.maxChangesetSize}
-                                        onChange={(e) => setAnalysisSettings(prev => ({ ...prev, maxChangesetSize: parseInt(e.target.value) || 50 }))}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200"
-                                    />
-                                </SettingField>
-
-                                <SettingField label="Changeset Mode" description="How to group changes">
-                                    <select data-testid="settings-select-select-1"
-                                        value={analysisSettings.changesetMode}
-                                        onChange={(e) => setAnalysisSettings(prev => ({ ...prev, changesetMode: e.target.value as any }))}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200"
-                                    >
-                                        <option value="by_commit">By Commit</option>
-                                        <option value="by_author_time">By Author Time Window</option>
-                                        <option value="by_ticket_id">By Ticket ID</option>
-                                    </select>
-                                </SettingField>
-
-                                <SettingField label="Min Co-occurrence" description="Minimum times files changed together">
-                                    <input data-testid="settings-input-input-3"
-                                        type="number"
-                                        min={1}
-                                        value={analysisSettings.minCooccurrence}
-                                        onChange={(e) => setAnalysisSettings(prev => ({ ...prev, minCooccurrence: parseInt(e.target.value) || 1 }))}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200"
-                                    />
-                                </SettingField>
-
-                                <SettingField label="Time Window (days)" description="Only analyze recent history">
-                                    <input data-testid="settings-input-no-limit"
-                                        type="number"
-                                        min={0}
-                                        placeholder="No limit"
-                                        value={analysisSettings.windowDays || ''}
-                                        onChange={(e) => setAnalysisSettings(prev => ({ ...prev, windowDays: e.target.value ? parseInt(e.target.value) : null }))}
-                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 placeholder:text-slate-600"
-                                    />
-                                </SettingField>
-                            </div>
-
-                            <SettingField label="Exclude Patterns" description="Files matching these patterns are excluded">
-                                <div className="space-y-2">
-                                    <div className="flex gap-2">
-                                        <input data-testid="settings-input-e.g.,-*.test.*,-vendor/*"
-                                            type="text"
-                                            placeholder="e.g., *.test.*, vendor/*"
-                                            value={excludePatternInput}
-                                            onChange={(e) => setExcludePatternInput(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && handleAddExcludePattern()}
-                                            className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 placeholder:text-slate-600"
-                                        />
-                                        <button data-testid="settings-btn-btn-3"
-                                            onClick={handleAddExcludePattern}
-                                            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition-colors"
-                                        >
-                                            Add
-                                        </button>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2">
-                                        {analysisSettings.excludePatterns.map(pattern => (
-                                            <span
-                                                key={pattern}
-                                                className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-800 rounded-lg text-xs text-slate-300 font-mono"
-                                            >
-                                                {pattern}
-                                                <button data-testid="settings-btn-btn-4"
-                                                    onClick={() => handleRemoveExcludePattern(pattern)}
-                                                    className="text-slate-500 hover:text-red-400"
-                                                >
-                                                    ×
-                                                </button>
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </SettingField>
+                            <GitAnalysisConfigurator
+                                value={analysisSettings}
+                                onChange={setAnalysisSettings}
+                                repoId={repo.id}
+                            />
                         </div>
                     )}
 
@@ -477,12 +410,11 @@ export function SettingsView({ repo }: SettingsViewProps) {
                                         <button data-testid="settings-btn-btn-5"
                                             key={theme.value}
                                             onClick={() => setDisplaySettings(prev => ({ ...prev, theme: theme.value as any }))}
-                                            className={cn(
-                                                'flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors',
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
                                                 displaySettings.theme === theme.value
                                                     ? 'bg-sky-500/20 border-sky-500/50 text-sky-400'
                                                     : 'border-slate-700 text-slate-400 hover:border-slate-600'
-                                            )}
+                                            }`}
                                         >
                                             {theme.icon}
                                             {theme.label}

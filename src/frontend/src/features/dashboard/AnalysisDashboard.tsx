@@ -8,10 +8,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { type RepoInfo } from '../../api/repos';
-import { type AnalysisStatus, type GitRemoteInfo, getAnalysisStatus, startAnalysis, getGitInfo } from '../../api/git';
+import { type GitRemoteInfo, getGitInfo } from '../../api/git';
+import { listAnalysisConfigs, listAnalysisRuns } from '../../api/analysis';
 import { useFilters } from '../../shared/filters/useFilters';
 import {
-    ArrowLeft, Play, Loader2, GitCommit,
+    ArrowLeft, Play, GitCommit,
     AlertTriangle, Filter, Keyboard, Command, ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import * as Icons from 'lucide-react';
@@ -52,6 +53,15 @@ interface AnalysisDashboardProps {
     onTabChange: (tab: string) => void;
 }
 
+interface AnalysisStatus {
+    state: string;
+    stage?: string;
+    progress?: number;
+    processed_commits?: number;
+    total_commits?: number;
+    error?: string | null;
+}
+
 export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange }: AnalysisDashboardProps) {
     const location = useLocation();
     const navigate = useNavigate();
@@ -68,7 +78,8 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
     const [mainTabId, subTabId] = currentPath.split('/');
 
     const [status, setStatus] = useState<AnalysisStatus | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [activeConfig, setActiveConfig] = useState<{ id: string; name: string } | null>(null);
+    const [latestRunConfigId, setLatestRunConfigId] = useState<string | null>(null);
     const [detailsSelection, setDetailsSelection] = useState<DetailsSelection | null>(null);
     const [gitInfo, setGitInfo] = useState<GitRemoteInfo | null>(null);
 
@@ -114,8 +125,31 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
 
     const fetchStatus = async () => {
         try {
-            const data = await getAnalysisStatus(repo.id);
-            setStatus(data);
+            const [runs, configs] = await Promise.all([
+                listAnalysisRuns(repo.id),
+                listAnalysisConfigs(repo.id),
+            ]);
+
+            const latestRun = runs[0] ?? null;
+            const latestCompletedRun = runs.find((run) => run.state === 'completed') ?? null;
+            const metrics = (latestRun?.metrics ?? {}) as Record<string, unknown>;
+            if (latestRun && !(latestRun.state === 'failed' && !latestCompletedRun)) {
+                setStatus({
+                    state: latestRun.state,
+                    stage: latestRun.stage,
+                    progress: latestRun.progress,
+                    processed_commits: Number(metrics.processed_commits ?? 0),
+                    total_commits: Number(metrics.total_commits ?? metrics.commit_count ?? 0),
+                    error: latestRun.error ?? null,
+                });
+                setLatestRunConfigId(latestRun.config_id ?? null);
+            } else {
+                setStatus(null);
+                setLatestRunConfigId(null);
+            }
+
+            const active = configs.find((config) => config.is_active) ?? null;
+            setActiveConfig(active ? { id: active.id, name: active.name } : null);
         } catch (e) {
             console.error(e);
         }
@@ -138,20 +172,13 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
     }, [repo.id]);
 
     const handleStartAnalysis = async () => {
-        setLoading(true);
-        try {
-            await startAnalysis(repo.id, {});
-            fetchStatus();
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
+        navigate(`/repos/${repo.id}/wizard`);
     };
 
     const isComplete = status?.state === 'completed';
     const isRunning = status?.state === 'running';
     const isFailed = status?.state === 'failed';
+    const hasRunHistory = status !== null;
 
     const toggleTabExpanded = (tabId: string) => {
         setExpandedTabs(prev => ({ ...prev, [tabId]: !prev[tabId] }));
@@ -178,10 +205,9 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                     </div>
                     <button data-testid="dashboard-btn-btn-1"
                         onClick={handleStartAnalysis}
-                        disabled={loading}
                         className="px-8 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-all shadow-xl shadow-red-500/20 text-lg"
                     >
-                        {loading ? 'Starting...' : 'Retry Analysis'}
+                        Retry Analysis
                     </button>
                 </div>
             );
@@ -203,7 +229,7 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                         className="px-8 py-4 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-sky-500/25 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/30 text-lg flex items-center gap-3"
                     >
                         <Play fill="currentColor" size={20} />
-                        Analyze Project Now
+                        Go to Configure
                     </button>
                 </div>
             );
@@ -298,22 +324,35 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                     {sidebarCollapsed ? <PanelLeftOpen size={13} /> : <PanelLeftClose size={13} />}
                 </button>
                 {/* Header */}
-                <div className="p-5 border-b border-slate-800/50 flex items-center justify-between">
-                    {!sidebarCollapsed && (
-                        <div className="overflow-hidden">
-                            <button data-testid="dashboard-btn-btn-3"
-                                onClick={onBack}
-                                className="flex items-center gap-2 text-slate-400 hover:text-sky-400 transition-colors mb-2 text-xs uppercase tracking-wider font-semibold"
-                            >
-                                <ArrowLeft size={14} />
-                                Projects
+                <div className="p-5 border-b border-slate-800/50">
+                    <div className="flex items-center justify-between mb-3">
+                        {!sidebarCollapsed && (
+                            <div className="overflow-hidden flex-1">
+                                <button data-testid="dashboard-btn-btn-3"
+                                    onClick={onBack}
+                                    className="flex items-center gap-2 text-slate-400 hover:text-sky-400 transition-colors mb-2 text-xs uppercase tracking-wider font-semibold"
+                                >
+                                    <ArrowLeft size={14} />
+                                    Projects
+                                </button>
+                                <h2 className="text-xl font-bold truncate bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">{repo.name}</h2>
+                            </div>
+                        )}
+                        {sidebarCollapsed && (
+                            <button data-testid="dashboard-btn-btn-4" onClick={onBack} className="mx-auto text-slate-400 hover:text-sky-400">
+                                <ArrowLeft size={20} />
                             </button>
-                            <h2 className="text-xl font-bold truncate bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">{repo.name}</h2>
-                        </div>
-                    )}
-                    {sidebarCollapsed && (
-                        <button data-testid="dashboard-btn-btn-4" onClick={onBack} className="mx-auto text-slate-400 hover:text-sky-400">
-                            <ArrowLeft size={20} />
+                        )}
+                    </div>
+                    {/* Re-analyze button - ISSUE 019 */}
+                    {!sidebarCollapsed && isComplete && (
+                        <button
+                            onClick={() => navigate(`/repos/${repo.id}/wizard`)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-sky-600/20 hover:bg-sky-600/30 text-sky-400 rounded-lg transition-all border border-sky-500/30 hover:border-sky-500/50 text-sm font-medium"
+                            title="Configure and run a new analysis"
+                        >
+                            <Play size={14} />
+                            New Analysis
                         </button>
                     )}
                 </div>
@@ -414,13 +453,23 @@ export default function AnalysisDashboard({ repo, onBack, activeTab, onTabChange
                     ) : (
                         <button data-testid="dashboard-btn-re-analyze"
                             onClick={handleStartAnalysis}
-                            disabled={loading || isRunning}
+                            disabled={isRunning}
                             className={`w-full flex items-center justify-center gap-2 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 disabled:from-slate-800 disabled:to-slate-800 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-sky-900/20 ${sidebarCollapsed ? 'px-0' : 'px-4'}`}
-                            title="Re-analyze"
+                            title={hasRunHistory ? 'New analysis' : 'Go to configure analysis'}
                         >
-                            {loading ? <Loader2 size={18} className="animate-spin" /> : <Play size={18} fill="currentColor" />}
-                            {!sidebarCollapsed && (isComplete ? 'Re-analyze' : 'Start Analysis')}
+                            <Play size={18} fill="currentColor" />
+                            {!sidebarCollapsed && (hasRunHistory ? 'New Analysis' : 'Go to Configure')}
                         </button>
+                    )}
+                    {!sidebarCollapsed && (
+                        <div className="mt-3 rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2 text-[10px] text-slate-500 space-y-1">
+                            <div className="truncate">
+                                Active config: {activeConfig ? `${activeConfig.name} (${activeConfig.id.slice(0, 8)})` : 'none'}
+                            </div>
+                            <div className="truncate">
+                                Latest run config: {latestRunConfigId ? latestRunConfigId.slice(0, 8) : 'none'}
+                            </div>
+                        </div>
                     )}
                 </div>
             </aside>

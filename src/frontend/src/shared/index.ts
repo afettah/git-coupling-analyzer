@@ -26,3 +26,4 @@ export { Spinner, LoadingState, EmptyState, ErrorBanner, type SpinnerProps, type
 
 // Context menu
 export { ContextMenu, type ContextMenuProps, type ContextMenuItem } from './ContextMenu';
+export { FileTree } from './FileTree';

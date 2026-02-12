@@ -58,8 +58,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     analyze.add_argument("--since", help="Analyze since date (e.g. '2023-01-01')", default=None)
     analyze.add_argument("--until", help="Analyze until date", default=None)
-    analyze.add_argument("--max-changeset-size", type=int, default=100, help="Skip commits with more changes")
-    analyze.add_argument("--min-cooccurrence", type=int, default=2, help="Minimum shared commits for a pair")
+    analyze.add_argument("--max-changeset-size", type=int, default=50, help="Skip commits with more changes")
+    analyze.add_argument("--min-cooccurrence", type=int, default=3, help="Minimum shared commits for a pair")
     analyze.add_argument("--topk-edges-per-file", type=int, default=50, help="Keep top K edges per file")
     analyze.set_defaults(func=_cmd_analyze)
 

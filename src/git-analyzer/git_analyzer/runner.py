@@ -12,7 +12,7 @@ from git_analyzer.extract import HistoryExtractor
 from git_analyzer.edges import EdgeBuilder
 from git_analyzer.mirror import mirror_repo
 from code_intel.storage import Storage
-from git_analyzer.git import get_head_oid
+from git_analyzer.git import get_head_oid, count_commits
 from code_intel.logging_utils import get_logger
 from code_intel_interfaces.analyzer import TaskStatus
 
@@ -37,20 +37,60 @@ def run_analysis(
         # Just update progress as we go
         
         # 1. Mirror
+        storage.update_task(
+            run_id,
+            TaskStatus.RUNNING,
+            stage="mirroring",
+            progress=0.05,
+        )
         logger.info("Mirroring repository...")
         mirror_repo(repo_path, paths)
         
         head_oid = get_head_oid(paths.mirror_path)
         # We can store head_oid in metrics for now
+
+        effective_since = since
+        if not effective_since and config.window_days:
+            from datetime import timezone, timedelta
+            effective_since = (
+                datetime.now(timezone.utc) - timedelta(days=config.window_days)
+            ).strftime("%Y-%m-%d")
+        total_commits = count_commits(paths.mirror_path, since=effective_since, until=until)
+        progress_state = {"processed_commits": 0, "total_commits": total_commits}
         
         # 2. Extract
+        storage.update_task(
+            run_id,
+            TaskStatus.RUNNING,
+            stage="extracting_history",
+            progress=0.1,
+            metrics_json=progress_state,
+        )
         logger.info("Extracting history...")
-        extractor = HistoryExtractor(paths, config)
-        stats = extractor.run(since=since, until=until, progress_callback=progress_callback)
+        extractor = HistoryExtractor(paths, config, storage=storage)
+        
+        def _on_progress(processed_commits: int) -> None:
+            progress_state["processed_commits"] = processed_commits
+            progress_ratio = 0.1
+            if total_commits > 0:
+                progress_ratio = 0.1 + min(0.55, (processed_commits / total_commits) * 0.55)
+            storage.update_task(
+                run_id,
+                TaskStatus.RUNNING,
+                stage="extracting_history",
+                progress=progress_ratio,
+                metrics_json=progress_state,
+            )
+            if progress_callback:
+                progress_callback(processed_commits)
+
+        stats = extractor.run(since=since, until=until, progress_callback=_on_progress)
         extractor.close()
         
         metrics = {
             "commit_count": stats.commit_count,
+            "processed_commits": stats.commit_count,
+            "total_commits": total_commits,
             "git_head_oid": head_oid,
             "skipped_invalid_status": stats.skipped_invalid_status,
             "skipped_invalid_path": stats.skipped_invalid_path,
@@ -62,6 +102,8 @@ def run_analysis(
         storage.update_task(
             run_id,
             TaskStatus.RUNNING,
+            stage="building_edges",
+            progress=0.75,
             entity_count=stats.file_count,
             metrics_json=metrics
         )
@@ -73,7 +115,7 @@ def run_analysis(
         
         # 3. Build edges
         logger.info("Building coupling edges...")
-        builder = EdgeBuilder(paths, config)
+        builder = EdgeBuilder(paths, config, storage=storage)
         edge_count = builder.build()
         builder.close()
         
@@ -82,6 +124,8 @@ def run_analysis(
         storage.update_task(
             run_id,
             TaskStatus.COMPLETED,
+            stage="completed",
+            progress=1.0,
             relationship_count=edge_count,
             finished_at=datetime.utcnow().isoformat(),
             metrics_json=final_metrics

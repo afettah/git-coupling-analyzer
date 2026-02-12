@@ -7,7 +7,7 @@ import uuid
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from pydantic import BaseModel
 
-from code_intel.config import RepoPaths
+from code_intel.config import RepoPaths, DEFAULT_DATA_DIR
 from code_intel.orchestrator import orchestrator
 from code_intel.registry import registry
 from code_intel.storage import Storage
@@ -26,10 +26,12 @@ class AnalyzerInfo(BaseModel):
 class AnalysisRequest(BaseModel):
     analyzer_type: str
     config: dict = {}
-    data_dir: str = "data"
+    data_dir: str = Query(default=None)
 
 @router.get("", response_model=List[AnalyzerInfo])
-def list_analyzers(repo_id: str, data_dir: str = "data") -> List[AnalyzerInfo]:
+def list_analyzers(repo_id: str, data_dir: str = Query(default=None)) -> List[AnalyzerInfo]:
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     """List available analyzers."""
     # Get last run info for each analyzer
     last_runs: dict[str, dict] = {}
@@ -82,6 +84,17 @@ async def run_analyzer(
     background_tasks: BackgroundTasks
 ):
     """Run a specific analyzer on a repository."""
+    if request.analyzer_type == "git":
+        raise HTTPException(
+            status_code=410,
+            detail="Git analysis run endpoint moved to /repos/{repo_id}/analysis/run",
+        )
+
+    analyzer = registry.get_analyzer(request.analyzer_type)
+    validation_errors = analyzer.validate_config(request.config)
+    if validation_errors:
+        raise HTTPException(status_code=422, detail={"errors": validation_errors})
+
     # Find repo source path
     paths = RepoPaths(Path(request.data_dir), repo_id)
     storage = Storage(paths.db_path, paths.parquet_dir)
@@ -115,10 +128,12 @@ async def run_analyzer(
 @router.get("/tasks")
 async def list_tasks(
     repo_id: str,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
     status: str | None = None,
     limit: int = 50,
 ):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     """List all analysis tasks for a repository."""
     paths = RepoPaths(Path(data_dir), repo_id)
     storage = Storage(paths.db_path, paths.parquet_dir)
@@ -159,8 +174,10 @@ async def list_tasks(
 async def get_task_status(
     repo_id: str,
     task_id: str,
-    data_dir: str = "data"
+    data_dir: str = Query(default=None)
 ):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     """Get status of a specific task."""
     paths = RepoPaths(Path(data_dir), repo_id)
     storage = Storage(paths.db_path, paths.parquet_dir)
@@ -177,8 +194,10 @@ async def get_task_status(
 async def get_analyzer_status(
     repo_id: str,
     analyzer_type: str,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     """Get the status of a specific analyzer for a repo (latest run)."""
     paths = RepoPaths(Path(data_dir), repo_id)
     storage = Storage(paths.db_path, paths.parquet_dir)

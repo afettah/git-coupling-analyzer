@@ -17,7 +17,9 @@ router = APIRouter(prefix="/repos/{repo_id}/git", tags=["git"])
 
 def _paths(repo_id: str, data_dir: str | None = None) -> RepoPaths:
     """Get repository paths using global or provided data_dir."""
-    return RepoPaths(Path(data_dir) if data_dir else DEFAULT_DATA_DIR, repo_id)
+    if data_dir is None:
+        return RepoPaths(DEFAULT_DATA_DIR, repo_id)
+    return RepoPaths(Path(data_dir), repo_id)
 
 
 def _storage(repo_id: str, data_dir: str | None = None) -> Storage:
@@ -35,7 +37,7 @@ async def get_file_coupling(
     metric: str = "jaccard",
     min_weight: float = 0.0,
     limit: int = 50,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     paths = _paths(repo_id, data_dir)
     api = registry.get_git_api()
@@ -51,7 +53,7 @@ async def get_coupling_graph(
     metric: str = "jaccard",
     min_weight: float = 0.1,
     limit: int = 200,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     paths = _paths(repo_id, data_dir)
     api = registry.get_git_api()
@@ -65,7 +67,7 @@ async def get_component_coupling(
     repo_id: str,
     component: str = "",
     depth: int = 2,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     paths = _paths(repo_id, data_dir)
     api = registry.get_git_api()
@@ -79,7 +81,7 @@ async def get_coupling_edges(
     min_weight: float = 0.0,
     metric: str = "jaccard",
     offset: int = 0,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     """Return raw coupling edges for export / table views."""
     # Validate metric to prevent SQL injection
@@ -118,7 +120,7 @@ async def get_file_impact(
     repo_id: str,
     path: str,
     top: int = 20,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     """Get the top coupled files for a given file path."""
     storage = _storage(repo_id, data_dir)
@@ -172,7 +174,7 @@ async def get_impact_graph(
     repo_id: str,
     path: str,
     top: int = 25,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     """Get a graph visualization centered on a single file's coupling."""
     storage = _storage(repo_id, data_dir)
@@ -219,7 +221,7 @@ async def get_impact_graph(
 
 
 @router.get("/files/{path:path}/lineage")
-async def get_file_lineage(repo_id: str, path: str, data_dir: str = "data"):
+async def get_file_lineage(repo_id: str, path: str, data_dir: str = Query(default=None)):
     """Get file rename/move history (lineage)."""
     storage = _storage(repo_id, data_dir)
     try:
@@ -262,7 +264,7 @@ async def list_files(
     limit: int = 5000,
     sort_by: str = "path",
     sort_dir: str = "asc",
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     storage = _storage(repo_id, data_dir)
     try:
@@ -302,7 +304,7 @@ async def list_files(
 
 
 @router.get("/folders")
-async def list_folders(repo_id: str, depth: int | None = None, data_dir: str = "data"):
+async def list_folders(repo_id: str, depth: int | None = None, data_dir: str = Query(default=None)):
     storage = _storage(repo_id, data_dir)
     try:
         rows = storage.conn.execute(
@@ -323,21 +325,99 @@ async def list_folders(repo_id: str, depth: int | None = None, data_dir: str = "
 
 
 @router.get("/tree")
-async def get_file_tree(repo_id: str, data_dir: str = "data"):
+async def get_file_tree(repo_id: str, data_dir: str = Query(default=None)):
     paths = _paths(repo_id, data_dir)
     api = registry.get_git_api()
     return api.get_file_tree(paths.db_path)
 
 
+@router.get("/refs")
+async def list_git_refs(
+    repo_id: str,
+    q: str = Query("", description="Filter refs by name substring"),
+    kind: str = Query("all", description="Filter by kind: branch, tag, or all"),
+    limit: int = Query(100, ge=1, le=500),
+    data_dir: str = Query(default=None),
+):
+    """List git branches and tags for a repository (lazy-loaded from disk)."""
+    import subprocess
+
+    storage = _storage(repo_id, data_dir)
+    try:
+        row = storage.conn.execute(
+            "SELECT value FROM repo_meta WHERE key = 'source_path'"
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Repository source path not found")
+        repo_path = row[0]
+    finally:
+        storage.close()
+
+    if not Path(repo_path).exists():
+        raise HTTPException(status_code=404, detail="Repository path no longer exists on disk")
+
+    refs: list[dict] = []
+
+    if kind in ("branch", "all"):
+        try:
+            result = subprocess.run(
+                ["git", "-C", repo_path, "for-each-ref", "--sort=-committerdate",
+                 "--format=%(refname:short)\t%(objectname:short)\t%(committerdate:iso8601)",
+                 "refs/heads/"],
+                capture_output=True, text=True, timeout=10,
+            )
+            if result.returncode == 0:
+                for line in result.stdout.strip().splitlines():
+                    parts = line.split("\t")
+                    if len(parts) >= 1:
+                        name = parts[0]
+                        if q and q.lower() not in name.lower():
+                            continue
+                        refs.append({
+                            "name": name,
+                            "kind": "branch",
+                            "short_sha": parts[1] if len(parts) > 1 else "",
+                            "date": parts[2] if len(parts) > 2 else None,
+                        })
+        except Exception as exc:
+            logger.warning(f"Failed to list branches for {repo_id}: {exc}")
+
+    if kind in ("tag", "all"):
+        try:
+            result = subprocess.run(
+                ["git", "-C", repo_path, "for-each-ref", "--sort=-creatordate",
+                 "--format=%(refname:short)\t%(objectname:short)\t%(creatordate:iso8601)",
+                 "refs/tags/"],
+                capture_output=True, text=True, timeout=10,
+            )
+            if result.returncode == 0:
+                for line in result.stdout.strip().splitlines():
+                    parts = line.split("\t")
+                    if len(parts) >= 1:
+                        name = parts[0]
+                        if q and q.lower() not in name.lower():
+                            continue
+                        refs.append({
+                            "name": name,
+                            "kind": "tag",
+                            "short_sha": parts[1] if len(parts) > 1 else "",
+                            "date": parts[2] if len(parts) > 2 else None,
+                        })
+        except Exception as exc:
+            logger.warning(f"Failed to list tags for {repo_id}: {exc}")
+
+    return refs[:limit]
+
+
 @router.get("/files/{path:path}/history")
-async def get_file_history(repo_id: str, path: str, data_dir: str = "data"):
+async def get_file_history(repo_id: str, path: str, data_dir: str = Query(default=None)):
     paths = _paths(repo_id, data_dir)
     api = registry.get_git_api()
     return api.get_file_history(paths.db_path, paths.parquet_dir, path)
 
 
 @router.get("/files/{path:path}/details")
-async def get_file_details(repo_id: str, path: str, data_dir: str = "data"):
+async def get_file_details(repo_id: str, path: str, data_dir: str = Query(default=None)):
     paths = _paths(repo_id, data_dir)
     api = registry.get_git_api()
     return api.get_file_details_enhanced(paths.db_path, paths.parquet_dir, path)
@@ -350,7 +430,7 @@ async def get_file_activity(
     granularity: str = "monthly",
     from_date: str | None = None,
     to_date: str | None = None,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     """Per-file activity breakdown with optional time-range filtering."""
     from datetime import datetime, timezone
@@ -387,7 +467,7 @@ async def get_file_authors(
     from_date: str | None = None,
     to_date: str | None = None,
     granularity: str = "monthly",
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     """Per-file author breakdown with bus factor and ownership timeline."""
     from datetime import datetime, timezone
@@ -425,7 +505,7 @@ async def get_file_commits(
     exclude_merges: bool = False,
     limit: int = 100,
     offset: int = 0,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     """Per-file commit list."""
     import pyarrow.dataset as ds
@@ -497,7 +577,7 @@ async def get_file_coupling_timeline(
     granularity: str = "monthly",
     from_date: str | None = None,
     to_date: str | None = None,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     """Coupling evolution timeline for a file."""
     from datetime import datetime, timezone
@@ -534,7 +614,7 @@ async def get_file_risk_timeline(
     granularity: str = "monthly",
     from_date: str | None = None,
     to_date: str | None = None,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     """Risk score evolution timeline for a file."""
     from datetime import datetime, timezone
@@ -565,7 +645,7 @@ async def get_file_risk_timeline(
 
 
 @router.get("/folders/{path:path}/details")
-async def get_folder_details(repo_id: str, path: str, data_dir: str = "data"):
+async def get_folder_details(repo_id: str, path: str, data_dir: str = Query(default=None)):
     """Folder-level details."""
     storage = _storage(repo_id, data_dir)
     try:
@@ -610,11 +690,11 @@ async def get_folder_details(repo_id: str, path: str, data_dir: str = "data"):
             "file_count": file_count,
             "subfolder_count": len(subfolders),
             "total_commits": total_commits,
-            "total_lines_added": 0,
-            "total_lines_deleted": 0,
-            "authors_count": 0,
+            "total_lines_added": lines_added,
+            "total_lines_deleted": lines_deleted,
+            "authors_count": authors_count,
             "top_author": None,
-            "health_score": 0,
+            "health_score": round(health_score, 1),
             "hot_files": [],
             "treemap_data": [],
             "churn_distribution": [],
@@ -636,7 +716,7 @@ async def get_hotspots(
     repo_id: str,
     limit: int = 50,
     sort_by: str = "risk_score",
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     paths = _paths(repo_id, data_dir)
     api = registry.get_git_api()
@@ -646,7 +726,7 @@ async def get_hotspots(
 # ── Clustering ───────────────────────────────────────────────────────────────
 
 @router.get("/clustering/algorithms")
-async def get_clustering_algorithms(repo_id: str, data_dir: str = "data"):
+async def get_clustering_algorithms(repo_id: str, data_dir: str = Query(default=None)):
     try:
         from git_analyzer.clustering.registry import list_algorithms
         return list_algorithms()
@@ -666,7 +746,7 @@ class ClusterRequest(BaseModel):
 async def run_clustering(
     repo_id: str,
     request: ClusterRequest,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     paths = _paths(repo_id, data_dir)
     api = registry.get_git_api()
@@ -679,7 +759,7 @@ async def run_clustering(
 
 
 @router.post("/clustering/snapshots")
-async def save_clustering_snapshot(repo_id: str, body: dict, data_dir: str = "data"):
+async def save_clustering_snapshot(repo_id: str, body: dict, data_dir: str = Query(default=None)):
     import json, uuid
     storage = _storage(repo_id, data_dir)
     try:
@@ -707,7 +787,7 @@ async def save_clustering_snapshot(repo_id: str, body: dict, data_dir: str = "da
 
 
 @router.get("/clustering/snapshots")
-async def list_clustering_snapshots(repo_id: str, data_dir: str = "data"):
+async def list_clustering_snapshots(repo_id: str, data_dir: str = Query(default=None)):
     import json
     storage = _storage(repo_id, data_dir)
     try:
@@ -733,7 +813,7 @@ async def list_clustering_snapshots(repo_id: str, data_dir: str = "data"):
 
 
 @router.get("/clustering/snapshots/{snapshot_id}")
-async def get_clustering_snapshot(repo_id: str, snapshot_id: str, data_dir: str = "data"):
+async def get_clustering_snapshot(repo_id: str, snapshot_id: str, data_dir: str = Query(default=None)):
     import json
     storage = _storage(repo_id, data_dir)
     try:
@@ -750,7 +830,7 @@ async def get_clustering_snapshot(repo_id: str, snapshot_id: str, data_dir: str 
 
 @router.put("/clustering/snapshots/{snapshot_id}")
 async def update_clustering_snapshot(
-    repo_id: str, snapshot_id: str, body: dict, data_dir: str = "data"
+    repo_id: str, snapshot_id: str, body: dict, data_dir: str = Query(default=None)
 ):
     import json
     storage = _storage(repo_id, data_dir)
@@ -778,7 +858,7 @@ async def update_clustering_snapshot(
 
 @router.delete("/clustering/snapshots/{snapshot_id}")
 async def delete_clustering_snapshot(
-    repo_id: str, snapshot_id: str, data_dir: str = "data"
+    repo_id: str, snapshot_id: str, data_dir: str = Query(default=None)
 ):
     storage = _storage(repo_id, data_dir)
     try:
@@ -792,13 +872,13 @@ async def delete_clustering_snapshot(
 
 
 @router.get("/clustering/snapshots/{snapshot_id}/edges")
-async def get_snapshot_edges(repo_id: str, snapshot_id: str, data_dir: str = "data"):
+async def get_snapshot_edges(repo_id: str, snapshot_id: str, data_dir: str = Query(default=None)):
     return {"edges": []}
 
 
 @router.get("/clustering/compare")
 async def compare_snapshots(
-    repo_id: str, base: str = "", head: str = "", data_dir: str = "data"
+    repo_id: str, base: str = "", head: str = "", data_dir: str = Query(default=None)
 ):
     return {
         "comparisons": [],
@@ -811,7 +891,7 @@ async def compare_snapshots(
 # ── Dashboard ────────────────────────────────────────────────────────────────
 
 @router.get("/dashboard/summary")
-async def get_dashboard_summary(repo_id: str, data_dir: str = "data"):
+async def get_dashboard_summary(repo_id: str, data_dir: str = Query(default=None)):
     paths = _paths(repo_id, data_dir)
     api = registry.get_git_api()
     return api.get_dashboard_summary(paths.db_path, paths.parquet_dir)
@@ -819,7 +899,7 @@ async def get_dashboard_summary(repo_id: str, data_dir: str = "data"):
 
 @router.get("/dashboard/trends")
 async def get_dashboard_trends(
-    repo_id: str, months: int = 6, granularity: str = "monthly", data_dir: str = "data"
+    repo_id: str, months: int = 6, granularity: str = "monthly", data_dir: str = Query(default=None)
 ):
     paths = _paths(repo_id, data_dir)
     api = registry.get_git_api()
@@ -829,7 +909,7 @@ async def get_dashboard_trends(
 # ── Authors & Timeline ───────────────────────────────────────────────────────
 
 @router.get("/authors")
-async def get_authors(repo_id: str, limit: int = 50, data_dir: str = "data"):
+async def get_authors(repo_id: str, limit: int = 50, data_dir: str = Query(default=None)):
     paths = _paths(repo_id, data_dir)
     api = registry.get_git_api()
     return api.get_authors(paths.db_path, paths.parquet_dir, limit=limit)
@@ -840,121 +920,10 @@ async def get_timeline(
     repo_id: str,
     points: int = 12,
     granularity: str = "monthly",
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     paths = _paths(repo_id, data_dir)
     api = registry.get_git_api()
     return api.get_timeline(
         paths.db_path, paths.parquet_dir, points=points, granularity=granularity
     )
-
-
-# ── Impact & Lineage ─────────────────────────────────────────────────────────
-
-@router.get("/impact")
-async def get_impact(
-    repo_id: str,
-    path: str,
-    top: int = 20,
-    data_dir: str = "data",
-):
-    storage = _storage(repo_id, data_dir)
-    try:
-        row = storage.conn.execute(
-            "SELECT entity_id FROM entities WHERE qualified_name = ? AND kind = 'file'",
-            (path,),
-        ).fetchone()
-        if not row:
-            raise HTTPException(404, "File not found")
-        file_id = row[0]
-
-        rows = storage.conn.execute(
-            """
-            SELECT e.entity_id AS file_id, e.qualified_name AS path,
-                   g.pair_count, g.jaccard, g.jaccard_weighted,
-                   g.p_dst_given_src, g.p_src_given_dst
-            FROM git_edges g
-            JOIN entities e ON g.dst_entity_id = e.entity_id
-            WHERE g.src_entity_id = ?
-            ORDER BY g.jaccard DESC
-            LIMIT ?
-            """,
-            (file_id, top),
-        ).fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        storage.close()
-
-
-@router.get("/impact/graph")
-async def get_impact_graph(
-    repo_id: str,
-    path: str,
-    top: int = 25,
-    data_dir: str = "data",
-):
-    storage = _storage(repo_id, data_dir)
-    try:
-        row = storage.conn.execute(
-            "SELECT entity_id FROM entities WHERE qualified_name = ? AND kind = 'file'",
-            (path,),
-        ).fetchone()
-        if not row:
-            raise HTTPException(404, "File not found")
-        focus_id = row[0]
-
-        edge_rows = storage.conn.execute(
-            """
-            SELECT g.src_entity_id AS source, g.dst_entity_id AS target,
-                   g.jaccard AS weight
-            FROM git_edges g
-            WHERE g.src_entity_id = ? OR g.dst_entity_id = ?
-            ORDER BY g.jaccard DESC
-            LIMIT ?
-            """,
-            (focus_id, focus_id, top),
-        ).fetchall()
-
-        node_ids = {focus_id}
-        edges = []
-        for r in edge_rows:
-            edges.append({"source": r[0], "target": r[1], "weight": r[2]})
-            node_ids.add(r[0])
-            node_ids.add(r[1])
-
-        placeholders = ",".join("?" * len(node_ids))
-        node_rows = storage.conn.execute(
-            f"SELECT entity_id AS id, qualified_name AS path FROM entities WHERE entity_id IN ({placeholders})",
-            list(node_ids),
-        ).fetchall()
-        nodes = [dict(r) for r in node_rows]
-
-        return {"nodes": nodes, "edges": edges, "focus_id": focus_id}
-    finally:
-        storage.close()
-
-
-@router.get("/files/{path:path}/lineage")
-async def get_file_lineage(repo_id: str, path: str, data_dir: str = "data"):
-    storage = _storage(repo_id, data_dir)
-    try:
-        row = storage.conn.execute(
-            "SELECT entity_id FROM entities WHERE qualified_name = ? AND kind = 'file'",
-            (path,),
-        ).fetchone()
-        if not row:
-            raise HTTPException(404, "File not found")
-        entity_id = row[0]
-
-        rows = storage.conn.execute(
-            """
-            SELECT path, start_commit_oid, end_commit_oid
-            FROM git_file_lineage
-            WHERE entity_id = ?
-            ORDER BY start_commit_oid
-            """,
-            (entity_id,),
-        ).fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        storage.close()

@@ -8,7 +8,7 @@ export interface AnalyzerInfo {
     description: string;
     available: boolean;
     last_run?: string;
-    status?: TaskStatus;
+    status?: TaskStatus | TaskStatus['state'];
 }
 
 export interface TaskStatus {

@@ -16,10 +16,11 @@ logger = get_logger(__name__)
 
 
 class EdgeBuilder:
-    def __init__(self, paths: RepoPaths, config: CouplingConfig):
+    def __init__(self, paths: RepoPaths, config: CouplingConfig, storage: Storage | None = None):
         self.paths = paths
         self.config = config
-        self.storage = Storage(paths.db_path, paths.parquet_dir)
+        self._owns_storage = storage is None
+        self.storage = storage or Storage(paths.db_path, paths.parquet_dir)
     
     def build(self) -> int:
         """Build coupling edges from transactions."""
@@ -34,9 +35,13 @@ class EdgeBuilder:
         changesets = list(get_changesets(commits, changes, self.config))
         
         # Count pairs and file occurrences
-        pair_counts: dict[tuple[int, int], float] = defaultdict(float)
+        pair_counts_weighted: dict[tuple[int, int], float] = defaultdict(float)
+        pair_counts_raw: Counter[tuple[int, int]] = Counter()
         file_counts: Counter[int] = Counter()
         file_weights: dict[int, float] = defaultdict(float)
+
+        latest_changeset_ts = max((cs.timestamp for cs in changesets), default=0)
+        decay_half_life = self.config.decay_half_life_days
         
         for cs in changesets:
             file_ids = sorted(cs.file_ids)
@@ -47,52 +52,61 @@ class EdgeBuilder:
             
             # Calculate weight
             weight = cs.weight
-            if len(file_ids) > self.config.max_changeset_size:
-                weight *= 1.0 / math.log(1.0 + len(file_ids))
+            if decay_half_life and decay_half_life > 0 and latest_changeset_ts and cs.timestamp:
+                age_days = max(0.0, (latest_changeset_ts - cs.timestamp) / 86400.0)
+                weight *= math.pow(0.5, age_days / decay_half_life)
             
             # Count pairs
             for a, b in combinations(file_ids, 2):
-                pair_counts[(a, b)] += weight
+                key = (a, b)
+                pair_counts_weighted[key] += weight
+                pair_counts_raw[key] += 1
             
             for fid in file_ids:
                 file_counts[fid] += 1
                 file_weights[fid] += weight
         
-        logger.info(f"Counted {len(pair_counts)} file pairs")
+        logger.info(f"Counted {len(pair_counts_weighted)} file pairs")
         
-        # Filter by min_cooccurrence
+        # Filter by min_revisions and min_cooccurrence
+        min_revisions = max(1, self.config.min_revisions)
+        eligible_files = {fid for fid, count in file_counts.items() if count >= min_revisions}
         min_cooc = self.config.min_cooccurrence
-        filtered_pairs = {
-            k: v for k, v in pair_counts.items()
-            if v >= min_cooc
-        }
+        filtered_pairs: dict[tuple[int, int], tuple[float, int]] = {}
+        for pair, weighted_count in pair_counts_weighted.items():
+            raw_count = pair_counts_raw[pair]
+            if raw_count < min_cooc:
+                continue
+            if pair[0] not in eligible_files or pair[1] not in eligible_files:
+                continue
+            filtered_pairs[pair] = (weighted_count, raw_count)
         
         logger.info(f"After filtering: {len(filtered_pairs)} pairs")
         
         # Build edges with metrics
         edges = []
-        for (src, dst), pair_count in filtered_pairs.items():
+        for (src, dst), (pair_count_weighted, pair_count_raw) in filtered_pairs.items():
             src_count = file_counts[src]
             dst_count = file_counts[dst]
             src_weight = file_weights[src]
             dst_weight = file_weights[dst]
             
-            # Jaccard (unweighted)
-            denom = src_count + dst_count - pair_count
-            jaccard = pair_count / denom if denom > 0 else 0
+            # Jaccard and conditional probabilities are computed on raw counts.
+            denom = src_count + dst_count - pair_count_raw
+            jaccard = pair_count_raw / denom if denom > 0 else 0
             
             # Weighted Jaccard
-            denom_w = src_weight + dst_weight - pair_count
-            jaccard_weighted = pair_count / denom_w if denom_w > 0 else 0
+            denom_w = src_weight + dst_weight - pair_count_weighted
+            jaccard_weighted = pair_count_weighted / denom_w if denom_w > 0 else 0
             
             # Conditional probabilities
-            p_dst_given_src = pair_count / src_count if src_count > 0 else 0
-            p_src_given_dst = pair_count / dst_count if dst_count > 0 else 0
+            p_dst_given_src = pair_count_raw / src_count if src_count > 0 else 0
+            p_src_given_dst = pair_count_raw / dst_count if dst_count > 0 else 0
             
             edges.append({
                 "src_entity_id": src,
                 "dst_entity_id": dst,
-                "pair_count": pair_count,
+                "pair_count": pair_count_weighted,
                 "src_count": src_count,
                 "dst_count": dst_count,
                 "src_weight": src_weight,
@@ -100,11 +114,12 @@ class EdgeBuilder:
                 "jaccard": jaccard,
                 "jaccard_weighted": jaccard_weighted,
                 "p_dst_given_src": p_dst_given_src,
-                "p_src_given_dst": p_src_given_dst
+                "p_src_given_dst": p_src_given_dst,
+                "pair_count_raw": pair_count_raw,
             })
         
         # Apply top-K per file
-        if self.config.topk_edges_per_file:
+        if self.config.topk_edges_per_file is not None and self.config.topk_edges_per_file > 0:
             edges = self._apply_topk(edges)
         
         # Prepare unified relationships and git_edges
@@ -119,6 +134,7 @@ class EdgeBuilder:
                 "weight": e["jaccard"],
                 "properties_json": json.dumps({
                     "pair_count": e["pair_count"],
+                    "pair_count_raw": e["pair_count_raw"],
                     "src_count": e["src_count"],
                     "dst_count": e["dst_count"],
                     "jaccard_weighted": e["jaccard_weighted"],
@@ -143,6 +159,9 @@ class EdgeBuilder:
     def _apply_topk(self, edges: list[dict]) -> list[dict]:
         """Keep top-K edges per file."""
         k = self.config.topk_edges_per_file
+        if k is None or k <= 0:
+            return edges
+        k = int(k)
         
         # Group by source and dest
         by_file: dict[int, list[dict]] = defaultdict(list)
@@ -190,6 +209,7 @@ class EdgeBuilder:
             lambda: {"pair_count": 0.0, "jaccard_sum": 0.0, "file_pairs": 0}
         )
         
+        min_component_cooccurrence = max(1, self.config.min_component_cooccurrence)
         for e in edges:
             src_comp = file_to_comp.get(e["src_entity_id"])
             dst_comp = file_to_comp.get(e["dst_entity_id"])
@@ -202,6 +222,8 @@ class EdgeBuilder:
         
         # Store
         for (src, dst), data in comp_edges.items():
+            if data["pair_count"] < min_component_cooccurrence:
+                continue
             avg_jaccard = data["jaccard_sum"] / data["file_pairs"] if data["file_pairs"] else 0
             self.storage.conn.execute("""
                 INSERT OR REPLACE INTO git_component_edges
@@ -227,4 +249,5 @@ class EdgeBuilder:
         self.storage.conn.commit()
     
     def close(self):
-        self.storage.close()
+        if self._owns_storage:
+            self.storage.close()

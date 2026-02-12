@@ -21,7 +21,8 @@ class Orchestrator:
         db_path: Path,
         parquet_dir: Path,
         config: Dict[str, Any],
-        task_id: str | None = None
+        task_id: str | None = None,
+        config_id: str | None = None,
     ) -> TaskResult:
         """Dispatch an analysis task to an analyzer."""
         from code_intel.storage import Storage
@@ -44,7 +45,7 @@ class Orchestrator:
         logger.info(f"Starting analysis task {task_id} for {analyzer_type}")
         
         # 1. Create task entry
-        storage.create_task(task)
+        storage.create_task(task, config_id=config_id)
         storage.update_task(task_id, TaskStatus.RUNNING, started_at=datetime.utcnow().isoformat())
         
         try:

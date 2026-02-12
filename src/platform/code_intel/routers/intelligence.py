@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from fastapi import APIRouter
-from code_intel.config import RepoPaths
+from fastapi import APIRouter, Query
+from code_intel.config import RepoPaths, DEFAULT_DATA_DIR
 from code_intel.registry import registry
 from code_intel.storage import Storage
 from code_intel.logging_utils import get_logger
@@ -23,28 +23,36 @@ def _storage(repo_id: str, data_dir: str) -> Storage:
 
 
 @router.get("/risk/overview")
-async def get_risk_overview(repo_id: str, data_dir: str = "data"):
+async def get_risk_overview(repo_id: str, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     paths = _paths(repo_id, data_dir)
     api = registry.get_api("intelligence")
     return api.get_risk_overview(paths.db_path)
 
 
 @router.get("/risk/entities/{entity_id}")
-async def get_entity_risk(repo_id: str, entity_id: int, data_dir: str = "data"):
+async def get_entity_risk(repo_id: str, entity_id: int, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     paths = _paths(repo_id, data_dir)
     api = registry.get_api("intelligence")
     return api.get_entity_risk(paths.db_path, entity_id)
 
 
 @router.get("/graph")
-async def get_knowledge_graph(repo_id: str, data_dir: str = "data"):
+async def get_knowledge_graph(repo_id: str, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     paths = _paths(repo_id, data_dir)
     api = registry.get_api("intelligence")
     return api.get_knowledge_graph(paths.db_path)
 
 
 @router.get("/dashboard")
-async def get_intelligence_dashboard(repo_id: str, data_dir: str = "data"):
+async def get_intelligence_dashboard(repo_id: str, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     storage = _storage(repo_id, data_dir)
     try:
         file_count = storage.conn.execute(
@@ -114,7 +122,9 @@ async def get_intelligence_dashboard(repo_id: str, data_dir: str = "data"):
 
 
 @router.get("/architecture")
-async def get_architecture_map(repo_id: str, data_dir: str = "data"):
+async def get_architecture_map(repo_id: str, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     storage = _storage(repo_id, data_dir)
     try:
         domain_rows = storage.conn.execute(
@@ -172,8 +182,10 @@ async def get_correlations(
     repo_id: str,
     min_git_coupling: float = 0.1,
     min_semantic_similarity: float = 0.3,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     storage = _storage(repo_id, data_dir)
     try:
         rows = storage.conn.execute(

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Play, CheckCircle, XCircle, Loader, Clock, AlertCircle } from 'lucide-react';
 import { listAnalyzers, runAnalyzer, type AnalyzerInfo } from '@/api/analyzers';
+import { listAnalysisConfigs, runAnalysis } from '@/api/analysis';
 import { Button, Card, Badge } from '@/shared';
 
 interface AnalyzerStatusPanelProps {
@@ -33,8 +34,18 @@ export default function AnalyzerStatusPanel({ repoId, onAnalysisStarted }: Analy
     const handleRun = async (type: string) => {
         setRunning(prev => new Set(prev).add(type));
         try {
-            const result = await runAnalyzer(repoId, type);
-            onAnalysisStarted?.(type, result.task_id);
+            if (type === 'git') {
+                const configs = await listAnalysisConfigs(repoId);
+                const activeConfig = configs.find((config) => config.is_active) ?? configs[0] ?? null;
+                if (!activeConfig) {
+                    throw new Error('No analysis configuration found for this repository');
+                }
+                const result = await runAnalysis(repoId, { config_id: activeConfig.id });
+                onAnalysisStarted?.(type, result.run_id);
+            } else {
+                const result = await runAnalyzer(repoId, type);
+                onAnalysisStarted?.(type, result.task_id);
+            }
             await fetchAnalyzers();
         } catch (error) {
             console.error(`Failed to run ${type} analyzer:`, error);
@@ -87,64 +98,69 @@ export default function AnalyzerStatusPanel({ repoId, onAnalysisStarted }: Analy
         <Card className="p-6">
             <h3 className="text-lg font-semibold text-slate-200 mb-4">Analyzers</h3>
             <div className="space-y-3">
-                {analyzers.map((analyzer) => (
-                    <div
-                        key={analyzer.type}
-                        className="flex items-center justify-between p-4 bg-slate-900/50 rounded-lg border border-slate-800 hover:border-slate-700 transition-colors"
-                    >
-                        <div className="flex items-center gap-3 flex-1">
-                            {getStatusIcon(analyzer.status?.state)}
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                    <h4 className="text-sm font-medium text-slate-200">{analyzer.name}</h4>
-                                    {analyzer.status && (
-                                        <Badge className={getStatusBadge(analyzer.status.state)}>
-                                            {analyzer.status.state}
-                                        </Badge>
+                {analyzers.map((analyzer) => {
+                    const statusObj = typeof analyzer.status === 'string' ? null : analyzer.status;
+                    const statusState = typeof analyzer.status === 'string' ? analyzer.status : analyzer.status?.state;
+
+                    return (
+                        <div
+                            key={analyzer.type}
+                            className="flex items-center justify-between p-4 bg-slate-900/50 rounded-lg border border-slate-800 hover:border-slate-700 transition-colors"
+                        >
+                            <div className="flex items-center gap-3 flex-1">
+                                {getStatusIcon(statusState)}
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <h4 className="text-sm font-medium text-slate-200">{analyzer.name}</h4>
+                                        {statusState && (
+                                            <Badge className={getStatusBadge(statusState)}>
+                                                {statusState}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-slate-400 mt-1">{analyzer.description}</p>
+                                    {analyzer.last_run && (
+                                        <p className="text-xs text-slate-500 mt-1">
+                                            Last run: {new Date(analyzer.last_run).toLocaleString()}
+                                        </p>
+                                    )}
+                                    {statusObj?.progress !== undefined && (
+                                        <div className="mt-2">
+                                            <div className="flex items-center gap-2 text-xs text-slate-400 mb-1">
+                                                <span>{statusObj.stage || 'Processing'}</span>
+                                                <span>{Math.round(statusObj.progress * 100)}%</span>
+                                            </div>
+                                            <div className="w-full bg-slate-800 rounded-full h-1.5">
+                                                <div
+                                                    className="bg-sky-500 h-1.5 rounded-full transition-all"
+                                                    style={{ width: `${statusObj.progress * 100}%` }}
+                                                />
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
-                                <p className="text-xs text-slate-400 mt-1">{analyzer.description}</p>
-                                {analyzer.last_run && (
-                                    <p className="text-xs text-slate-500 mt-1">
-                                        Last run: {new Date(analyzer.last_run).toLocaleString()}
-                                    </p>
-                                )}
-                                {analyzer.status?.progress !== undefined && (
-                                    <div className="mt-2">
-                                        <div className="flex items-center gap-2 text-xs text-slate-400 mb-1">
-                                            <span>{analyzer.status.stage || 'Processing'}</span>
-                                            <span>{Math.round(analyzer.status.progress * 100)}%</span>
-                                        </div>
-                                        <div className="w-full bg-slate-800 rounded-full h-1.5">
-                                            <div
-                                                className="bg-sky-500 h-1.5 rounded-full transition-all"
-                                                style={{ width: `${analyzer.status.progress * 100}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
                             </div>
+                            <Button
+                                onClick={() => handleRun(analyzer.type)}
+                                disabled={!analyzer.available || running.has(analyzer.type) || statusState === 'running'}
+                                size="sm"
+                                className="ml-4"
+                            >
+                                {running.has(analyzer.type) || statusState === 'running' ? (
+                                    <>
+                                        <Loader className="w-4 h-4 mr-2 animate-spin" />
+                                        Running
+                                    </>
+                                ) : (
+                                    <>
+                                        <Play className="w-4 h-4 mr-2" />
+                                        Run
+                                    </>
+                                )}
+                            </Button>
                         </div>
-                        <Button
-                            onClick={() => handleRun(analyzer.type)}
-                            disabled={!analyzer.available || running.has(analyzer.type) || analyzer.status?.state === 'running'}
-                            size="sm"
-                            className="ml-4"
-                        >
-                            {running.has(analyzer.type) || analyzer.status?.state === 'running' ? (
-                                <>
-                                    <Loader className="w-4 h-4 mr-2 animate-spin" />
-                                    Running
-                                </>
-                            ) : (
-                                <>
-                                    <Play className="w-4 h-4 mr-2" />
-                                    Run
-                                </>
-                            )}
-                        </Button>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </Card>
     );

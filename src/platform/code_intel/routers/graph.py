@@ -37,8 +37,10 @@ async def search_entities(
     language: str | None = None,
     limit: int = 50,
     offset: int = 0,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     storage = _storage(repo_id, data_dir)
     try:
         where = "WHERE 1=1"
@@ -68,7 +70,9 @@ async def search_entities(
 
 
 @router.get("/entities/{entity_id}")
-async def get_entity_detail(repo_id: str, entity_id: int, data_dir: str = "data"):
+async def get_entity_detail(repo_id: str, entity_id: int, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     storage = _storage(repo_id, data_dir)
     try:
         row = storage.conn.execute(
@@ -148,8 +152,10 @@ async def get_relationships(
     rel_kind: str | None = None,
     min_weight: float = 0.0,
     limit: int = 100,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     storage = _storage(repo_id, data_dir)
     try:
         where = "WHERE weight >= ?"
@@ -194,8 +200,10 @@ async def get_neighbors(
     entity_id: int,
     max_depth: int = 1,
     min_weight: float = 0.0,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     storage = _storage(repo_id, data_dir)
     try:
         center_row = storage.conn.execute(
@@ -264,7 +272,7 @@ async def find_path(
     from_id: int = Query(..., alias="from"),
     to_id: int = Query(..., alias="to"),
     max_length: int = 5,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
     storage = _storage(repo_id, data_dir)
     try:
@@ -348,7 +356,9 @@ async def find_path(
 
 
 @router.get("/stats")
-async def get_graph_stats(repo_id: str, data_dir: str = "data"):
+async def get_graph_stats(repo_id: str, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     storage = _storage(repo_id, data_dir)
     try:
         total_entities = storage.conn.execute("SELECT COUNT(*) FROM entities").fetchone()[0]

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from code_intel.config import RepoPaths, DEFAULT_DATA_DIR
 from code_intel.storage import Storage
 from code_intel.logging_utils import get_logger
@@ -43,7 +43,9 @@ def _compute_file_risk(row) -> dict:
 
 
 @router.get("/overview")
-async def get_risk_overview(repo_id: str, data_dir: str = "data"):
+async def get_risk_overview(repo_id: str, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     storage = _storage(repo_id, data_dir)
     try:
         rows = storage.conn.execute(
@@ -105,8 +107,10 @@ async def get_risk_files(
     order: str = "desc",
     limit: int = 100,
     offset: int = 0,
-    data_dir: str = "data",
+    data_dir: str = Query(default=None),
 ):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     storage = _storage(repo_id, data_dir)
     try:
         where = "WHERE exists_at_head = 1 AND kind = 'file'"
@@ -136,7 +140,9 @@ async def get_risk_files(
 
 
 @router.get("/folders")
-async def get_risk_folders(repo_id: str, data_dir: str = "data"):
+async def get_risk_folders(repo_id: str, data_dir: str = Query(default=None)):
+    if data_dir is None:
+        data_dir = str(DEFAULT_DATA_DIR)
     storage = _storage(repo_id, data_dir)
     try:
         rows = storage.conn.execute(

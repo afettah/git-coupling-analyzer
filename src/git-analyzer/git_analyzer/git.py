@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 import subprocess
 from dataclasses import dataclass, field
@@ -11,6 +12,10 @@ from typing import Iterable, Iterator, List
 _COMMIT_MARKER = "__CI_COMMIT__"
 _HEX40_RE = re.compile(r"^[0-9a-f]{40}$")
 _VALID_STATUS_RE = re.compile(r"^([AMDTUXB]|[RC]\d{2,3})$")
+_NUMSTAT_MARKER = "__CI_NUMSTAT__"
+
+logger = logging.getLogger(__name__)
+_GIT_TIMEOUT_SECONDS = 30
 
 
 class ParseState(Enum):
@@ -145,6 +150,9 @@ def iter_log(
     until: str | None = None,
     ref: str = "HEAD",
     all_refs: bool = False,
+    skip_merge_commits: bool = False,
+    first_parent_only: bool = False,
+    find_renames_threshold: int = 60,
     validation_mode: str = "soft",  # strict | soft | permissive
 ) -> Iterable[tuple[CommitHeader, list[tuple[str, str, str | None]]]]:
     """Parse git log with deterministic state machine.
@@ -169,7 +177,7 @@ def iter_log(
         str(repo_path),
         "log",
         "--name-status",
-        "--find-renames=60%",
+        f"--find-renames={max(1, min(100, int(find_renames_threshold)))}%",
         "--date-order",
         "-z",
     ]
@@ -177,6 +185,10 @@ def iter_log(
         args.append(f"--since={since}")
     if until:
         args.append(f"--until={until}")
+    if skip_merge_commits:
+        args.append("--no-merges")
+    if first_parent_only:
+        args.append("--first-parent")
 
     if all_refs:
         args.append("--all")
@@ -413,7 +425,98 @@ def iter_log(
             yield current_header, current_changes
     finally:
         proc.stdout.close()
-        proc.wait()
+        stderr_text = ""
+        if proc.stderr:
+            stderr_text = proc.stderr.read().decode("utf-8", errors="replace").strip()
+            proc.stderr.close()
+        return_code = proc.wait()
+        if return_code != 0:
+            logger.warning("git log exited with code %s: %s", return_code, stderr_text)
+        elif stderr_text:
+            logger.debug("git log stderr: %s", stderr_text)
+
+
+def iter_numstat(
+    repo_path: Path,
+    since: str | None = None,
+    until: str | None = None,
+    ref: str = "HEAD",
+    all_refs: bool = False,
+    skip_merge_commits: bool = False,
+    first_parent_only: bool = False,
+    find_renames_threshold: int = 60,
+) -> Iterator[tuple[str, list[tuple[str, int, int]]]]:
+    """Iterate per-commit numstat rows as (commit_oid, [(path, added, deleted)])."""
+    args = [
+        "git",
+        "-C",
+        str(repo_path),
+        "log",
+        "--numstat",
+        f"--find-renames={max(1, min(100, int(find_renames_threshold)))}%",
+        "--date-order",
+        "-z",
+    ]
+    if since:
+        args.append(f"--since={since}")
+    if until:
+        args.append(f"--until={until}")
+    if skip_merge_commits:
+        args.append("--no-merges")
+    if first_parent_only:
+        args.append("--first-parent")
+    if all_refs:
+        args.append("--all")
+    else:
+        args.append(ref)
+    args.append(f"--pretty=format:%x00{_NUMSTAT_MARKER}%x00%H%x00")
+
+    proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if not proc.stdout:
+        raise RuntimeError("Failed to open git numstat output stream.")
+
+    current_oid: str | None = None
+    current_rows: list[tuple[str, int, int]] = []
+    try:
+        for raw in _token_stream(proc):
+            token = raw.strip()
+            if not token:
+                continue
+            if token == _NUMSTAT_MARKER:
+                if current_oid is not None:
+                    yield current_oid, current_rows
+                current_oid = None
+                current_rows = []
+                continue
+            if current_oid is None:
+                if _HEX40_RE.match(token):
+                    current_oid = token
+                continue
+
+            parts = token.split("\t", 2)
+            if len(parts) != 3:
+                continue
+            added_raw, deleted_raw, path = parts
+            try:
+                added = 0 if added_raw == "-" else int(added_raw)
+                deleted = 0 if deleted_raw == "-" else int(deleted_raw)
+            except ValueError:
+                continue
+            current_rows.append((path, added, deleted))
+
+        if current_oid is not None:
+            yield current_oid, current_rows
+    finally:
+        proc.stdout.close()
+        stderr_text = ""
+        if proc.stderr:
+            stderr_text = proc.stderr.read().decode("utf-8", errors="replace").strip()
+            proc.stderr.close()
+        return_code = proc.wait()
+        if return_code != 0:
+            logger.warning("git numstat log exited with code %s: %s", return_code, stderr_text)
+        elif stderr_text:
+            logger.debug("git numstat stderr: %s", stderr_text)
 
 
 def count_commits(repo_path: Path, since: str | None = None, until: str | None = None) -> int:
@@ -422,15 +525,19 @@ def count_commits(repo_path: Path, since: str | None = None, until: str | None =
         args.append(f"--since={since}")
     if until:
         args.append(f"--until={until}")
-    output = subprocess.check_output(args, stderr=subprocess.STDOUT)
-    return int(output.decode("utf-8").strip() or 0)
+    try:
+        output = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=_GIT_TIMEOUT_SECONDS)
+        return int(output.decode("utf-8").strip() or 0)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+        logger.warning("Failed to count commits for %s: %s", repo_path, exc)
+        return 0
 
 
 def get_head_oid(repo_path: Path) -> str:
     """Get current HEAD commit OID."""
     result = subprocess.run(
         ["git", "-C", str(repo_path), "rev-parse", "HEAD"],
-        capture_output=True, text=True, check=True
+        capture_output=True, text=True, check=True, timeout=_GIT_TIMEOUT_SECONDS
     )
     return result.stdout.strip()
 
@@ -449,7 +556,7 @@ def get_remote_url(repo_path: Path, remote: str = "origin") -> str | None:
     try:
         result = subprocess.run(
             ["git", "-C", str(repo_path), "remote", "get-url", remote],
-            capture_output=True, text=True
+            capture_output=True, text=True, timeout=_GIT_TIMEOUT_SECONDS
         )
         if result.returncode == 0:
             return result.stdout.strip()
@@ -463,7 +570,7 @@ def list_remotes(repo_path: Path) -> list[str]:
     try:
         result = subprocess.run(
             ["git", "-C", str(repo_path), "remote"],
-            capture_output=True, text=True
+            capture_output=True, text=True, timeout=_GIT_TIMEOUT_SECONDS
         )
         if result.returncode == 0:
             return [line.strip() for line in result.stdout.splitlines() if line.strip()]
@@ -478,7 +585,7 @@ def get_default_branch(repo_path: Path, remote: str = "origin") -> str:
     try:
         result = subprocess.run(
             ["git", "-C", str(repo_path), "symbolic-ref", f"refs/remotes/{remote}/HEAD"],
-            capture_output=True, text=True
+            capture_output=True, text=True, timeout=_GIT_TIMEOUT_SECONDS
         )
         if result.returncode == 0:
             ref = result.stdout.strip()
@@ -493,7 +600,7 @@ def get_default_branch(repo_path: Path, remote: str = "origin") -> str:
         try:
             result = subprocess.run(
                 ["git", "-C", str(repo_path), "rev-parse", "--verify", f"refs/heads/{branch}"],
-                capture_output=True, text=True
+                capture_output=True, text=True, timeout=_GIT_TIMEOUT_SECONDS
             )
             if result.returncode == 0:
                 return branch

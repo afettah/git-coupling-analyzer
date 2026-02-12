@@ -70,21 +70,35 @@ class GitAPI(GitAnalyzerAPI):
             file_id = row[0]
 
             query = f"""
-                SELECT 
-                    e.qualified_name as path,
-                    g.pair_count,
-                    g.{metric} as weight,
-                    g.jaccard,
-                    g.jaccard_weighted,
-                    g.p_dst_given_src,
-                    g.p_src_given_dst
-                FROM git_edges g
-                JOIN entities e ON g.dst_entity_id = e.entity_id
-                WHERE g.src_entity_id = ? AND g.{metric} >= ?
-                ORDER BY g.{metric} DESC
+                SELECT * FROM (
+                    SELECT 
+                        e.qualified_name as path,
+                        g.pair_count,
+                        g.{metric} as weight,
+                        g.jaccard,
+                        g.jaccard_weighted,
+                        g.p_dst_given_src,
+                        g.p_src_given_dst
+                    FROM git_edges g
+                    JOIN entities e ON g.dst_entity_id = e.entity_id
+                    WHERE g.src_entity_id = ? AND g.{metric} >= ?
+                    UNION ALL
+                    SELECT
+                        e.qualified_name as path,
+                        g.pair_count,
+                        g.{metric} as weight,
+                        g.jaccard,
+                        g.jaccard_weighted,
+                        g.p_src_given_dst as p_dst_given_src,
+                        g.p_dst_given_src as p_src_given_dst
+                    FROM git_edges g
+                    JOIN entities e ON g.src_entity_id = e.entity_id
+                    WHERE g.dst_entity_id = ? AND g.{metric} >= ?
+                )
+                ORDER BY weight DESC
                 LIMIT ?
             """
-            rows = storage.conn.execute(query, (file_id, min_weight, limit)).fetchall()
+            rows = storage.conn.execute(query, (file_id, min_weight, file_id, min_weight, limit)).fetchall()
             return [dict(row) for row in rows]
         finally:
             storage.close()
@@ -311,10 +325,8 @@ class GitAPI(GitAnalyzerAPI):
                 """
             ).fetchall()
 
-            # Calculate risk scores
+            # Calculate risk scores with the same formula used in get_file_details.
             results = []
-            max_commits = max([r[2] or 0 for r in rows], default=1)
-            max_coupling = max([r[6] or 0 for r in rows], default=1)
 
             for row in rows:
                 commits = row[2] or 0
@@ -326,11 +338,14 @@ class GitAPI(GitAnalyzerAPI):
 
                 lines_changed = lines_added + lines_deleted
 
-                # Calculate risk score
-                commit_score = (commits / max(max_commits, 1)) * 40 if max_commits > 0 else 0
-                coupling_score = (coupling / max(max_coupling, 1)) * 30 if max_coupling > 0 else 0
-                complexity_score = min(authors * 5, 20) + min(coupled_count / 10, 10)
-                risk_score = min(commit_score + coupling_score + complexity_score, 100)
+                churn_rate = (lines_changed / commits) if commits > 0 else 0.0
+                risk_score = min(
+                    (commits / 10) * 30
+                    + coupling * 30
+                    + min(authors * 5, 20)
+                    + min(churn_rate / 50, 20),
+                    100,
+                )
 
                 results.append({
                     "file_id": row[0],
